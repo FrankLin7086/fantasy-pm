@@ -241,6 +241,7 @@ a.lab:hover{text-decoration:underline}
 .goal .bar{grid-column:1/-1;margin-top:2px}
 .goal:hover{border-color:var(--brass)}
 .tab[hidden]{display:none!important}
+.fbstats{white-space:pre-wrap;font-family:var(--f-num);font-size:12px;line-height:1.6;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 12px;margin:6px 0;max-height:260px;overflow:auto}
 </style>
 
 <div class="wrap">
@@ -422,6 +423,16 @@ a.lab:hover{text-decoration:underline}
     </div>
     <div class="note" id="saveNote" aria-live="polite"></div>
     <p class="sub" id="cloudNote"></p>
+    <div class="sec-title" style="margin-top:12px"><h2>試玩回饋</h2><span>紀錄只存在這台裝置</span></div>
+    <p>遊戲會在這台裝置上記下你玩了幾天、登入幾次，以及第一次達成各個里程碑的時間。按「寄信」或「複製」時才會離開裝置，幫助開發者調整節奏。</p>
+    <pre class="fbstats" id="fbStats"></pre>
+    <textarea id="fbNote" spellcheck="false" placeholder="想說的話（選填）：哪裡卡住、哪裡覺得無聊、哪段劇情喜歡或看不懂"></textarea>
+    <div class="btns" id="fbBtns">
+      <button class="btn" id="fbForm" type="button" hidden>填寫試玩問卷</button>
+      <button class="btn" id="fbMail" type="button" hidden>寄信給開發者</button>
+      <button class="btn" id="fbCopy" type="button">複製試玩紀錄</button>
+    </div>
+    <div class="note" id="fbMsg" aria-live="polite"></div>
     <div class="sec-title" style="margin-top:12px"><h2>測試模式</h2><span>給試玩用，正式版會拿掉</span></div>
     <p>開啟後，畫面上方會出現測試按鈕。用測試按鈕得到的進度會照常存檔，測完可以按「重新開始」。</p>
     <div class="btns"><button class="btn" id="dbgToggle" type="button" aria-pressed="false">開啟測試模式</button></div>
@@ -444,6 +455,7 @@ a.lab:hover{text-decoration:underline}
 'use strict';
 const KEY='fantasy-pm-save-v1';
 const OFFLINE_MIN=60;
+const VERSION='v0.5.1';
 
 /* ================= DATA ================= */
 const CITIES=[
@@ -600,8 +612,19 @@ const CONFIG={
   adsenseTest:true,             // 申請審核期間保持 true（顯示測試廣告）
   admobRewardedIOS:'',          // AdMob 獎勵廣告單元 ID（iOS）
   admobRewardedAndroid:'',      // AdMob 獎勵廣告單元 ID（Android）
-  adDailyCap:5                  // 每日「看廣告換沙漏」上限
+  adDailyCap:5,                 // 每日「看廣告換沙漏」上限
+  feedbackUrl:'',               // 試玩問卷網址（例如 Google 表單）；留空則不顯示按鈕
+  feedbackEmail:'littleaquataco@gmail.com' // 回饋信箱；留空則不顯示「寄信」按鈕
 };
+/* ---- 本機試玩紀錄：只存在玩家裝置，玩家自己按「寄出」或「複製」才會離開裝置 ---- */
+function stNote(gap){const t=S.stats;const d=today();if(!t.start)t.start=Date.now();
+  if(!t.sessions||gap>=300)t.sessions++;
+  if(!t.days.includes(d)){t.days.push(d);if(t.days.length>400)t.days.shift();}}
+function stFirst(k){const t=S.stats;if(t.firsts[k])return;if(!t.start)t.start=Date.now();t.firsts[k]=[+((Date.now()-t.start)/864e5).toFixed(2),Math.round(t.playSec/60),t.sessions];}
+const FIRST_NAMES={g1:'雇用第一位員工',p2:'第 2 個物件',p3:'第 3 個物件',p4:'第 4 個物件',p5:'第 5 個物件',p6:'第 6 個物件',p7:'第 7 個物件',p8:'第 8 個物件',ev1:'第一張客訴',ct1:'第一件合約完工',rb1:'第 1 次重組',rb2:'第 2 次重組',rb3:'第 3 次重組',rb5:'第 5 次重組',ipo1:'第 1 次上市',case0:'叔叔主線第一章',case10:'叔叔主線完結'};
+function playSummary(){const t=S.stats;const days=t.start?Math.max(1,Math.ceil((Date.now()-t.start)/864e5)):1;
+  return {days,active:t.days.length,sessions:t.sessions,hours:t.playSec/3600,lines:Object.keys(FIRST_NAMES).filter(k=>t.firsts[k]).map(k=>{const f=t.firsts[k];return FIRST_NAMES[k]+'：第 '+(Math.floor(f[0])+1)+' 天，線上 '+f[1]+' 分鐘，第 '+f[2]+' 次登入';})};}
+function playText(){const p=playSummary();return ['奇幻物業管家 試玩紀錄','版本：'+VERSION,'開始後第 '+p.days+' 天，其中有玩的天數 '+p.active+' 天','登入 '+p.sessions+' 次，線上 '+(p.hours<1?Math.round(p.hours*60)+' 分鐘':p.hours.toFixed(1)+' 小時'),'目前：'+cityName()+'，管理 '+S.props+' 個物件，重組 '+S.rebirths+' 次，上市 '+S.ipos+' 次','成就 '+S.ach.length+'，住戶 '+S.residents.length+'，劇情 '+S.story.length+' 段','— 第一次達成 —',...(p.lines.length?p.lines:['（還沒有）'])].join('\n');}
 /* Ads adapter: 'admob' inside the Capacitor app, 'h5' on your own website with AdSense, otherwise 'mock' */
 const Ads={mode:'mock',ready:false,
   detect(){const cap=window.Capacitor;
@@ -978,7 +1001,7 @@ function fresh(){return {v:2,amt:1,dbg:false,dbgSpeed:false,coins:0,life:0,run:0
   units:{},props:1,reno:[],ach:[],patrols:0,complaints:0,offlineClaims:0,buffs:[],daily:{last:null,day:0,cycles:0},
   story:[],log:[],seen:[],event:null,nextEvent:null,lastEventIdx:null,lastSeen:Date.now(),
   contracts:{offers:[],active:[]},contractsDone:0,council:{on:[],changed:0},councilSet:0,facs:[],
-  talents:{},mgr:{},seenEv:[],teamLv:0,assign:{},assignInit:true,autoOff:{},glass:GLASS_GIFT,glassUsed:0,eventAt:0,shares:0,sharesTotal:0,ipos:0,board:{},maxCity:0,maxRebirths:0,cityOverride:null,nextCity:null,tabsSeen:[],seasonDone:0,supporter:false,adDay:null,adViews:0,custom:{office:'',player:'',title:'rookie',slogan:'',accent:'brass',props:{}},residents:[],nextRes:0,cards:[],sev:{key:'',c:{},got:[]}};}
+  talents:{},mgr:{},seenEv:[],teamLv:0,assign:{},assignInit:true,autoOff:{},glass:GLASS_GIFT,glassUsed:0,eventAt:0,shares:0,sharesTotal:0,ipos:0,board:{},maxCity:0,maxRebirths:0,cityOverride:null,nextCity:null,tabsSeen:[],seasonDone:0,supporter:false,adDay:null,adViews:0,custom:{office:'',player:'',title:'rookie',slogan:'',accent:'brass',props:{}},residents:[],nextRes:0,cards:[],sev:{key:'',c:{},got:[]},stats:{start:0,sessions:0,days:[],playSec:0,firsts:{}}};}
 function merge(o){
   const f=fresh();if(!o||typeof o!=='object')return f;
   const migrated=o.v!==2;
@@ -999,6 +1022,7 @@ function merge(o){
   f.custom=Object.assign({office:'',player:'',title:'rookie',slogan:'',accent:'brass',props:{}},f.custom||{});if(!f.custom.props||typeof f.custom.props!=='object')f.custom.props={};
   if(o.maxCity===undefined){f.maxCity=Math.min(f.rebirths||0,CITIES.length-1);f.maxRebirths=f.rebirths||0;}
   if(!f.sev||typeof f.sev!=='object')f.sev={key:'',c:{},got:[]};
+  f.stats=Object.assign({start:0,sessions:0,days:[],playSec:0,firsts:{}},f.stats||{});if(!Array.isArray(f.stats.days))f.stats.days=[];if(!f.stats.firsts||typeof f.stats.firsts!=='object')f.stats.firsts={};
   if(migrated){const old=Number(o.fame)||0;f.fameTotal=Math.floor(Math.sqrt(old));f.fame=f.fameTotal;f.seen=[];f.v=2;
     f.log.unshift({t:'--:--',text:'存檔已升級到 v0.2。舊的聲望依新公式換算為 '+f.fameTotal+' 點，可以到「集團」頁點天賦。',kind:'story'});}
   return f;
@@ -1115,6 +1139,9 @@ function check(){
   ACH.forEach(([id,name,,fn])=>{if(!S.ach.includes(id)&&fn(S)){S.ach.push(id);toast('達成成就：'+name+'（收入 +2%）');log('達成成就「'+name+'」。');}});
   STORY.forEach(st=>{if(!S.story.includes(st.id)&&st.when(S)){S.story.push(st.id);log(st.title+'：'+st.text[st.text.length-1],'story');queue({title:st.title,lines:st.reward?[...st.text,{text:'獲得時光沙漏 +'+st.reward,cls:'sub'}]:st.text,btn:st.btn,onOk:st.id==='open'?()=>{doPatrol();returnReport(0);}:st.reward?()=>gainGlass(st.reward,st.title):null});}});
   if(S.story.includes('open'))checkCards();
+  if(cnt('goblin'))stFirst('g1');if(S.props>=2&&S.props<=8)for(let i=2;i<=S.props;i++)stFirst('p'+i);
+  if(S.complaints)stFirst('ev1');if(S.contractsDone)stFirst('ct1');if(S.ipos)stFirst('ipo1');[1,2,3,5].forEach(n=>{if(S.maxRebirths>=n||S.rebirths>=n)stFirst('rb'+n);});
+  if(S.story.includes('case0'))stFirst('case0');if(S.story.includes('case10'))stFirst('case10');
   const now=Date.now();
   if(S.props>=2&&S.event==null){if(S.nextEvent==null)S.nextEvent=now+60*1000;else if(now>=S.nextEvent)spawnEvent();}
   S.buffs=S.buffs.filter(b=>b.until>now);
@@ -1151,6 +1178,7 @@ function recruitEffect(x){const g=x.g,b=mgrBase(g),target=g.t.startsWith('@')?TA
 function applyRecruit(x){const g=x.g,isNew=!x.lv;S.mgr[g.id]=x.lv+1;if(isNew)autoAssign(g);log((isNew?'錄用主管：':'主管升級：')+g.name+'（'+g.title+'）Lv'+(x.lv+1)+'。','story');}
 function tryRecruit(chance){
   const x=rollRecruit(chance);if(!x)return;const g=x.g,isNew=!x.lv;
+  if(!isNew){applyRecruit(x);toast('老朋友回來了：'+g.name+' 升到 Lv'+(x.lv+1)+'（'+recruitEffect(x)+'）');return;}
   queue({title:isNew?'人才來訪':'老朋友回來了',lines:[
     isNew?'一位應徵者站在事務所門口。':g.name+'又來了，說想多幫點忙。',
     {text:'【'+RARITY[g.r].name+'】'+g.name+' · '+g.title,cls:'gain'},g.d,
@@ -1176,7 +1204,7 @@ function tryResident(why,quiet){
 function unlockCards(ids){
   const fresh=ids.filter(id=>!S.cards.includes(id)&&CARDS.some(c=>c[0]===id));if(!fresh.length)return;
   fresh.forEach(id=>S.cards.push(id));
-  if(fresh.length<=2)fresh.forEach(id=>{const c=CARDS.find(x=>x[0]===id);queue({title:'物業知識小卡',lines:[{text:c[1],cls:'gain'},c[2],{text:'出處：'+c[3]+' · 收集一張，收入 +1%',cls:'sub'}],btn:'收進圖鑑',link:CONFIG.labUrl?{url:CONFIG.labUrl,text:'延伸閱讀：'+CONFIG.labName+' →'}:null});});
+  if(fresh.length===1)fresh.forEach(id=>{const c=CARDS.find(x=>x[0]===id);queue({title:'物業知識小卡',lines:[{text:c[1],cls:'gain'},c[2],{text:'出處：'+c[3]+' · 收集一張，收入 +1%',cls:'sub'}],btn:'收進圖鑑',link:CONFIG.labUrl?{url:CONFIG.labUrl,text:'延伸閱讀：'+CONFIG.labName+' →'}:null});});
   else{toast('解鎖 '+fresh.length+' 張物業知識小卡，到「收藏」頁查看');}
   log('解鎖物業知識小卡：'+fresh.map(id=>CARDS.find(x=>x[0]===id)[1]).join('、')+'。');
 }
@@ -1406,6 +1434,7 @@ function nextGoal(){
   const sn=seasonNow();if(sn&&S.sev.key===sn.key&&SEASON_TASKS.some(t=>!S.sev.got.includes(t.k)&&(S.sev.c[t.k]||0)>=t.need))return {text:sn.s.name+'活動任務完成了，領取沙漏',tab:'run'};
   if(!cnt('goblin'))return S.coins<10?{text:'按「巡視公寓」存到 10 金幣，雇用第一位哥布林清潔工',pct:S.coins/10}:{text:'雇用第一位哥布林清潔工',tab:'run'};
   if(ipoReady())return {text:'可以集團上市了：到「集團」敲鐘',tab:'corp'};
+  if(veteran()&&S.run>=REBIRTH_MIN){const fg=fameGain();if(fg>=3&&fg>=S.fameTotal*0.5)return {text:'重組時機到了：這輪可得 '+fg+' 聲望（累計 '+S.fameTotal+'），下一輪會跑得更快',tab:'corp'};}
   if(!veteran()&&S.run>=REBIRTH_MIN&&fameGain()>=3)return {text:'可以發動集團重組了：帶著 '+fameGain()+' 點聲望前往下一座城市',tab:'corp'};
   if(S.props>=3&&!S.contracts.active.length&&!autoOn('a_collect'))return {text:'接一件承攬合約，離線時也會施工',tab:'biz'};
   const need=needOf(S.props),lv=S.teamLv||0,nx=TEAM_STEPS[lv],mn=teamMin();
@@ -1565,7 +1594,8 @@ function renderSeason(){
       return '<div class="stask"><div><span>'+t.name+'</span><div class="bar"><i style="width:'+(c/t.need*100).toFixed(0)+'%"></i></div></div><button class="mini" type="button" data-act="season" data-v="'+t.k+'" '+(got||!ok?'disabled':'')+'>'+(got?'已領取':ok?'領 '+t.glass+' 沙漏':c+'/'+t.need)+'</button></div>';}).join('')+
     '<span class="sub">三項都完成：限定主管「'+g.name+'」（'+g.title+'）加入或升級。</span>');
 }
-function renderAll(){renderTabs();renderCustom();renderSeason();renderDebug();renderAmt();renderTop();renderProps();renderBiz();renderCorp();renderMgr();renderAch();renderLog();renderSlip();}
+function renderFeedback(){if($('page-save').hidden)return;$('fbStats').textContent=playText();$('fbForm').hidden=!CONFIG.feedbackUrl;$('fbMail').hidden=!CONFIG.feedbackEmail;}
+function renderAll(){renderTabs();renderCustom();renderFeedback();renderSeason();renderDebug();renderAmt();renderTop();renderProps();renderBiz();renderCorp();renderMgr();renderAch();renderLog();renderSlip();}
 
 /* ================= SAVE ================= */
 function save(){S.lastSeen=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}cloudSave(false);}
@@ -1611,7 +1641,7 @@ function runAutomation(){
 function toggleAuto(id){if(tal(id)<1)return;S.autoOff[id]=!S.autoOff[id];log('自動化「'+talDef(id).name+'」'+(S.autoOff[id]?'已關閉':'已開啟')+'。');renderAll();save();}
 function tick(){
   const now=Date.now();const gap=(now-S.lastSeen)/1000;S.lastSeen=now;
-  if(gap>=OFFLINE_MIN){returnReport(gap);}else if(gap>0)earn(rate()*gap*(S.dbgSpeed?10:1));
+  if(gap>=OFFLINE_MIN){stNote(gap);returnReport(gap);}else if(gap>0){earn(rate()*gap*(S.dbgSpeed?10:1));S.stats.playSec+=gap;}
   check();tickN++;if(gap<OFFLINE_MIN)runAutomation();
   if(S.story.includes('open')){if(!S.nextRes)S.nextRes=now+3*60*1000;else if(now>=S.nextRes){tryResident('');S.nextRes=now+(6+Math.random()*6)*60*1000;}}
   if(tickN%5===0){renderSeason();renderTabs();}renderTop();
@@ -1621,7 +1651,7 @@ function tick(){
   if(vis('corp')||tickN%3===0)renderCorp();
   renderSlip();
 }
-function wake(){const gap=(Date.now()-S.lastSeen)/1000;S.lastSeen=Date.now();returnReport(gap);check();renderAll();}
+function wake(){const gap=(Date.now()-S.lastSeen)/1000;S.lastSeen=Date.now();if(S.story.length)stNote(gap);returnReport(gap);check();renderAll();}
 
 /* ================= WIRING ================= */
 function debugAct(v){
@@ -1664,6 +1694,11 @@ function wire(){
   $('exportBtn').onclick=()=>{save();const code=encode(S);const ta=$('code');ta.value=code;
     try{navigator.clipboard.writeText(code).then(()=>{$('saveNote').textContent='存檔碼已複製，到另一台裝置的「存檔」頁貼上後按匯入。';},()=>{ta.select();$('saveNote').textContent='已產生存檔碼並選取，請手動複製。';});}catch(e){ta.select();$('saveNote').textContent='已產生存檔碼並選取，請手動複製。';}};
   $('importBtn').onclick=()=>{try{const o=decode($('code').value);S=merge(o);S.lastSeen=Date.now();staffBuilt='';save();cloudSave(true);renderAll();$('saveNote').textContent='已匯入存檔。';log('從存檔碼匯入進度。');}catch(e){$('saveNote').textContent='這串存檔碼無法讀取。請確認是以 GK1- 開頭的完整字串。';}};
+  const fbBody=()=>{const n=$('fbNote').value.trim();return (n?'想說的話：\n'+n+'\n\n':'')+playText();};
+  $('fbForm').onclick=()=>{if(CONFIG.feedbackUrl)window.open(CONFIG.feedbackUrl,'_blank','noopener');};
+  $('fbMail').onclick=()=>{if(!CONFIG.feedbackEmail)return;location.href='mailto:'+CONFIG.feedbackEmail+'?subject='+encodeURIComponent('奇幻物業管家 試玩回饋 '+VERSION)+'&body='+encodeURIComponent(fbBody());$('fbMsg').textContent='已開啟郵件程式。如果沒有反應，請改用「複製試玩紀錄」，貼到任何地方傳給開發者。';};
+  $('fbCopy').onclick=()=>{const t=fbBody();const ok=()=>$('fbMsg').textContent='已複製，可以貼到 LINE、Email 或問卷裡。';
+    try{navigator.clipboard.writeText(t).then(ok,()=>{$('code').value=t;$('code').select();$('fbMsg').textContent='無法自動複製，已放到上方文字框並選取，請手動複製。';});}catch(e){$('code').value=t;$('code').select();$('fbMsg').textContent='無法自動複製，已放到上方文字框並選取，請手動複製。';}};
   $('resetBtn').onclick=()=>{$('resetRow').hidden=true;$('resetConfirm').hidden=false;};
   $('resetNo').onclick=()=>{$('resetRow').hidden=false;$('resetConfirm').hidden=true;};
   $('resetYes').onclick=()=>{S=fresh();staffBuilt='';try{localStorage.removeItem(KEY);}catch(e){}cloudSave(true);$('resetRow').hidden=false;$('resetConfirm').hidden=true;$('saveNote').textContent='已重新開始。';check();renderAll();};
@@ -1674,7 +1709,7 @@ function boot(){
   applyAccent();
   if(!S.assignInit){MGRS.filter(g=>mgrLv(g.id)).forEach(autoAssign);S.assignInit=true;}
   const gap=(Date.now()-S.lastSeen)/1000;S.lastSeen=Date.now();
-  returnReport(S.story.length?gap:0);check();renderAll();
+  stNote(S.stats.sessions?Math.max(gap,300):0);returnReport(S.story.length?gap:0);check();renderAll();
 }
 function start(data){
   S=(data&&data.state)?merge(data.state):(load()||fresh());
@@ -1691,9 +1726,9 @@ function start(data){
   setInterval(save,30000);
   if(window.claude&&window.claude.hot&&window.claude.hot.snapshot)window.claude.hot.snapshot(()=>({state:S}));
 }
+if(/[?&]sim=1/.test(location.search))window.__sim={S:()=>S,fameGain,ipoReady,nextGoal,rate,cityName};
 window.claude?.hot?.ready?window.claude.hot.ready(start):start(window.claude?.hot?.data??{});
 })();
 </script>
-
 <script>if("serviceWorker" in navigator){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){});});}</script>
 </html>
