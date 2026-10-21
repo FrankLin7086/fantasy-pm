@@ -8,6 +8,8 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="物業管家">
+<meta name="google-adsense-account" content="ca-pub-7982993592099360">
+<script async data-adbreak-test="on" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7982993592099360" crossorigin="anonymous"></script>
 <title>奇幻物業管家</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -587,7 +589,7 @@ const GLASS_GIFT=3;
 const CONFIG={
   labName:'住宅實驗室',
   labUrl:'',                    // 住宅實驗室的方格子網址，例如 https://vocus.cc/salon/xxxx；留空則不顯示連結
-  adsenseClient:'',             // AdSense 發布商 ID，例如 ca-pub-0000000000000000（網頁版 H5 Games Ads）
+  adsenseClient:'ca-pub-7982993592099360',             // AdSense 發布商 ID，例如 ca-pub-0000000000000000（網頁版 H5 Games Ads）
   adsenseTest:true,             // 申請審核期間保持 true（顯示測試廣告）
   admobRewardedIOS:'',          // AdMob 獎勵廣告單元 ID（iOS）
   admobRewardedAndroid:'',      // AdMob 獎勵廣告單元 ID（Android）
@@ -601,8 +603,8 @@ const Ads={mode:'mock',ready:false,
     else this.mode='mock';},
   async init(){this.detect();
     try{
-      if(this.mode==='h5'){const sc=document.createElement('script');sc.async=true;sc.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client='+CONFIG.adsenseClient;sc.crossOrigin='anonymous';
-        sc.setAttribute('data-ad-client',CONFIG.adsenseClient);if(CONFIG.adsenseTest)sc.setAttribute('data-adbreak-test','on');document.head.appendChild(sc);
+      if(this.mode==='h5'){if(!document.querySelector('script[src*="adsbygoogle.js"]')){const sc=document.createElement('script');sc.async=true;sc.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client='+CONFIG.adsenseClient;sc.crossOrigin='anonymous';
+        sc.setAttribute('data-ad-client',CONFIG.adsenseClient);if(CONFIG.adsenseTest)sc.setAttribute('data-adbreak-test','on');document.head.appendChild(sc);}
         window.adsbygoogle=window.adsbygoogle||[];window.adBreak=window.adConfig=function(o){window.adsbygoogle.push(o);};window.adConfig({preloadAdBreaks:'on',sound:'on'});}
       if(this.mode==='admob'){const A=window.Capacitor.Plugins.AdMob;
         try{const st=await A.trackingAuthorizationStatus();if(st&&st.status==='notDetermined')await A.requestTrackingAuthorization();}catch(e){}
@@ -611,7 +613,7 @@ const Ads={mode:'mock',ready:false,
     }catch(e){this.mode='mock';this.ready=true;}},
   rewarded(name){
     if(this.mode==='h5')return new Promise(res=>{let done=false;const fin=v=>{if(!done){done=true;res(v);}};
-      window.adBreak({type:'reward',name,beforeReward:show=>show(),adViewed:()=>fin(true),adDismissed:()=>fin(false),adBreakDone:()=>fin(false)});});
+      window.adBreak({type:'reward',name,beforeReward:show=>show(),adViewed:()=>{Ads.last='viewed';fin(true);},adDismissed:()=>{Ads.last='dismissed';fin(false);},adBreakDone:info=>{if(!done)Ads.last=(info&&info.breakStatus)||'unavailable';fin(false);}});});
     if(this.mode==='admob')return (async()=>{const A=window.Capacitor.Plugins.AdMob;const plat=window.Capacitor.getPlatform();
       const adId=plat==='ios'?CONFIG.admobRewardedIOS:CONFIG.admobRewardedAndroid;if(!adId)return false;
       try{await A.prepareRewardVideoAd({adId});const r=await A.showRewardVideoAd();return !!r;}catch(e){return false;}})();
@@ -620,7 +622,7 @@ const Ads={mode:'mock',ready:false,
 };
 const adsOn=()=>!S.supporter;
 function adLeft(){const t=todayISO();if(!S.adDay||S.adDay.d!==t)S.adDay={d:t,n:0};return Math.max(0,CONFIG.adDailyCap-S.adDay.n);}
-async function adForGlass(){if(!adsOn()||adLeft()<=0)return;const ok=await Ads.rewarded('時光沙漏');if(!ok){toast('沒有看完廣告，這次不給獎勵');return;}
+async function adForGlass(){if(!adsOn()||adLeft()<=0)return;Ads.last='';const ok=await Ads.rewarded('時光沙漏');if(!ok){toast(Ads.last&&Ads.last!=='dismissed'?'目前沒有可播放的廣告，請稍後再試':'沒有看完廣告，這次不給獎勵');return;}
   adLeft();S.adDay.n++;S.adViews=(S.adViews||0)+1;gainGlass(1,'看廣告');check();renderAll();save();}
 function buySupporter(){/* 正式版：Apple / Google 內購成功後才呼叫 grantSupporter() */
   if(Ads.mode==='mock'&&!S.dbg){toast('支持者禮包會在 App 上架後開放');return;}grantSupporter();}
@@ -1288,7 +1290,7 @@ function handleReturn(gapSec){
   if(S.props>=2&&S.event==null)S.nextEvent=Date.now();
   if(gapSec>=4*3600)lines.push({text:'夜班團隊留下了一個時光沙漏。',cls:'sub'});
   const claim=(mult)=>{earn(gain*mult);S.offlineClaims++;if(mult>1)log('看廣告，離線收益加倍。');if(gapSec>=4*3600)gainGlass(1,'離線 4 小時以上');if(gapSec>=3600)tryResident('趁你不在時');log('領取離線收益 +'+fmt(gain*mult)+' 金幣（'+dur(capped)+'）。');if(gapSec>=3600)tryRecruit(0.3);check();save();};
-  queue({title:'你不在的時候……',lines,btn:'領取',onOk:()=>claim(1),alt:adsOn()?{text:'看廣告，收益 ×2',fn:async()=>{const ok=await Ads.rewarded('離線收益加倍');claim(ok?2:1);if(!ok)toast('沒有看完廣告，照常領取 1 倍收益');renderAll();}}:null});
+  queue({title:'你不在的時候……',lines,btn:'領取',onOk:()=>claim(1),alt:adsOn()?{text:'看廣告，收益 ×2',fn:async()=>{const ok=await Ads.rewarded('離線收益加倍');claim(ok?2:1);if(!ok)toast(Ads.last&&Ads.last!=='dismissed'?'目前沒有可播放的廣告，照常領取 1 倍收益':'沒有看完廣告，照常領取 1 倍收益');renderAll();}}:null});
 }
 function today(){const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
 function handleDaily(){

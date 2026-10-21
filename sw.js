@@ -1,5 +1,5 @@
 // 快取遊戲檔案，讓沒有網路時也能開啟。改版時把版本號加 1。
-const CACHE = 'fantasy-pm-v0.4.0';
+const CACHE = 'fantasy-pm-v0.4.1';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './privacy.html'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES))); self.skipWaiting(); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k))))); self.clients.claim(); });
