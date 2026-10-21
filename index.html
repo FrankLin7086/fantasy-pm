@@ -235,6 +235,12 @@ textarea{width:100%;box-sizing:border-box;min-height:84px;background:var(--panel
 .sw:disabled{opacity:.55}
 a.lab{font-size:13px;color:var(--brass);text-decoration:none;align-self:flex-start}
 a.lab:hover{text-decoration:underline}
+.goal{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;align-items:center;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:13px;color:var(--fg)}
+.goal .gl{font-size:11px;letter-spacing:.12em;color:var(--brass)}
+.goal .gt{min-width:0}
+.goal .bar{grid-column:1/-1;margin-top:2px}
+.goal:hover{border-color:var(--brass)}
+.tab[hidden]{display:none!important}
 </style>
 
 <div class="wrap">
@@ -245,10 +251,11 @@ a.lab:hover{text-decoration:underline}
       <div class="coins">
         <span class="label">金幣</span>
         <span class="val num" id="coins">0</span>
-        <span class="rate"><span class="num" id="rate">0</span> / 秒 · 沙漏 <span class="num" id="glassTop">0</span></span>
+        <span class="rate"><span class="num" id="rate">0</span> / 秒<span id="glassWrap"> · 沙漏 <span class="num" id="glassTop">0</span></span></span>
       </div>
       <button class="patrol" id="patrol" type="button">巡視公寓<small class="num" id="patrolGain">+1</small></button>
     </div>
+    <button class="goal" id="goal" type="button" hidden></button>
     <div class="buffs" id="buffs"></div>
     <div class="amt" id="amtBar" role="group" aria-label="一次雇用數量">
       <span>一次雇用</span>
@@ -971,7 +978,7 @@ function fresh(){return {v:2,amt:1,dbg:false,dbgSpeed:false,coins:0,life:0,run:0
   units:{},props:1,reno:[],ach:[],patrols:0,complaints:0,offlineClaims:0,buffs:[],daily:{last:null,day:0,cycles:0},
   story:[],log:[],seen:[],event:null,nextEvent:null,lastEventIdx:null,lastSeen:Date.now(),
   contracts:{offers:[],active:[]},contractsDone:0,council:{on:[],changed:0},councilSet:0,facs:[],
-  talents:{},mgr:{},seenEv:[],teamLv:0,assign:{},assignInit:true,autoOff:{},glass:GLASS_GIFT,glassUsed:0,eventAt:0,shares:0,sharesTotal:0,ipos:0,board:{},maxCity:0,maxRebirths:0,cityOverride:null,nextCity:null,seasonDone:0,supporter:false,adDay:null,adViews:0,custom:{office:'',player:'',title:'rookie',slogan:'',accent:'brass',props:{}},residents:[],nextRes:0,cards:[],sev:{key:'',c:{},got:[]}};}
+  talents:{},mgr:{},seenEv:[],teamLv:0,assign:{},assignInit:true,autoOff:{},glass:GLASS_GIFT,glassUsed:0,eventAt:0,shares:0,sharesTotal:0,ipos:0,board:{},maxCity:0,maxRebirths:0,cityOverride:null,nextCity:null,tabsSeen:[],seasonDone:0,supporter:false,adDay:null,adViews:0,custom:{office:'',player:'',title:'rookie',slogan:'',accent:'brass',props:{}},residents:[],nextRes:0,cards:[],sev:{key:'',c:{},got:[]}};}
 function merge(o){
   const f=fresh();if(!o||typeof o!=='object')return f;
   const migrated=o.v!==2;
@@ -1106,7 +1113,7 @@ function check(){
   const tl=teamCur();if(tl>(S.teamLv||0)){S.teamLv=tl;log('團隊晉升到 Lv'+tl+'：所有員工都達到 '+TEAM_STEPS[tl-1]+' 名，全體收入 ×2（累計 ×'+fmt(teamMult())+'）。','story');toast('團隊晉升 Lv'+tl+'，全體收入 ×2');}
   while(S.run>=needOf(S.props)){S.props++;const p=propAt(S.props-1);log('接管新物件：'+p.name+'。全體收入 ×1.3。','story');if(p.legend)toast('接管'+p.name);if(S.props===3)fillOffers();MGRS.filter(g=>mgrLv(g.id)&&stationOf(g.id)==null).forEach(autoAssign);}
   ACH.forEach(([id,name,,fn])=>{if(!S.ach.includes(id)&&fn(S)){S.ach.push(id);toast('達成成就：'+name+'（收入 +2%）');log('達成成就「'+name+'」。');}});
-  STORY.forEach(st=>{if(!S.story.includes(st.id)&&st.when(S)){S.story.push(st.id);log(st.title+'：'+st.text[st.text.length-1],'story');queue({title:st.title,lines:st.reward?[...st.text,{text:'獲得時光沙漏 +'+st.reward,cls:'sub'}]:st.text,btn:st.btn,onOk:st.id==='open'?()=>{doPatrol();handleDaily();}:st.reward?()=>gainGlass(st.reward,st.title):null});}});
+  STORY.forEach(st=>{if(!S.story.includes(st.id)&&st.when(S)){S.story.push(st.id);log(st.title+'：'+st.text[st.text.length-1],'story');queue({title:st.title,lines:st.reward?[...st.text,{text:'獲得時光沙漏 +'+st.reward,cls:'sub'}]:st.text,btn:st.btn,onOk:st.id==='open'?()=>{doPatrol();returnReport(0);}:st.reward?()=>gainGlass(st.reward,st.title):null});}});
   if(S.story.includes('open'))checkCards();
   const now=Date.now();
   if(S.props>=2&&S.event==null){if(S.nextEvent==null)S.nextEvent=now+60*1000;else if(now>=S.nextEvent)spawnEvent();}
@@ -1132,20 +1139,23 @@ function resolveEvent(which){
 }
 
 /* ================= MANAGERS ================= */
-function tryRecruit(chance){
+function rollRecruit(chance){
   if(seasonOn('yearend'))chance=Math.min(1,chance*2);
-  if(Math.random()>=chance)return;
+  if(Math.random()>=chance)return null;
   let r=Math.random()*100,ri=0;for(let k=0;k<RARITY.length;k++){if(r<RARITY[k].w){ri=k;break;}r-=RARITY[k].w;}
   const pool=MGRS.filter(g=>!g.event&&g.r===ri&&mgrLv(g.id)<MGR_MAX);const all=MGRS.filter(g=>!g.event&&mgrLv(g.id)<MGR_MAX);
-  const g=(pool.length?pool:all)[Math.floor(Math.random()*(pool.length?pool:all).length)];if(!g)return;
-  const lv=mgrLv(g.id),isNew=!lv;
-  const target=g.t.startsWith('@')?TARGET_TEXT[g.t]:UNITS[unitIndex[g.t]].name+'產出';
-  const b=mgrBase(g);
+  const list=pool.length?pool:all;const g=list[Math.floor(Math.random()*list.length)];if(!g)return null;
+  return {g,lv:mgrLv(g.id)};
+}
+function recruitEffect(x){const g=x.g,b=mgrBase(g),target=g.t.startsWith('@')?TARGET_TEXT[g.t]:UNITS[unitIndex[g.t]].name+'產出';return target+' ×'+fmt(1+(b-1)*(x.lv+1));}
+function applyRecruit(x){const g=x.g,isNew=!x.lv;S.mgr[g.id]=x.lv+1;if(isNew)autoAssign(g);log((isNew?'錄用主管：':'主管升級：')+g.name+'（'+g.title+'）Lv'+(x.lv+1)+'。','story');}
+function tryRecruit(chance){
+  const x=rollRecruit(chance);if(!x)return;const g=x.g,isNew=!x.lv;
   queue({title:isNew?'人才來訪':'老朋友回來了',lines:[
     isNew?'一位應徵者站在事務所門口。':g.name+'又來了，說想多幫點忙。',
     {text:'【'+RARITY[g.r].name+'】'+g.name+' · '+g.title,cls:'gain'},g.d,
-    {text:(isNew?'錄用後：':'升到 Lv'+(lv+1)+'：')+target+' ×'+fmt(1+(b-1)*(lv+1))+(isNew?'':'（原本 ×'+fmt(1+(b-1)*lv)+'）')+'。需要派駐到物件才會生效，派到適合的物件效果更好。',cls:'sub'}],
-    btn:isNew?'錄用':'升級',onOk:()=>{S.mgr[g.id]=lv+1;if(isNew)autoAssign(g);log((isNew?'錄用主管：':'主管升級：')+g.name+'（'+g.title+'）Lv'+(lv+1)+'。','story');check();save();}});
+    {text:(isNew?'錄用後：':'升到 Lv'+(x.lv+1)+'：')+recruitEffect(x)+'。需要派駐到物件才會生效，派到適合的物件效果更好。',cls:'sub'}],
+    btn:isNew?'錄用':'升級',onOk:()=>{applyRecruit(x);check();save();}});
 }
 
 /* ================= SEASONS / RESIDENTS / CARDS ================= */
@@ -1156,11 +1166,12 @@ function claimSeason(k){const n=seasonNow();if(!n||S.sev.key!==n.key)return;cons
     S.seasonDone=(S.seasonDone||0)+1;log(n.s.name+'活動任務全部完成！限定主管'+g.name+'（'+g.title+'）'+(lv?'升到 Lv'+(lv+1):'加入事務所')+'。','story');
     queue({title:n.s.name+'活動完成',lines:['你完成了這次'+n.s.name+'的所有任務。',{text:'限定主管【'+RARITY[g.r].name+'】'+g.name+' · '+g.title+(lv?' 升到 Lv'+(lv+1):' 加入事務所'),cls:'gain'},g.d,{text:'每年同一個活動都能再完成一次，讓這位主管升級。',cls:'sub'}],btn:'太好了'});}
   check();renderAll();save();}
-function tryResident(why){
-  const pool=RESIDENTS.filter(x=>x[0]<Math.min(S.props,PROPS.length)&&!S.residents.includes(x[1]));if(!pool.length)return;
+function tryResident(why,quiet){
+  const pool=RESIDENTS.filter(x=>x[0]<Math.min(S.props,PROPS.length)&&!S.residents.includes(x[1]));if(!pool.length)return null;
   const x=pick(pool);S.residents.push(x[1]);const p=PROPS[x[0]];
-  log('新住戶搬進'+p.name+'：'+x[2]+'，'+x[3]+(why?'（'+why+'）':''),'story');toast('新住戶：'+x[2]+'（收入 +1%）');
+  log('新住戶搬進'+p.name+'：'+x[2]+'，'+x[3]+(why?'（'+why+'）':''),'story');if(!quiet)toast('新住戶：'+x[2]+'（收入 +1%）');
   if(RESIDENTS.filter(y=>y[0]===x[0]).every(y=>S.residents.includes(y[1]))){log(p.name+'全棟滿租！全體收入 ×1.1。','story');toast(p.name+'全棟滿租，收入 ×1.1');}
+  return x;
 }
 function unlockCards(ids){
   const fresh=ids.filter(id=>!S.cards.includes(id)&&CARDS.some(c=>c[0]===id));if(!fresh.length)return;
@@ -1170,7 +1181,7 @@ function unlockCards(ids){
   log('解鎖物業知識小卡：'+fresh.map(id=>CARDS.find(x=>x[0]===id)[1]).join('、')+'。');
 }
 function checkCards(){const ids=[];
-  for(let i=0;i<Math.min(S.props,PROPS.length);i++)ids.push('p'+i);
+  for(let i=0;i<Math.min(S.props,PROPS.length);i++)if(i>0||cnt('goblin')>=1||veteran())ids.push('p'+i);
   S.facs.forEach(f=>ids.push('f_'+f));
   if(S.complaints>=1)ids.push('c_comp');if(S.contractsDone>=1)ids.push('c_contract');if(S.councilSet>=1)ids.push('c_council');
   if(S.reno.some(l=>l>0))ids.push('c_reno');if(S.rebirths>=1)ids.push('c_rebirth');if(seasonOn('typhoon'))ids.push('c_typhoon');
@@ -1277,31 +1288,45 @@ function doRebirth(){
 }
 
 /* ================= OFFLINE & DAILY ================= */
-function handleReturn(gapSec){
-  if(gapSec<OFFLINE_MIN){earn(rate()*gapSec);return;}
-  const cap=offlineCapH()*3600,capped=Math.min(gapSec,cap);
-  const gain=baseRate()*capped*(policyOn('night')?1.5:1)*mgrMult('@offline')*(inCity(3)?2:1);
-  if(gain<=0)return;
-  const picks=[];while(picks.length<2){const p=pick(OFF_LINES);if(!picks.includes(p))picks.push(p);}
-  const lines=['你離開了 '+dur(gapSec)+'。',...picks,{text:'收入 +'+fmt(gain)+' 金幣',cls:'gain'}];
-  if(gapSec>cap)lines.push({text:'離線收益最多累積 '+offlineCapH()+' 小時，超過的時間不計。',cls:'sub'});
-  const doneN=S.contracts.active.filter(c=>c.end<=Date.now()).length;
-  if(doneN)lines.push({text:'有 '+doneN+' 件承攬合約已完工，到「業務」頁驗收。',cls:'sub'});
-  if(S.props>=2&&S.event==null)S.nextEvent=Date.now();
-  if(gapSec>=4*3600)lines.push({text:'夜班團隊留下了一個時光沙漏。',cls:'sub'});
-  const claim=(mult)=>{earn(gain*mult);S.offlineClaims++;if(mult>1)log('看廣告，離線收益加倍。');if(gapSec>=4*3600)gainGlass(1,'離線 4 小時以上');if(gapSec>=3600)tryResident('趁你不在時');log('領取離線收益 +'+fmt(gain*mult)+' 金幣（'+dur(capped)+'）。');if(gapSec>=3600)tryRecruit(0.3);check();save();};
-  queue({title:'你不在的時候……',lines,btn:'領取',onOk:()=>claim(1),alt:adsOn()?{text:'看廣告，收益 ×2',fn:async()=>{const ok=await Ads.rewarded('離線收益加倍');claim(ok?2:1);if(!ok)toast(Ads.last&&Ads.last!=='dismissed'?'目前沒有可播放的廣告，照常領取 1 倍收益':'沒有看完廣告，照常領取 1 倍收益');renderAll();}}:null});
-}
 function today(){const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
-function handleDaily(){
-  const t=today();if(S.daily.last===t)return;if(!S.story.includes('open'))return;
-  S.daily.last=t;S.daily.day=S.daily.day%7+1;const day=S.daily.day;
-  const mins=day<=3?10:day<=6?30:120;const gain=Math.max(baseRate()*mins*60,20*day)*(1+0.5*tal('daily'));
-  const lines=['事務所門口放著住戶們送來的東西。',{text:'+'+fmt(gain)+' 金幣（'+(mins>=60?mins/60+' 小時':mins+' 分鐘')+'份的收入）',cls:'gain'}];
-  if(day===7)lines.push({text:'第 7 天加碼：收入 ×2 持續 30 分鐘。',cls:'sub'});
-  lines.push({text:'時光沙漏 +'+(day===7?5:2)+'，今天也會有一位人才上門應徵。',cls:'sub'});
-  queue({title:'每日登入 · 第 '+day+' 天',lines,btn:'收下',extra:()=>{const w=document.createElement('div');w.className='week';for(let i=1;i<=7;i++){const x=document.createElement('i');if(i<=day)x.className='on';w.appendChild(x);}return w;},
-    onOk:()=>{earn(gain);if(day===7){S.buffs.push({mult:2,until:Date.now()+30*60*1000,label:'全勤獎勵'});S.daily.cycles++;}log('每日登入第 '+day+' 天，+'+fmt(gain)+' 金幣。');gainGlass((day===7?5:2)+(seasonOn('moon')?2:0)+brd('bonus')+(S.supporter?5:0),'每日登入');tryRecruit(1);check();save();}});
+function returnReport(gapSec){
+  const lines=[],recs=[];let offGain=0,capped=0,glass=0,daily=null;
+  if(gapSec>0&&gapSec<OFFLINE_MIN)earn(rate()*gapSec);
+  else if(gapSec>=OFFLINE_MIN){
+    const cap=offlineCapH()*3600;capped=Math.min(gapSec,cap);
+    offGain=baseRate()*capped*(policyOn('night')?1.5:1)*mgrMult('@offline')*(inCity(3)?2:1);
+    if(offGain>0){
+      lines.push('你離開了 '+dur(gapSec)+'。'+pick(OFF_LINES));
+      lines.push({text:'離線收益 +'+fmt(offGain)+' 金幣'+(gapSec>cap?'（已達 '+offlineCapH()+' 小時上限）':''),cls:'gain'});
+      if(gapSec>=4*3600)glass+=1;
+    }
+    if(S.props>=2&&S.event==null)S.nextEvent=Date.now();
+    if(gapSec>=3600){const x=tryResident('趁你不在時',true);if(x)lines.push({text:'新住戶搬進'+PROPS[x[0]].name+'：'+x[2]+'（收入 +1%）',cls:'sub'});const rc=rollRecruit(0.3);if(rc)recs.push(rc);}
+    const doneN=S.contracts.active.filter(c=>c.end<=Date.now()).length;
+    if(doneN&&!autoOn('a_collect'))lines.push({text:'有 '+doneN+' 件承攬合約已完工，記得到「業務」驗收。',cls:'sub'});
+  }
+  const t=today();
+  if(S.story.includes('open')&&S.daily.last!==t){
+    S.daily.last=t;S.daily.day=S.daily.day%7+1;const day=S.daily.day;
+    const mins=day<=3?10:day<=6?30:120;
+    daily={day,mins,gain:Math.max(baseRate()*mins*60,20*day)*(1+0.5*tal('daily'))};
+    glass+=(day===7?5:2)+(seasonOn('moon')?2:0)+brd('bonus')+(S.supporter?5:0);
+    lines.push({text:'每日登入第 '+day+' 天：+'+fmt(daily.gain)+' 金幣'+(day===7?'，收入 ×2 持續 30 分鐘':''),cls:'gain'});
+    const rc=rollRecruit(1);if(rc)recs.push(rc);
+  }
+  if(glass)lines.push({text:'時光沙漏 +'+glass,cls:'gain'});
+  recs.forEach(x=>lines.push({text:(x.lv?'老朋友回來了：':'人才來訪：')+'【'+RARITY[x.g.r].name+'】'+x.g.name+' · '+x.g.title+(x.lv?' 升到 Lv'+(x.lv+1):'')+'（'+recruitEffect(x)+'）',cls:'sub'}));
+  if(!offGain&&!daily&&!recs.length)return;
+  const apply=mult=>{
+    if(offGain){earn(offGain*mult);S.offlineClaims++;log('領取離線收益 +'+fmt(offGain*mult)+' 金幣（'+dur(capped)+(mult>1?'，看廣告加倍':'')+'）。');}
+    if(daily){earn(daily.gain);if(daily.day===7){S.buffs.push({mult:2,until:Date.now()+30*60*1000,label:'全勤獎勵'});S.daily.cycles++;}log('每日登入第 '+daily.day+' 天，+'+fmt(daily.gain)+' 金幣。');}
+    if(glass)gainGlass(glass,'回訪獎勵');
+    recs.forEach(applyRecruit);
+    check();save();renderAll();
+  };
+  queue({title:offGain?'歡迎回來':'每日登入',lines,btn:'全部領取',onOk:()=>apply(1),
+    extra:daily?()=>{const w=document.createElement('div');w.className='week';for(let i=1;i<=7;i++){const x=document.createElement('i');if(i<=daily.day)x.className='on';w.appendChild(x);}return w;}:null,
+    alt:offGain&&adsOn()?{text:'看廣告，離線收益 ×2',fn:async()=>{const ok=await Ads.rewarded('離線收益加倍');apply(ok?2:1);if(!ok)toast(Ads.last&&Ads.last!=='dismissed'?'目前沒有可播放的廣告，照常領取 1 倍':'沒有看完廣告，照常領取 1 倍');}}:null});
 }
 
 /* ================= RENDER ================= */
@@ -1357,7 +1382,41 @@ function renderCustom(){
     '<div class="cf">招牌顏色<div class="sws">'+acc+'</div></div>'+
     '<div class="sec-title" style="margin-top:6px"><h2 style="font-size:16px">物件暱稱</h2><span>只顯示已接管的物件，重組後保留</span></div>'+props);
 }
+/* ================= ONBOARDING: next goal + progressive tabs ================= */
+const veteran=()=>S.rebirths>0||S.ipos>0||(S.maxRebirths||0)>0;
+const TAB_RULES={run:()=>true,biz:()=>veteran()||S.props>=2,corp:()=>veteran()||S.props>=4,mgr:()=>veteran()||S.props>=2,ach:()=>veteran()||S.ach.length>=1,log:()=>veteran()||S.props>=2,save:()=>true};
+const TAB_NAMES={biz:'業務',corp:'集團',mgr:'收藏',ach:'成就',log:'日誌'};
+const curTab=()=>{const t=document.querySelector('.tab[aria-selected="true"]');return t?t.dataset.tab:'run';};
+function renderTabs(){
+  if(!Array.isArray(S.tabsSeen))S.tabsSeen=[];
+  const fresh=[];Object.keys(TAB_RULES).forEach(k=>{const ok=TAB_RULES[k]();$('tab-'+k).hidden=!ok;
+    if(ok&&TAB_NAMES[k]&&!S.tabsSeen.includes(k)){S.tabsSeen.push(k);if(S.story.includes('open')&&!veteran())fresh.push(TAB_NAMES[k]);}});
+  if(fresh.length){toast('新分頁開放：'+fresh.join('、'));log('新分頁開放：「'+fresh.join('」「')+'」。');}
+  if(!TAB_RULES[curTab()]())$('tab-run').click();
+  $('amtBar').hidden=curTab()!=='run'||!(veteran()||totalStaff()>=10);
+  $('glassWrap').hidden=!TAB_RULES.biz();
+  $('team').hidden=!(veteran()||S.seen.length>=3);
+  $('eventBox').hidden=!(veteran()||S.props>=2);
+}
+function nextGoal(){
+  if(!S.story.includes('open'))return null;
+  const now=Date.now();
+  if(S.event!=null)return {text:'有一張客訴單在等你處理'};
+  if(S.contracts.active.some(c=>c.end<=now)&&!autoOn('a_collect'))return {text:'有承攬合約完工了，到「業務」驗收',tab:'biz'};
+  const sn=seasonNow();if(sn&&S.sev.key===sn.key&&SEASON_TASKS.some(t=>!S.sev.got.includes(t.k)&&(S.sev.c[t.k]||0)>=t.need))return {text:sn.s.name+'活動任務完成了，領取沙漏',tab:'run'};
+  if(!cnt('goblin'))return S.coins<10?{text:'按「巡視公寓」存到 10 金幣，雇用第一位哥布林清潔工',pct:S.coins/10}:{text:'雇用第一位哥布林清潔工',tab:'run'};
+  if(ipoReady())return {text:'可以集團上市了：到「集團」敲鐘',tab:'corp'};
+  if(!veteran()&&S.run>=REBIRTH_MIN&&fameGain()>=3)return {text:'可以發動集團重組了：帶著 '+fameGain()+' 點聲望前往下一座城市',tab:'corp'};
+  if(S.props>=3&&!S.contracts.active.length&&!autoOn('a_collect'))return {text:'接一件承攬合約，離線時也會施工',tab:'biz'};
+  const need=needOf(S.props),lv=S.teamLv||0,nx=TEAM_STEPS[lv],mn=teamMin();
+  if(nx&&S.seen.length>=3&&mn/nx>=0.7&&mn<nx){const low=BASE_UNITS.filter(u=>S.seen.includes(u[0])).sort((x,y)=>cnt(x[0])-cnt(y[0]))[0];return {text:'團隊升級還差：'+low[1]+' 再 '+(nx-mn)+' 名（全體收入 ×2）',pct:mn/nx,tab:'run'};}
+  return {text:'再 '+fmt(Math.max(0,need-S.run))+' 金幣接管「'+propAt(S.props).name+'」',pct:S.run/need};
+}
+function renderGoal(){const g=nextGoal(),el=$('goal');if(!g){el.hidden=true;return;}el.hidden=false;
+  setHTML(el,'<span class="gl">下一步</span><span class="gt">'+esc(g.text)+'</span>'+(g.pct!=null?'<span class="bar"><i style="width:'+Math.min(100,Math.max(0,g.pct*100)).toFixed(1)+'%"></i></span>':''));
+  el.dataset.tab=g.tab||'';}
 function renderTop(){
+  renderGoal();
   $('coins').textContent=fmt(S.coins);$('rate').textContent=fmt(rate());$('glassTop').textContent=S.glass;
   $('patrolGain').textContent='+'+fmt(patrolGain());
   $('where').textContent=cityName()+' · 管理 '+S.props+' 個物件'+(inCity(7)&&isNight()?' · 夜之城加成中':'');
@@ -1506,7 +1565,7 @@ function renderSeason(){
       return '<div class="stask"><div><span>'+t.name+'</span><div class="bar"><i style="width:'+(c/t.need*100).toFixed(0)+'%"></i></div></div><button class="mini" type="button" data-act="season" data-v="'+t.k+'" '+(got||!ok?'disabled':'')+'>'+(got?'已領取':ok?'領 '+t.glass+' 沙漏':c+'/'+t.need)+'</button></div>';}).join('')+
     '<span class="sub">三項都完成：限定主管「'+g.name+'」（'+g.title+'）加入或升級。</span>');
 }
-function renderAll(){renderCustom();renderSeason();renderDebug();renderAmt();renderTop();renderProps();renderBiz();renderCorp();renderMgr();renderAch();renderLog();renderSlip();}
+function renderAll(){renderTabs();renderCustom();renderSeason();renderDebug();renderAmt();renderTop();renderProps();renderBiz();renderCorp();renderMgr();renderAch();renderLog();renderSlip();}
 
 /* ================= SAVE ================= */
 function save(){S.lastSeen=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}cloudSave(false);}
@@ -1552,17 +1611,17 @@ function runAutomation(){
 function toggleAuto(id){if(tal(id)<1)return;S.autoOff[id]=!S.autoOff[id];log('自動化「'+talDef(id).name+'」'+(S.autoOff[id]?'已關閉':'已開啟')+'。');renderAll();save();}
 function tick(){
   const now=Date.now();const gap=(now-S.lastSeen)/1000;S.lastSeen=now;
-  if(gap>=OFFLINE_MIN){handleReturn(gap);handleDaily();}else if(gap>0)earn(rate()*gap*(S.dbgSpeed?10:1));
+  if(gap>=OFFLINE_MIN){returnReport(gap);}else if(gap>0)earn(rate()*gap*(S.dbgSpeed?10:1));
   check();tickN++;if(gap<OFFLINE_MIN)runAutomation();
   if(S.story.includes('open')){if(!S.nextRes)S.nextRes=now+3*60*1000;else if(now>=S.nextRes){tryResident('');S.nextRes=now+(6+Math.random()*6)*60*1000;}}
-  if(tickN%5===0)renderSeason();renderTop();
+  if(tickN%5===0){renderSeason();renderTabs();}renderTop();
   const vis=k=>!$('page-'+k).hidden;
   if(vis('run')||tickN%3===0)renderProps();
   if(vis('biz')||tickN%3===0)renderBiz();
   if(vis('corp')||tickN%3===0)renderCorp();
   renderSlip();
 }
-function wake(){const gap=(Date.now()-S.lastSeen)/1000;S.lastSeen=Date.now();handleReturn(gap);handleDaily();check();renderAll();}
+function wake(){const gap=(Date.now()-S.lastSeen)/1000;S.lastSeen=Date.now();returnReport(gap);check();renderAll();}
 
 /* ================= WIRING ================= */
 function debugAct(v){
@@ -1579,7 +1638,7 @@ function debugAct(v){
   else if(v==='speed'){S.dbgSpeed=!S.dbgSpeed;toast(S.dbgSpeed?'收入加速 ×10 開啟':'收入加速關閉');}
   else if(v==='off'){log('［測試］模擬離線 8 小時。');S.lastSeen=Date.now()-8*3600*1000;wake();return;}
   else if(v==='ev'){if(S.props<2){toast('要先接管第 2 個物件，客訴才會出現');return;}if(S.event!=null){toast('已經有一張客訴單在等你');return;}spawnEvent();}
-  else if(v==='day'){if(!S.story.includes('open')){toast('請先看完開場');return;}S.daily.last='測試';handleDaily();}
+  else if(v==='day'){if(!S.story.includes('open')){toast('請先看完開場');return;}S.daily.last='測試';returnReport(0);}
   check();renderAll();
 }
 function wire(){
@@ -1600,7 +1659,8 @@ function wire(){
   document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
     document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected',x===t?'true':'false'));
     ['run','biz','corp','mgr','ach','log','save'].forEach(k=>$('page-'+k).hidden=(k!==t.dataset.tab));
-    $('amtBar').hidden=t.dataset.tab!=='run';renderAll();window.scrollTo(0,0);});
+    renderAll();window.scrollTo(0,0);});
+  $('goal').onclick=()=>{const k=$('goal').dataset.tab;if(k&&TAB_RULES[k]&&TAB_RULES[k]())$('tab-'+k).click();};
   $('exportBtn').onclick=()=>{save();const code=encode(S);const ta=$('code');ta.value=code;
     try{navigator.clipboard.writeText(code).then(()=>{$('saveNote').textContent='存檔碼已複製，到另一台裝置的「存檔」頁貼上後按匯入。';},()=>{ta.select();$('saveNote').textContent='已產生存檔碼並選取，請手動複製。';});}catch(e){ta.select();$('saveNote').textContent='已產生存檔碼並選取，請手動複製。';}};
   $('importBtn').onclick=()=>{try{const o=decode($('code').value);S=merge(o);S.lastSeen=Date.now();staffBuilt='';save();cloudSave(true);renderAll();$('saveNote').textContent='已匯入存檔。';log('從存檔碼匯入進度。');}catch(e){$('saveNote').textContent='這串存檔碼無法讀取。請確認是以 GK1- 開頭的完整字串。';}};
@@ -1614,8 +1674,7 @@ function boot(){
   applyAccent();
   if(!S.assignInit){MGRS.filter(g=>mgrLv(g.id)).forEach(autoAssign);S.assignInit=true;}
   const gap=(Date.now()-S.lastSeen)/1000;S.lastSeen=Date.now();
-  if(S.story.length&&gap>0)handleReturn(gap);
-  handleDaily();check();renderAll();
+  returnReport(S.story.length?gap:0);check();renderAll();
 }
 function start(data){
   S=(data&&data.state)?merge(data.state):(load()||fresh());
