@@ -455,7 +455,7 @@ a.lab:hover{text-decoration:underline}
 'use strict';
 const KEY='fantasy-pm-save-v1';
 const OFFLINE_MIN=60;
-const VERSION='v0.5.2';
+const VERSION='v0.6.0';
 
 /* ================= DATA ================= */
 const CITIES=[
@@ -621,7 +621,7 @@ function stNote(gap){const t=S.stats;const d=today();if(!t.start)t.start=Date.no
   if(!t.sessions||gap>=300)t.sessions++;
   if(!t.days.includes(d)){t.days.push(d);if(t.days.length>400)t.days.shift();}}
 function stFirst(k){const t=S.stats;if(t.firsts[k])return;if(!t.start)t.start=Date.now();t.firsts[k]=[+((Date.now()-t.start)/864e5).toFixed(2),Math.round(t.playSec/60),t.sessions];}
-const FIRST_NAMES={g1:'雇用第一位員工',p2:'第 2 個物件',p3:'第 3 個物件',p4:'第 4 個物件',p5:'第 5 個物件',p6:'第 6 個物件',p7:'第 7 個物件',p8:'第 8 個物件',ev1:'第一張客訴',ct1:'第一件合約完工',rb1:'第 1 次重組',rb2:'第 2 次重組',rb3:'第 3 次重組',rb5:'第 5 次重組',ipo1:'第 1 次上市',case0:'叔叔主線第一章',case10:'叔叔主線完結',ash0:'第三部開始',ash10:'第三部完結'};
+const FIRST_NAMES={g1:'雇用第一位員工',p2:'第 2 個物件',p3:'第 3 個物件',p4:'第 4 個物件',p5:'第 5 個物件',p6:'第 6 個物件',p7:'第 7 個物件',p8:'第 8 個物件',ev1:'第一張客訴',ct1:'第一件合約完工',rb1:'第 1 次重組',rb2:'第 2 次重組',rb3:'第 3 次重組',rb5:'第 5 次重組',ipo1:'第 1 次上市',case0:'叔叔主線第一章',case10:'叔叔主線完結',ash0:'第三部開始',ash10:'第三部完結',edge0:'第四部開始',edge8:'第四部完結',ipo3:'第 3 次上市',ipo5:'第 5 次上市'};
 function playSummary(){const t=S.stats;const days=t.start?Math.max(1,Math.ceil((Date.now()-t.start)/864e5)):1;
   return {days,active:t.days.length,sessions:t.sessions,hours:t.playSec/3600,lines:Object.keys(FIRST_NAMES).filter(k=>t.firsts[k]).map(k=>{const f=t.firsts[k];return FIRST_NAMES[k]+'：第 '+(Math.floor(f[0])+1)+' 天，線上 '+f[1]+' 分鐘，第 '+f[2]+' 次登入';})};}
 function playText(){const p=playSummary();return ['奇幻物業管家 試玩紀錄','版本：'+VERSION,'開始後第 '+p.days+' 天，其中有玩的天數 '+p.active+' 天','登入 '+p.sessions+' 次，線上 '+(p.hours<1?Math.round(p.hours*60)+' 分鐘':p.hours.toFixed(1)+' 小時'),'目前：'+cityName()+'，管理 '+S.props+' 個物件，重組 '+S.rebirths+' 次，上市 '+S.ipos+' 次','成就 '+S.ach.length+'，住戶 '+S.residents.length+'，劇情 '+S.story.length+' 段','— 第一次達成 —',...(p.lines.length?p.lines:['（還沒有）'])].join('\n');}
@@ -932,7 +932,48 @@ const CASE2=[
   file:'第三部完：公共基金全數歸還，叔叔退休開辦管家學校。'}
 ];
 CASE2.forEach(c=>STORY.push({id:c.id,when:c.when,title:c.title,text:c.text,reward:2,btn:c.id==='ash10'?'翻到下一頁':'收進卷宗'}));
-const caseFound=()=>CASE.filter(c=>S.story.includes(c.id)).length+CASE2.filter(c=>S.story.includes(c.id)).length;
+/* ================= MAIN STORY PART 4: 地圖的邊緣（第 2 次上市以後） ================= */
+const edgeAt=(prev,ipo,c,n)=>s=>s.ipos>=ipo&&s.story.includes(prev)&&cityIdx()===c&&s.props>=n;
+const CASE3=[
+ {id:'edge0',title:'第四部 · 沒有名字的房子',hint:'第三部完結後，在任一城市接管 5 個物件',
+  when:s=>s.story.includes('ash10')&&s.props>=5,
+  text:['叔叔的管家學校開學了。第一堂課，他把一張泛黃的地圖攤在講桌上。','九座城市之外，地圖邊緣密密麻麻畫著小房子，旁邊只寫了兩個字：「無人」。','「沒有管委會、沒有管理公司，也沒有人記得它們的名字，」叔叔說，「房子還在，住戶也還在。」','學生們看向你。你知道下一份工作在哪裡了。'],
+  file:'地圖邊緣有許多「無人管理」的老房子，住戶還住在裡面。'},
+ {id:'edge1',title:'霧港 · 老街的第一次會議',hint:'第 2 次上市後，在霧港接管 4 個物件',
+  when:edgeAt('edge0',2,1,4),
+  text:['霧港老街有一排五層樓的老公寓，四十年來沒有開過一次住戶會議。','樓梯燈壞了沒人修，因為「不知道該找誰」。','你挨家挨戶敲門，請大家到一樓的雜貨店集合。來了十二戶，剛好過半。','那天晚上，他們選出了第一位主任委員，是雜貨店的老闆娘。她說：「我只會記帳，但我會記得很清楚。」'],
+  file:'霧港老街的老公寓第一次成立管理組織。'},
+ {id:'edge2',title:'赤岩鎮 · 會搖的宿舍',hint:'第 2 次上市後，在赤岩鎮接管 4 個物件',
+  when:edgeAt('edge1',2,2,4),
+  text:['礦坑爆破時，邊境那排舊宿舍搖得比別棟都厲害。','你請來矮人結構技師做初步的耐震評估。他敲了敲柱子，臉色不太好看。','「還站得住，但不能再等了。」','你沒有嚇唬住戶，只把評估結果一頁一頁講清楚：哪裡要補強、要花多少、可以申請哪些補助。'],
+  file:'赤岩鎮邊境宿舍完成耐震初評，住戶開始討論補強。'},
+ {id:'edge3',title:'星泉城 · 誰的屋頂',hint:'第 3 次上市後，在星泉城接管 4 個物件',
+  when:edgeAt('edge2',3,3,4),
+  text:['星泉城邊境的老公寓，頂樓被一位占星師圍起來，蓋成了私人觀星室。','「我住頂樓，屋頂當然是我的。」他理直氣壯。','你帶著住戶一起上樓。屋頂平台是全體住戶共用的，也是火災時往上逃生的地方。','最後，占星師同意拆掉圍牆。作為交換，管委會決定每個月在屋頂辦一次全社區的觀星夜，由他主講。'],
+  file:'星泉城老公寓的屋頂平台恢復為共用空間，改辦社區觀星夜。'},
+ {id:'edge4',title:'翡翠灣 · 存不夠的修繕費',hint:'第 3 次上市後，在翡翠灣接管 4 個物件',
+  when:edgeAt('edge3',3,4,4),
+  text:['翡翠灣邊境的珊瑚公寓，外牆每年都在剝落，但公共基金只夠修一面牆。','住戶們吵成兩派：一派要大家一次分攤補齊，一派說「等壞了再說」。','你拿出一張表：未來二十年，屋頂、外牆、水管、電梯各要在哪一年修、要花多少，平均每月每戶要存多少。','看到那個數字，比吵架小得多。長期修繕計畫，全票通過。'],
+  file:'翡翠灣珊瑚公寓訂出二十年長期修繕計畫。'},
+ {id:'edge5',title:'白霜堡 · 三樓的燈',hint:'第 4 次上市後，在白霜堡接管 5 個物件',
+  when:edgeAt('edge4',4,6,5),
+  text:['雪妖保全回報：邊境公寓三樓的燈，已經三天沒有亮了。','你們敲門沒人應，請鎖匠開門，屋裡的老矮人倒在暖爐旁，還有呼吸。','他住了五十年，兒女都在別的城市。','從那天起，你在白霜堡的每一棟樓都排了關懷巡視：獨居的住戶，每天至少有一個人敲他的門。'],
+  file:'白霜堡建立獨居住戶的每日關懷巡視。'},
+ {id:'edge6',title:'月影市 · 空了十年的房間',hint:'第 4 次上市後，在月影市接管 5 個物件',
+  when:edgeAt('edge5',4,7,5),
+  text:['月影市邊境有上百間空屋，房東搬走了，房子一間一間在黑暗裡變舊。','同一時間，夜班工作的年輕住戶，在城裡找不到租得起的房間。','你向房東們提出一個辦法：由金鑰負責修繕、找房客、收租和日常管理，房東每個月安心收租。','第一批二十間空屋重新亮燈。搬進來的，是夜班護理師、麵包師和清潔工。'],
+  file:'月影市空屋以包租代管方式重新出租給在地工作者。'},
+ {id:'edge7',title:'金麥平原 · 最後一個簽名',hint:'第 5 次上市後，在金麥平原接管 5 個物件',
+  when:edgeAt('edge6',5,8,5),
+  text:['金麥平原邊境的老糧倉公寓，已經老到補強也來不及了，唯一的辦法是重建。','重建需要全體所有權人同意。二十九戶都簽了，只差頂樓的老稻草人。','「我在這裡看了六十年的麥田，」他說，「新房子還看得到嗎？」','你請建築師把新大樓的頂樓設計成公共的觀景台。老稻草人在同意書上，用麥稈簽下了名字。'],
+  file:'金麥平原老糧倉公寓取得全體同意，啟動重建。'},
+ {id:'edge8',title:'第四部完 · 地圖上的新名字',hint:'第 5 次上市後，把事務所開到王都並接管 5 個物件',
+  when:s=>s.ipos>=5&&s.story.includes('edge7')&&cityIdx()===9&&s.props>=5,
+  text:['公會年度大會上，你把那張泛黃的地圖還給叔叔。','地圖邊緣的「無人」兩個字，已經一個一個被劃掉，旁邊寫上了社區的名字。','叔叔的學生們接手了邊境的十幾個社區，有的在當主委，有的在修屋頂。','叔叔把地圖翻到背面，上面還有一片更大的空白。「這次，」他說，「換你來畫了。」'],
+  file:'第四部完：邊境的無人房子都有了名字和管理者。'}
+];
+CASE3.forEach(c=>STORY.push({id:c.id,when:c.when,title:c.title,text:c.text,reward:3,btn:c.id==='edge8'?'畫下一張地圖':'收進卷宗'}));
+const caseFound=()=>[...CASE,...CASE2,...CASE3].filter(c=>S.story.includes(c.id)).length;
 const caseMult=()=>1+0.03*caseFound();
 /* ================= CITY-LIMITED STORIES & COMPLAINTS ================= */
 EVENTS.push(
@@ -1031,6 +1072,7 @@ const ACH=[
  ['city10','走遍十城','解鎖全部 10 座城市的在地故事',s=>cityStories()>=10],
  ['case5','追查進行中','大案子卷宗收集 5 份線索',s=>CASE.filter(c=>s.story.includes(c.id)).length>=5],
  ['ash10','透明的帳本','完成第三部「灰燼之後」',s=>s.story.includes('ash10')],
+ ['edge8','畫地圖的人','完成第四部「地圖的邊緣」',s=>s.story.includes('edge8')],
  ['case','真相大白','破解叔叔的大案子',s=>s.story.includes('case10')],
  ['patron','金鑰贊助人','購買支持者禮包',s=>!!s.supporter],
  ['brand1','我的事務所','替事務所取一個名字',s=>!!s.custom.office],
@@ -1126,7 +1168,7 @@ const rank=c=>RANKS[Math.min(msLevel(c),RANKS.length-1)];
 const propMult=()=>Math.pow(1.3,S.props-1);
 const renoMult=()=>Math.pow(1.05,sum(S.reno));
 const facMult=()=>FACS.filter(f=>S.facs.includes(f.id)).reduce((m,f)=>m*f.mult,1);
-const fameMult=()=>1+FAME_PASSIVE*S.fameTotal;
+const fameMult=()=>S.fameTotal<=100?1+FAME_PASSIVE*S.fameTotal:3*Math.sqrt(S.fameTotal/100);
 const achMult=()=>1+0.02*S.ach.length;
 const dexMult=()=>1+0.01*S.seenEv.length;
 const cityMult=()=>(inCity(9)?2:1)*(inCity(7)&&isNight()?2:1);
@@ -1191,7 +1233,7 @@ function check(){
   if(S.story.includes('open'))checkCards();
   if(cnt('goblin'))stFirst('g1');if(S.props>=2&&S.props<=8)for(let i=2;i<=S.props;i++)stFirst('p'+i);
   if(S.complaints)stFirst('ev1');if(S.contractsDone)stFirst('ct1');if(S.ipos)stFirst('ipo1');[1,2,3,5].forEach(n=>{if(S.maxRebirths>=n||S.rebirths>=n)stFirst('rb'+n);});
-  if(S.story.includes('case0'))stFirst('case0');if(S.story.includes('case10'))stFirst('case10');if(S.story.includes('ash0'))stFirst('ash0');if(S.story.includes('ash10'))stFirst('ash10');
+  if(S.story.includes('case0'))stFirst('case0');if(S.story.includes('case10'))stFirst('case10');if(S.story.includes('ash0'))stFirst('ash0');if(S.story.includes('ash10'))stFirst('ash10');if(S.story.includes('edge0'))stFirst('edge0');if(S.story.includes('edge8'))stFirst('edge8');if(S.ipos>=3)stFirst('ipo3');if(S.ipos>=5)stFirst('ipo5');
   const now=Date.now();
   if(S.props>=2&&S.event==null){if(S.nextEvent==null)S.nextEvent=now+60*1000;else if(now>=S.nextEvent)spawnEvent();}
   S.buffs=S.buffs.filter(b=>b.until>now);
@@ -1308,9 +1350,9 @@ function buyTalent(id){const t=talDef(id);if(!t)return;const lv=tal(id);if(lv>=t
 
 /* ================= REBIRTH ================= */
 /* ================= IPO: second prestige layer ================= */
-const IPO_MIN_FAME=250;
+const IPO_MIN_FAME=250, IPO_GROW=3;
 const BOARD=[
- {id:'aura',name:'上市光環',max:10,cost:l=>l+1,d:l=>'全體收入 ×'+Math.pow(2,l)},
+ {id:'aura',name:'上市光環',max:10,cost:l=>2*(l+1),d:l=>'全體收入 ×'+fmt(Math.pow(1.3,l))},
  {id:'brand',name:'品牌授權',max:10,cost:l=>l+1,d:l=>'重組獲得的聲望 +'+(25*l)+'%'},
  {id:'head',name:'資深董事',max:3,cost:l=>2*(l+1),d:l=>'每次開業直接接管前 '+(l+1)+' 個物件'},
  {id:'bonus',name:'股東紅利',max:3,cost:l=>l+2,d:l=>'每日登入多 '+l+' 個沙漏'},
@@ -1318,9 +1360,10 @@ const BOARD=[
  {id:'pick',name:'城市直營',max:1,cost:()=>3,d:()=>'重組時可以選擇下一座城市（限已到過的城市）'}
 ];
 const brd=id=>(S&&S.board&&S.board[id])||0;
-const shareMult=()=>(1+0.05*S.sharesTotal)*Math.pow(2,brd('aura'));
+const shareMult=()=>(1+0.05*S.sharesTotal)*Math.pow(1.3,brd('aura'));
 const sharesFor=ft=>Math.floor(Math.sqrt(ft/10));
-const ipoReady=()=>S.rebirths>=CITIES.length-1&&S.fameTotal>=IPO_MIN_FAME;
+const ipoNeed=()=>Math.round(IPO_MIN_FAME*Math.pow(IPO_GROW,S.ipos||0));
+const ipoReady=()=>S.rebirths>=CITIES.length-1&&S.fameTotal>=ipoNeed();
 const fameGain=()=>Math.floor(fameFor(S.run)*(1+0.25*brd('brand')));
 const startProps=()=>Math.max(hasPerk(10)?2:1,brd('head')?brd('head')+1:1);
 function buyBoard(id){const b=BOARD.find(x=>x.id===id);if(!b)return;const lv=brd(id);if(lv>=b.max)return;const c=b.cost(lv);if(S.shares<c)return;
@@ -1335,6 +1378,7 @@ function doIPO(){
   const lines=first?['王都證券交易所的大廳擠滿了人。叔叔把敲鐘的木槌交給你。','「當年那間快倒閉的事務所，今天要上市了。」','鐘聲響起，金鑰物業集團正式掛牌。你帶著新的資本，回到一切開始的銀橡城。']
     :['金鑰物業集團再次增資上市，股東們的掌聲比上次更響。','你回到銀橡城，準備打下更大的版圖。'];
   lines.push({text:'獲得股份 +'+g+'（可用 '+S.shares+' 股，累計 '+S.sharesTotal+' 股，全體收入 ×'+fmt(shareMult())+'）',cls:'gain'});
+  lines.push({text:'下一次上市需要累計聲望 '+fmt(ipoNeed())+' 點（每上市一次，門檻 ×'+IPO_GROW+'）。',cls:'sub'});
   lines.push({text:'聲望、天賦、重組次數已歸零；自動化規則、主管、住戶、知識小卡、在地員工都保留。到「集團」頁用股份通過董事會決議。',cls:'sub'});
   log('集團上市（第 '+S.ipos+' 次），股份 +'+g+'。','story');
   queue({title:first?'敲鐘上市':'第 '+S.ipos+' 次上市',lines,btn:'回到銀橡城'});
@@ -1582,7 +1626,7 @@ function renderCorp(){
     setHTML($('rbPick'),'<label class="sub">下一座城市（城市直營）<select data-pick="1" id="cityPick">'+o+'</select></label>');}else setHTML($('rbPick'),'');
   const sg=sharesFor(S.fameTotal),ready=ipoReady();
   $('shares').textContent=S.shares;$('shareBonus').textContent='累計 '+S.sharesTotal+' 股 · 全體收入 ×'+fmt(shareMult());$('ipos').textContent=S.ipos;
-  $('ipoGain').textContent=ready?'現在上市可得 '+sg+' 股':'條件：把事務所開到王都（目前第 '+(S.rebirths+1)+' 座城市），且累計聲望達 '+IPO_MIN_FAME+' 點（目前 '+fmt(S.fameTotal)+'）';
+  $('ipoGain').textContent=ready?'現在上市可得 '+sg+' 股':'條件：把事務所開到王都（目前第 '+(S.rebirths+1)+' 座城市），且累計聲望達 '+fmt(ipoNeed())+' 點（目前 '+fmt(S.fameTotal)+'）';
   $('ipoNext').textContent=ready?'累計聲望達 '+fmt(Math.pow(sg+1,2)*10)+' 點，可再多 1 股。':'上市後聲望、天賦、重組次數會歸零，換成永久保留的股份。';
   $('ipoBtn').disabled=!ready||sg<=0;
   setHTML($('board'),BOARD.map(b=>{const lv=brd(b.id),max=lv>=b.max,c=b.cost(lv);
@@ -1597,9 +1641,9 @@ function renderCorp(){
   setHTML($('perks'),PERKS.map(([n,name,d])=>{const on=hasPerk(n);return '<div class="perk'+(on?' on':'')+'"><span class="need">'+(on?'已解鎖':'重組 '+n+' 次')+'</span><div><b>'+name+'</b><span class="d">'+d+'</span></div></div>';}).join(''));
 }
 function renderCase(){
-  const n=caseFound(),part3=S.story.includes('case10'),total=CASE.length+(part3?CASE2.length:0);$('caseSum').textContent='已收集 '+n+' / '+total+' · 收入 +'+(n*3)+'%';
+  const n=caseFound(),part3=S.story.includes('case10'),part4=S.story.includes('ash10'),total=CASE.length+(part3?CASE2.length:0)+(part4?CASE3.length:0);$('caseSum').textContent='已收集 '+n+' / '+total+' · 收入 +'+(n*3)+'%';
   const li=c=>S.story.includes(c.id)?'<li><b>'+c.title+'</b><span>'+c.file+'</span></li>':'<li class="off"><b>？？？</b><span>'+c.hint+'</span></li>';
-  setHTML($('case'),CASE.map(li).join('')+(part3?'<li><b style="color:var(--warn)">第三部 · 灰燼之後</b><span>上市之後，回到每一座城市，把被拿走的東西還回去。</span></li>'+CASE2.map(li).join(''):''));
+  setHTML($('case'),CASE.map(li).join('')+(part3?'<li><b style="color:var(--warn)">第三部 · 灰燼之後</b><span>上市之後，回到每一座城市，把被拿走的東西還回去。</span></li>'+CASE2.map(li).join(''):'')+(part4?'<li><b style="color:var(--warn)">第四部 · 地圖的邊緣</b><span>沒有管委會、沒有管理公司的老房子，也需要有人照顧。</span></li>'+CASE3.map(li).join(''):''));
 }
 function renderMgr(){
   renderCase();
