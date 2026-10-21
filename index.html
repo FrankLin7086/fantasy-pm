@@ -377,7 +377,7 @@ a.lab:hover{text-decoration:underline}
   <section class="page" id="page-mgr" hidden>
     <div>
       <div class="sec-title"><h2>大案子卷宗</h2><span id="caseSum"></span></div>
-      <p class="explain" style="margin-bottom:10px">叔叔在王都追查的大案子。每抵達一座新城市並接管 3 個物件，就會找到一份線索；每份線索收入 +3%。</p>
+      <p class="explain" style="margin-bottom:10px">叔叔在王都追查的大案子。每抵達一座新城市並接管 3 個物件，就會找到一份線索；每份線索收入 +3%。結案並上市後，第三部「灰燼之後」會在第二輪的城市展開。</p>
       <ul class="dex cardl" id="case"></ul>
     </div>
     <div>
@@ -455,7 +455,7 @@ a.lab:hover{text-decoration:underline}
 'use strict';
 const KEY='fantasy-pm-save-v1';
 const OFFLINE_MIN=60;
-const VERSION='v0.5.1';
+const VERSION='v0.5.2';
 
 /* ================= DATA ================= */
 const CITIES=[
@@ -621,7 +621,7 @@ function stNote(gap){const t=S.stats;const d=today();if(!t.start)t.start=Date.no
   if(!t.sessions||gap>=300)t.sessions++;
   if(!t.days.includes(d)){t.days.push(d);if(t.days.length>400)t.days.shift();}}
 function stFirst(k){const t=S.stats;if(t.firsts[k])return;if(!t.start)t.start=Date.now();t.firsts[k]=[+((Date.now()-t.start)/864e5).toFixed(2),Math.round(t.playSec/60),t.sessions];}
-const FIRST_NAMES={g1:'雇用第一位員工',p2:'第 2 個物件',p3:'第 3 個物件',p4:'第 4 個物件',p5:'第 5 個物件',p6:'第 6 個物件',p7:'第 7 個物件',p8:'第 8 個物件',ev1:'第一張客訴',ct1:'第一件合約完工',rb1:'第 1 次重組',rb2:'第 2 次重組',rb3:'第 3 次重組',rb5:'第 5 次重組',ipo1:'第 1 次上市',case0:'叔叔主線第一章',case10:'叔叔主線完結'};
+const FIRST_NAMES={g1:'雇用第一位員工',p2:'第 2 個物件',p3:'第 3 個物件',p4:'第 4 個物件',p5:'第 5 個物件',p6:'第 6 個物件',p7:'第 7 個物件',p8:'第 8 個物件',ev1:'第一張客訴',ct1:'第一件合約完工',rb1:'第 1 次重組',rb2:'第 2 次重組',rb3:'第 3 次重組',rb5:'第 5 次重組',ipo1:'第 1 次上市',case0:'叔叔主線第一章',case10:'叔叔主線完結',ash0:'第三部開始',ash10:'第三部完結'};
 function playSummary(){const t=S.stats;const days=t.start?Math.max(1,Math.ceil((Date.now()-t.start)/864e5)):1;
   return {days,active:t.days.length,sessions:t.sessions,hours:t.playSec/3600,lines:Object.keys(FIRST_NAMES).filter(k=>t.firsts[k]).map(k=>{const f=t.firsts[k];return FIRST_NAMES[k]+'：第 '+(Math.floor(f[0])+1)+' 天，線上 '+f[1]+' 分鐘，第 '+f[2]+' 次登入';})};}
 function playText(){const p=playSummary();return ['奇幻物業管家 試玩紀錄','版本：'+VERSION,'開始後第 '+p.days+' 天，其中有玩的天數 '+p.active+' 天','登入 '+p.sessions+' 次，線上 '+(p.hours<1?Math.round(p.hours*60)+' 分鐘':p.hours.toFixed(1)+' 小時'),'目前：'+cityName()+'，管理 '+S.props+' 個物件，重組 '+S.rebirths+' 次，上市 '+S.ipos+' 次','成就 '+S.ach.length+'，住戶 '+S.residents.length+'，劇情 '+S.story.length+' 段','— 第一次達成 —',...(p.lines.length?p.lines:['（還沒有）'])].join('\n');}
@@ -883,7 +883,56 @@ const CASE=[
   file:'結案：灰燼地產被查封，各城市社區重新委託「金鑰」管理。'}
 ];
 CASE.forEach(c=>STORY.push({id:c.id,when:c.when,title:c.title,text:c.text,btn:c.id==='case10'?'結案':'收進卷宗'}));
-const caseFound=()=>CASE.filter(c=>S.story.includes(c.id)).length;
+/* ================= MAIN STORY PART 3: 灰燼之後（上市後第二輪） ================= */
+const ashAfter=(prev,c,n)=>s=>s.ipos>=1&&s.story.includes(prev)&&cityIdx()===c&&s.props>=n;
+const CASE2=[
+ {id:'ash0',title:'第三部 · 查封之後',hint:'上市並結案後，回到銀橡城接管 2 個物件',
+  when:s=>s.ipos>=1&&s.story.includes('case10')&&cityIdx()===0&&s.props>=2,
+  text:['王都物業公會派人送來九箱查封的帳冊，箱子上貼著封條：「交由金鑰集團協助清點」。','夜班會計連夜對帳，天亮時她放下羽毛筆。','「各社區被拿走的公共基金，只追回七成。剩下三成，轉進了一個叫『餘燼信託』的帳戶。」','叔叔看著帳冊，好久沒說話：「灰燼燒完了，還留著餘燼。」'],
+  file:'公共基金只追回七成，三成流向「餘燼信託」。'},
+ {id:'ash1',title:'霧港 · 重新點名的區權會',hint:'上市後，在霧港接管 3 個物件',
+  when:ashAfter('ash0',1,3),
+  text:['燈塔社區拿回了七成的公共基金，但住戶們不太開心。','「上一個管理公司也說會好好管錢，」一位老漁夫說，「我們憑什麼相信你？」','你沒有爭辯，只是協助他們召開區分所有權人會議，重新選出管委會，開立社區自己名下的公共基金專戶，每個月把收支貼在公布欄。','散會時，燈塔管理員偷偷塞給你一張紙條：「餘燼信託的收款地址，在赤岩鎮的礦場。」'],
+  file:'霧港重新選出管委會；餘燼信託的收款地址指向赤岩鎮礦場。'},
+ {id:'ash2',title:'赤岩鎮 · 被借走的名字',hint:'上市後，在赤岩鎮接管 3 個物件',
+  when:ashAfter('ash1',2,3),
+  text:['一位手指被燙傷的老技師站在管理室門口，手裡捏著帽子。','「那十份檢修申報書上的簽名，是我的名字，」他說，「但不是我簽的。他們拿我的證照去申報，我一棟樓都沒去過。」','他知道得更多：餘燼信託一直在低價收購礦工宿舍底下的土地。房子愈破，地價愈便宜。','「他們不是在管房子，」老技師說，「是在等房子壞掉。」'],
+  file:'檢修技師的證照遭冒用；餘燼信託趁大樓失修低價收購土地。'},
+ {id:'ash3',title:'星泉城 · 空倉庫裡的最後一張紙',hint:'上市後，在星泉城接管 3 個物件',
+  when:ashAfter('ash2',3,3),
+  text:['城東的灰色倉庫已經人去樓空，只剩地上的車轍和一張被風吹進角落的出貨單。','星象值夜人說：「你們上市那一晚，最後一輛馬車往翡翠灣去了。」','出貨單的角落蓋著半個印章。你只看得出一根羽毛的形狀。'],
+  file:'上市當晚，最後一批文件被運往翡翠灣，出貨單上蓋著羽毛印章。'},
+ {id:'ash4',title:'翡翠灣 · 遲到三年的交接',hint:'上市後，在翡翠灣接管 3 個物件',
+  when:ashAfter('ash3',4,3),
+  text:['海龜搬家公司的倉庫裡，你找到那批遲到三年的箱子：公共基金存摺、會計憑證、帳簿、財務報表，還有管委會的印鑑。','你陪新的管委會一項一項點交，做成移交清冊，雙方簽名。','海龜老闆慢慢說：「那晚來托運的人，出示的是公會秘書處的通行證。」','羽毛印章，是王都物業公會秘書處的官印。'],
+  file:'翡翠灣完成三年前就該做的移交；羽毛印章屬於公會秘書處。'},
+ {id:'ash5',title:'雷鳴高原 · 灰色的羽毛',hint:'上市後，在雷鳴高原接管 3 個物件',
+  when:ashAfter('ash4',5,3),
+  text:['雷鳥送信員又送錯了一封信。這次，他是故意的。','「上次那封信害我被罵，」他說，「所以這次我先拆開看了。對不起。」','信是寫給餘燼信託受託人的，署名處沒有名字，只夾著一根灰色的羽毛。','公會秘書長的外號，就叫「灰羽」。'],
+  file:'寄給餘燼信託的密信，署名是一根灰色羽毛——公會秘書長「灰羽」。'},
+ {id:'ash6',title:'白霜堡 · 第二顆錄音水晶',hint:'上市後，在白霜堡接管 3 個物件',
+  when:ashAfter('ash5',6,3),
+  text:['冰巨人帶你回到冰窖深處。「你叔叔不知道，這裡還有第二顆。」','錄音水晶裡是灰燼地產前會長的聲音，像是在替自己留後路：','「整套辦法是灰羽設計的。先讓公共基金流進管理公司，再讓修繕一年拖過一年。出事的話，就說是我一個人做的。」','冰窖裡很冷，但你的手心在出汗。'],
+  file:'前會長的錄音：整套手法出自秘書長灰羽。'},
+ {id:'ash7',title:'月影市 · 熄燈的會計室',hint:'上市後，在月影市接管 3 個物件',
+  when:ashAfter('ash6',7,3),
+  text:['夜班會計的會計室，一夜之間被翻得亂七八糟。','她坐在一片狼藉中間，表情反而很平靜：「他們要找的帳本，我兩百年前就學會不放在辦公室了。」','你派了雪妖保全和狼人夜巡隊輪班守門。','天亮前，她把對完的帳交給你：被拿走的那三成，一枚金幣都沒有少算。'],
+  file:'夜班會計遭到威脅，但完整的資金流向帳已經對完。'},
+ {id:'ash8',title:'金麥平原 · 稻草人旁的會面',hint:'上市後，在金麥平原接管 3 個物件',
+  when:ashAfter('ash7',8,3),
+  text:['前會長在看守下，要求見你一面。地點在他被拍到的那片麥田旁。','「我做錯了，我認，」他看著稻草人，「但灰羽要的不是錢。」','「下個月的公會年度大會，他會提案修改公會規章：讓管理公司可以不經管委會同意，直接動用公共基金。」','「說是為了『提高修繕效率』。只要這條過了，以後就不需要偷了。」'],
+  file:'灰羽打算在公會年度大會修改規章，讓管理公司能直接動用公共基金。'},
+ {id:'ash9',title:'王都 · 年度大會',hint:'上市後，把事務所再開到王都',
+  when:s=>s.ipos>=1&&s.story.includes('ash8')&&cityIdx()===9,
+  text:['公會年度大會上，灰羽的修法提案排在第一案。他說得很動聽：效率、專業、少開會。','輪到你發言時，你沒有談灰羽，只把金鑰集團上市後每一季公開的財報，和九座城市的移交清冊，一份一份放上投影。','「公共基金是住戶的錢。管理公司可以幫忙管，但不能代替住戶決定。」','你提出另一個版本：公共基金一律存在社區專戶、每月公告收支、改選時公開移交清冊。夜班會計和老技師站起來作證。','表決結果，灰羽的提案被否決，你的版本通過。當天下午，餘燼信託的帳戶被凍結。'],
+  file:'年度大會否決灰羽的提案，改通過公共基金透明化規章；餘燼信託遭凍結。'},
+ {id:'ash10',title:'第三部完 · 透明的帳本',hint:'在年度大會之後，再完成一次集團上市，或在王都接管 6 個物件',
+  when:s=>s.story.includes('ash9')&&(s.ipos>=2||(cityIdx()===9&&s.props>=6)),
+  text:['被凍結的三成公共基金，分批匯回九座城市的社區專戶。','霧港的公布欄上，第一次貼出完整的年度收支表。有住戶在旁邊寫了一句：「看得懂了。」','叔叔把他那把磨得發亮的舊金鑰放在你桌上。','「我要回銀橡城開一間管家學校，」他說，「教新來的人，帳要公開，房子要修，住戶的信任要一點一點還回去。」','你把舊金鑰掛在事務所牆上，就在第一天那串鑰匙旁邊。地圖的邊緣，還有沒人管過的地方。'],
+  file:'第三部完：公共基金全數歸還，叔叔退休開辦管家學校。'}
+];
+CASE2.forEach(c=>STORY.push({id:c.id,when:c.when,title:c.title,text:c.text,reward:2,btn:c.id==='ash10'?'翻到下一頁':'收進卷宗'}));
+const caseFound=()=>CASE.filter(c=>S.story.includes(c.id)).length+CASE2.filter(c=>S.story.includes(c.id)).length;
 const caseMult=()=>1+0.03*caseFound();
 /* ================= CITY-LIMITED STORIES & COMPLAINTS ================= */
 EVENTS.push(
@@ -981,6 +1030,7 @@ const ACH=[
  ['city5','見多識廣','解鎖 5 座城市的在地故事',s=>cityStories()>=5],
  ['city10','走遍十城','解鎖全部 10 座城市的在地故事',s=>cityStories()>=10],
  ['case5','追查進行中','大案子卷宗收集 5 份線索',s=>CASE.filter(c=>s.story.includes(c.id)).length>=5],
+ ['ash10','透明的帳本','完成第三部「灰燼之後」',s=>s.story.includes('ash10')],
  ['case','真相大白','破解叔叔的大案子',s=>s.story.includes('case10')],
  ['patron','金鑰贊助人','購買支持者禮包',s=>!!s.supporter],
  ['brand1','我的事務所','替事務所取一個名字',s=>!!s.custom.office],
@@ -1141,7 +1191,7 @@ function check(){
   if(S.story.includes('open'))checkCards();
   if(cnt('goblin'))stFirst('g1');if(S.props>=2&&S.props<=8)for(let i=2;i<=S.props;i++)stFirst('p'+i);
   if(S.complaints)stFirst('ev1');if(S.contractsDone)stFirst('ct1');if(S.ipos)stFirst('ipo1');[1,2,3,5].forEach(n=>{if(S.maxRebirths>=n||S.rebirths>=n)stFirst('rb'+n);});
-  if(S.story.includes('case0'))stFirst('case0');if(S.story.includes('case10'))stFirst('case10');
+  if(S.story.includes('case0'))stFirst('case0');if(S.story.includes('case10'))stFirst('case10');if(S.story.includes('ash0'))stFirst('ash0');if(S.story.includes('ash10'))stFirst('ash10');
   const now=Date.now();
   if(S.props>=2&&S.event==null){if(S.nextEvent==null)S.nextEvent=now+60*1000;else if(now>=S.nextEvent)spawnEvent();}
   S.buffs=S.buffs.filter(b=>b.until>now);
@@ -1547,8 +1597,9 @@ function renderCorp(){
   setHTML($('perks'),PERKS.map(([n,name,d])=>{const on=hasPerk(n);return '<div class="perk'+(on?' on':'')+'"><span class="need">'+(on?'已解鎖':'重組 '+n+' 次')+'</span><div><b>'+name+'</b><span class="d">'+d+'</span></div></div>';}).join(''));
 }
 function renderCase(){
-  const n=caseFound();$('caseSum').textContent='已收集 '+n+' / '+CASE.length+' · 收入 +'+(n*3)+'%';
-  setHTML($('case'),CASE.map(c=>S.story.includes(c.id)?'<li><b>'+c.title+'</b><span>'+c.file+'</span></li>':'<li class="off"><b>？？？</b><span>'+c.hint+'</span></li>').join(''));
+  const n=caseFound(),part3=S.story.includes('case10'),total=CASE.length+(part3?CASE2.length:0);$('caseSum').textContent='已收集 '+n+' / '+total+' · 收入 +'+(n*3)+'%';
+  const li=c=>S.story.includes(c.id)?'<li><b>'+c.title+'</b><span>'+c.file+'</span></li>':'<li class="off"><b>？？？</b><span>'+c.hint+'</span></li>';
+  setHTML($('case'),CASE.map(li).join('')+(part3?'<li><b style="color:var(--warn)">第三部 · 灰燼之後</b><span>上市之後，回到每一座城市，把被拿走的東西還回去。</span></li>'+CASE2.map(li).join(''):''));
 }
 function renderMgr(){
   renderCase();
