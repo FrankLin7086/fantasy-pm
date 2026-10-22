@@ -242,6 +242,15 @@ a.lab:hover{text-decoration:underline}
 .goal:hover{border-color:var(--brass)}
 .tab[hidden]{display:none!important}
 .fbstats{white-space:pre-wrap;font-family:var(--f-num);font-size:12px;line-height:1.6;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 12px;margin:6px 0;max-height:260px;overflow:auto}
+.ic{width:26px;height:26px;flex:none;vertical-align:-7px;margin-right:6px}
+.prop .lv .ic{width:34px;height:34px;margin:0}
+.ic.dim{opacity:.35;filter:grayscale(.6)}
+.best{display:inline-block;font-family:var(--f-body);font-size:11px;line-height:1;padding:3px 6px;margin-left:6px;border-radius:4px;background:var(--good);color:var(--bg);vertical-align:2px}
+.best[hidden]{display:none}
+.mgr .av{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;margin-right:6px;font-size:13px;font-family:var(--f-body);background:var(--line);color:var(--fg);vertical-align:1px}
+.mgr.r1 .av{background:#5d7fa8;color:#fff}.mgr.r2 .av{background:var(--brass);color:var(--brass-ink)}
+.pipx{font-size:10px;color:var(--brass);margin-left:4px;font-family:var(--f-num)}
+.prop .lv{align-self:start}
 </style>
 
 <div class="wrap">
@@ -455,7 +464,7 @@ a.lab:hover{text-decoration:underline}
 'use strict';
 const KEY='fantasy-pm-save-v1';
 const OFFLINE_MIN=60;
-const VERSION='v0.6.0';
+const VERSION='v0.7.0';
 
 /* ================= DATA ================= */
 const CITIES=[
@@ -477,15 +486,15 @@ const isNight=()=>{const h=new Date().getHours();return h>=18||h<6;};
 
 const BASE_UNITS=[
  ['goblin','哥布林清潔工',10,0.5,'便宜、勤快，偶爾把垃圾帶回家當寶。','哥布林清潔隊自己排了班表，效率翻倍。'],
- ['dwarf','矮人保全',150,4,'廢話不多，斧頭很大。','矮人保全開始輪班巡邏，連老鼠都繞路走。'],
- ['elf','精靈櫃台接待',4500,25,'微笑可以化解三成的客訴。','精靈接待記住了每位住戶的名字，抱怨少了一半。'],
- ['golem','魔像機電技師',1.35e5,150,'不睡覺、不請假，但需要定期充魔力。','魔像技師排好了預防保養表，故障率大降。'],
- ['ward','法師結界門禁',4e6,900,'陌生人進不來，住戶偶爾也進不來。','結界升級成三層，連夢魘都進不來。'],
- ['halfling','半身人包裹管理員',1.2e8,5000,'記得每位住戶的包裹，也記得每位住戶的八卦。','半身人建好了包裹櫃索引，再也沒有人領錯包裹。'],
- ['treant','樹人園藝師',3.6e9,3e4,'修剪一棵樹要三天，修完的樹會向你道謝。','樹人們把整個社區的綠籬連成一片，房價都漲了。'],
- ['griffin','獅鷲物流隊',1.1e11,1.8e5,'包裹從天而降，偶爾真的是從天而降。','獅鷲物流隊開通了夜間航線，隔日到貨變成當日到貨。'],
- ['crystal','水晶監控塔',3.3e12,1e6,'看得見每一條走廊，包括你不想看見的。','水晶塔連成監控網，整座城的走廊都在掌握之中。'],
- ['dragon','龍族財務顧問',1e14,6e6,'只收金幣，而且只收亮的。','龍族顧問把金庫重新整理了一遍，連利息都在發光。']
+ ['dwarf','矮人保全',150,2,'廢話不多，斧頭很大。','矮人保全開始輪班巡邏，連老鼠都繞路走。'],
+ ['elf','精靈櫃台接待',2200,8,'微笑可以化解三成的客訴。','精靈接待記住了每位住戶的名字，抱怨少了一半。'],
+ ['golem','魔像機電技師',3.3e4,32,'不睡覺、不請假，但需要定期充魔力。','魔像技師排好了預防保養表，故障率大降。'],
+ ['ward','法師結界門禁',5e5,130,'陌生人進不來，住戶偶爾也進不來。','結界升級成三層，連夢魘都進不來。'],
+ ['halfling','半身人包裹管理員',7.5e6,520,'記得每位住戶的包裹，也記得每位住戶的八卦。','半身人建好了包裹櫃索引，再也沒有人領錯包裹。'],
+ ['treant','樹人園藝師',1.1e8,2100,'修剪一棵樹要三天，修完的樹會向你道謝。','樹人們把整個社區的綠籬連成一片，房價都漲了。'],
+ ['griffin','獅鷲物流隊',1.7e9,8400,'包裹從天而降，偶爾真的是從天而降。','獅鷲物流隊開通了夜間航線，隔日到貨變成當日到貨。'],
+ ['crystal','水晶監控塔',2.5e10,3.3e4,'看得見每一條走廊，包括你不想看見的。','水晶塔連成監控網，整座城的走廊都在掌握之中。'],
+ ['dragon','龍族財務顧問',3.8e11,1.3e5,'只收金幣，而且只收亮的。','龍族顧問把金庫重新整理了一遍，連利息都在發光。']
 ];
 const LOCAL_UNITS=[
  [1,'mistpilot','海霧引航員','在濃霧裡也找得到每一戶的門牌。'],
@@ -508,7 +517,14 @@ const LOCAL_UNITS=[
  [9,'archmage','宮廷魔導顧問','一個咒語就能讓整棟大樓自己打掃。']
 ];
 const UNITS=BASE_UNITS.map(([id,name,cost,prod,desc,ms])=>({id,name,cost,prod,desc,ms,city:0}))
- .concat(LOCAL_UNITS.map(([city,id,name,desc],k)=>({id,name,desc,city,cost:1e14*Math.pow(30,k+1),prod:6e6*Math.pow(5,k+1),ms:name+'完成了在地化培訓，效率翻倍。'})));
+ .concat(LOCAL_UNITS.map(([city,id,name,desc],k)=>({id,name,desc,city,cost:3.8e11*Math.pow(15,k+1),prod:1.3e5*Math.pow(4,k+1),ms:name+'完成了在地化培訓，效率翻倍。'})));
+const ICON_U={"goblin": "<path d=\"M6 15 L0.8 11 L7.5 19Z M26 15 L31.2 11 L24.5 19Z\" fill=\"#76b766\"/><ellipse cx=\"16\" cy=\"19\" rx=\"10.5\" ry=\"9.5\" fill=\"#8cc97a\"/><circle cx=\"12.5\" cy=\"17\" r=\"1.6\" fill=\"#2b2b33\"/><circle cx=\"19.5\" cy=\"17\" r=\"1.6\" fill=\"#2b2b33\"/><ellipse cx=\"10\" cy=\"20.5\" rx=\"1.8\" ry=\"1\" fill=\"#f19aa6\" opacity=\".8\"/><ellipse cx=\"22\" cy=\"20.5\" rx=\"1.8\" ry=\"1\" fill=\"#f19aa6\" opacity=\".8\"/><path d=\"M14.5 21.2q1.5 1.3 3 0\" stroke=\"#2b2b33\" stroke-width=\"1.1\" fill=\"none\" stroke-linecap=\"round\"/>", "dwarf": "<path d=\"M6 13 Q16 2 26 13Z\" fill=\"#9aa3ad\"/><rect x=\"5\" y=\"12\" width=\"22\" height=\"2.4\" rx=\"1.2\" fill=\"#7d8690\"/><ellipse cx=\"16\" cy=\"19\" rx=\"10.5\" ry=\"9.5\" fill=\"#efc29a\"/><circle cx=\"12.5\" cy=\"17\" r=\"1.6\" fill=\"#2b2b33\"/><circle cx=\"19.5\" cy=\"17\" r=\"1.6\" fill=\"#2b2b33\"/><ellipse cx=\"10\" cy=\"20.5\" rx=\"1.8\" ry=\"1\" fill=\"#f19aa6\" opacity=\".8\"/><ellipse cx=\"22\" cy=\"20.5\" rx=\"1.8\" ry=\"1\" fill=\"#f19aa6\" opacity=\".8\"/><path d=\"M14.5 21.2q1.5 1.3 3 0\" stroke=\"#2b2b33\" stroke-width=\"1.1\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M8.5 22 Q16 33 23.5 22 Q20 25 16 24.6 Q12 25 8.5 22Z\" fill=\"#a8683c\"/>", "elf": "<path d=\"M6.5 16 L0.5 9 L8 19.5Z M25.5 16 L31.5 9 L24 19.5Z\" fill=\"#f0d2b6\"/><path d=\"M6 15 Q16 4 26 15 Q16 10 6 15Z\" fill=\"#f2d16b\"/><ellipse cx=\"16\" cy=\"19\" rx=\"10.5\" ry=\"9.5\" fill=\"#f6e1cc\"/><circle cx=\"12.5\" cy=\"17\" r=\"1.6\" fill=\"#2b2b33\"/><circle cx=\"19.5\" cy=\"17\" r=\"1.6\" fill=\"#2b2b33\"/><ellipse cx=\"10\" cy=\"20.5\" rx=\"1.8\" ry=\"1\" fill=\"#f19aa6\" opacity=\".8\"/><ellipse cx=\"22\" cy=\"20.5\" rx=\"1.8\" ry=\"1\" fill=\"#f19aa6\" opacity=\".8\"/><path d=\"M14.5 21.2q1.5 1.3 3 0\" stroke=\"#2b2b33\" stroke-width=\"1.1\" fill=\"none\" stroke-linecap=\"round\"/>", "golem": "<rect x=\"5\" y=\"9\" width=\"22\" height=\"20\" rx=\"5\" fill=\"#aab2be\"/><rect x=\"9\" y=\"5\" width=\"14\" height=\"5\" rx=\"2\" fill=\"#8d96a3\"/><rect x=\"10.5\" y=\"15.5\" width=\"3.5\" height=\"3\" rx=\".8\" fill=\"#5fd3e0\"/><rect x=\"18\" y=\"15.5\" width=\"3.5\" height=\"3\" rx=\".8\" fill=\"#5fd3e0\"/><path d=\"M13 23h6\" stroke=\"#5c6470\" stroke-width=\"1.4\" stroke-linecap=\"round\"/><circle cx=\"7.5\" cy=\"12\" r=\"1\" fill=\"#6f7884\"/><circle cx=\"24.5\" cy=\"12\" r=\"1\" fill=\"#6f7884\"/>", "ward": "<path d=\"M7 14 L16 0.5 L25 14Z\" fill=\"#6b54b8\"/><rect x=\"5.5\" y=\"12.5\" width=\"21\" height=\"2.6\" rx=\"1.3\" fill=\"#58459e\"/><path d=\"M16 4.5l1 2.1 2.2.3-1.6 1.5.4 2.2-2-1.1-2 1.1.4-2.2-1.6-1.5 2.2-.3z\" fill=\"#f6d36b\"/><ellipse cx=\"16\" cy=\"19\" rx=\"10.5\" ry=\"9.5\" fill=\"#c9b6ef\"/><circle cx=\"12.5\" cy=\"17\" r=\"1.6\" fill=\"#2b2b33\"/><circle cx=\"19.5\" cy=\"17\" r=\"1.6\" fill=\"#2b2b33\"/><ellipse cx=\"10\" cy=\"20.5\" rx=\"1.8\" ry=\"1\" fill=\"#f19aa6\" opacity=\".8\"/><ellipse cx=\"22\" cy=\"20.5\" rx=\"1.8\" ry=\"1\" fill=\"#f19aa6\" opacity=\".8\"/><path d=\"M14.5 21.2q1.5 1.3 3 0\" stroke=\"#2b2b33\" stroke-width=\"1.1\" fill=\"none\" stroke-linecap=\"round\"/>", "halfling": "<path d=\"M7 13 Q9 6 16 7 Q23 6 25 13 Q16 9 7 13Z\" fill=\"#b5703f\"/><ellipse cx=\"16\" cy=\"19\" rx=\"10.5\" ry=\"9.5\" fill=\"#f7c9a8\"/><circle cx=\"12.5\" cy=\"17\" r=\"1.6\" fill=\"#2b2b33\"/><circle cx=\"19.5\" cy=\"17\" r=\"1.6\" fill=\"#2b2b33\"/><ellipse cx=\"10\" cy=\"20.5\" rx=\"1.8\" ry=\"1\" fill=\"#f19aa6\" opacity=\".8\"/><ellipse cx=\"22\" cy=\"20.5\" rx=\"1.8\" ry=\"1\" fill=\"#f19aa6\" opacity=\".8\"/><path d=\"M14.5 21.2q1.5 1.3 3 0\" stroke=\"#2b2b33\" stroke-width=\"1.1\" fill=\"none\" stroke-linecap=\"round\"/><rect x=\"10\" y=\"23\" width=\"12\" height=\"8\" rx=\"1.2\" fill=\"#c99a5b\"/><path d=\"M10 26h12M16 23v8\" stroke=\"#8b6534\" stroke-width=\"1\"/>", "treant": "<circle cx=\"10\" cy=\"9\" r=\"5\" fill=\"#6dbb6a\"/><circle cx=\"16\" cy=\"6\" r=\"5.5\" fill=\"#7fca73\"/><circle cx=\"22\" cy=\"9\" r=\"5\" fill=\"#6dbb6a\"/><ellipse cx=\"16\" cy=\"19\" rx=\"10.5\" ry=\"9.5\" fill=\"#b0835a\"/><circle cx=\"12.5\" cy=\"17\" r=\"1.6\" fill=\"#2b2b33\"/><circle cx=\"19.5\" cy=\"17\" r=\"1.6\" fill=\"#2b2b33\"/><ellipse cx=\"10\" cy=\"20.5\" rx=\"1.8\" ry=\"1\" fill=\"#f19aa6\" opacity=\".8\"/><ellipse cx=\"22\" cy=\"20.5\" rx=\"1.8\" ry=\"1\" fill=\"#f19aa6\" opacity=\".8\"/><path d=\"M14.5 21.2q1.5 1.3 3 0\" stroke=\"#2b2b33\" stroke-width=\"1.1\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M9 26c2 1 3 0 4 1\" stroke=\"#8a6340\" stroke-width=\"1\" fill=\"none\"/>", "griffin": "<path d=\"M26 15 Q32 13 31 21 Q28 18 25.5 20Z M6 15 Q0 13 1 21 Q4 18 6.5 20Z\" fill=\"#c9974a\"/><path d=\"M8 12 Q16 5 24 12 Q16 9 8 12Z\" fill=\"#fff4dc\"/><ellipse cx=\"16\" cy=\"19\" rx=\"10.5\" ry=\"9.5\" fill=\"#e8c063\"/><circle cx=\"12.5\" cy=\"17\" r=\"1.6\" fill=\"#2b2b33\"/><circle cx=\"19.5\" cy=\"17\" r=\"1.6\" fill=\"#2b2b33\"/><ellipse cx=\"10\" cy=\"20.5\" rx=\"1.8\" ry=\"1\" fill=\"#f19aa6\" opacity=\".8\"/><ellipse cx=\"22\" cy=\"20.5\" rx=\"1.8\" ry=\"1\" fill=\"#f19aa6\" opacity=\".8\"/><path d=\"M14.5 21.2q1.5 1.3 3 0\" stroke=\"#2b2b33\" stroke-width=\"1.1\" fill=\"none\" stroke-linecap=\"round\"/><path d=\"M14 19.5 L18 19.5 L16 23Z\" fill=\"#f08a3c\"/>", "crystal": "<path d=\"M16 2 L28 14 L16 30 L4 14Z\" fill=\"#8fe1f0\"/><path d=\"M16 2 L22 14 L16 30 L10 14Z\" fill=\"#b9eef7\"/><path d=\"M4 14h24\" stroke=\"#6cc8da\" stroke-width=\"1\"/><ellipse cx=\"16\" cy=\"17\" rx=\"4.2\" ry=\"3\" fill=\"#fff\"/><circle cx=\"16\" cy=\"17\" r=\"1.9\" fill=\"#2b2b33\"/>", "dragon": "<path d=\"M9 12 L6 3 L12 10Z M23 12 L26 3 L20 10Z\" fill=\"#f2d16b\"/><path d=\"M26 18 Q32 12 31 24 Q29 20 26 22Z M6 18 Q0 12 1 24 Q3 20 6 22Z\" fill=\"#c65750\"/><ellipse cx=\"16\" cy=\"19\" rx=\"10.5\" ry=\"9.5\" fill=\"#e8726a\"/><circle cx=\"12.5\" cy=\"17\" r=\"1.6\" fill=\"#2b2b33\"/><circle cx=\"19.5\" cy=\"17\" r=\"1.6\" fill=\"#2b2b33\"/><ellipse cx=\"10\" cy=\"20.5\" rx=\"1.8\" ry=\"1\" fill=\"#f19aa6\" opacity=\".8\"/><ellipse cx=\"22\" cy=\"20.5\" rx=\"1.8\" ry=\"1\" fill=\"#f19aa6\" opacity=\".8\"/><path d=\"M14.5 21.2q1.5 1.3 3 0\" stroke=\"#2b2b33\" stroke-width=\"1.1\" fill=\"none\" stroke-linecap=\"round\"/><ellipse cx=\"16\" cy=\"24.5\" rx=\"5\" ry=\"2.6\" fill=\"#f3a39c\"/><circle cx=\"14.4\" cy=\"24.2\" r=\".6\" fill=\"#7a2d2a\"/><circle cx=\"17.6\" cy=\"24.2\" r=\".6\" fill=\"#7a2d2a\"/>"};
+const ICON_P={"p0": "<rect x=\"2\" y=\"13\" width=\"28\" height=\"2\" fill=\"#6b5a45\"/><rect x=\"5\" y=\"15\" width=\"22\" height=\"14\" rx=\"1.5\" fill=\"#8a7a66\"/><rect x=\"13\" y=\"19\" width=\"6\" height=\"10\" rx=\"1\" fill=\"#e8b65a\"/><rect x=\"7.5\" y=\"18\" width=\"3.5\" height=\"3\" fill=\"#f6e7a8\"/><rect x=\"21\" y=\"18\" width=\"3.5\" height=\"3\" fill=\"#f6e7a8\"/><path d=\"M9 13 L12 7 L20 7 L23 13\" fill=\"none\" stroke=\"#6b5a45\" stroke-width=\"1.6\"/>", "p1": "<rect x=\"14\" y=\"16\" width=\"4\" height=\"15\" fill=\"#9a6b43\"/><circle cx=\"16\" cy=\"11\" r=\"9\" fill=\"#6dbb6a\"/><circle cx=\"9\" cy=\"14\" r=\"5\" fill=\"#7fca73\"/><circle cx=\"23\" cy=\"14\" r=\"5\" fill=\"#7fca73\"/><rect x=\"11\" y=\"10\" width=\"10\" height=\"7\" rx=\"1\" fill=\"#e4b780\"/><path d=\"M10 10.5 L16 6 L22 10.5Z\" fill=\"#c4643f\"/><rect x=\"15\" y=\"13\" width=\"2.5\" height=\"4\" fill=\"#7a4b2a\"/>", "p2": "<rect x=\"4\" y=\"15\" width=\"24\" height=\"14\" fill=\"#f0d9a8\"/><path d=\"M3 9h26l-2 7H5Z\" fill=\"#e8726a\"/><path d=\"M7 9l-1 7M12 9v7M17 9v7M22 9l1 7\" stroke=\"#fff4dc\" stroke-width=\"2.2\"/><rect x=\"7\" y=\"20\" width=\"18\" height=\"3\" fill=\"#c99a5b\"/><circle cx=\"10\" cy=\"19\" r=\"1.6\" fill=\"#f08a3c\"/><circle cx=\"14\" cy=\"19\" r=\"1.6\" fill=\"#8cc97a\"/><circle cx=\"18\" cy=\"19\" r=\"1.6\" fill=\"#e8c063\"/><circle cx=\"22\" cy=\"19\" r=\"1.6\" fill=\"#e8726a\"/>", "p3": "<path d=\"M1 30 L13 10 L19 18 L23 13 L31 30Z\" fill=\"#8e98a8\"/><path d=\"M13 10 L15.8 14.6 L11 14.6Z M23 13 L25.3 17 L21 17Z\" fill=\"#fff\"/><rect x=\"11\" y=\"4\" width=\"10\" height=\"7\" fill=\"#efe6d4\"/><path d=\"M10 4.5 L16 0.8 L22 4.5Z\" fill=\"#c65750\"/><rect x=\"14.8\" y=\"7\" width=\"2.4\" height=\"4\" fill=\"#9a6b43\"/>", "p4": "<rect x=\"10\" y=\"4\" width=\"12\" height=\"26\" rx=\"1\" fill=\"#8fb2d9\"/><rect x=\"14\" y=\"1\" width=\"4\" height=\"4\" fill=\"#6c8fb8\"/><g fill=\"#e9f3ff\"><rect x=\"12\" y=\"7\" width=\"3\" height=\"2.5\"/><rect x=\"17\" y=\"7\" width=\"3\" height=\"2.5\"/><rect x=\"12\" y=\"12\" width=\"3\" height=\"2.5\"/><rect x=\"17\" y=\"12\" width=\"3\" height=\"2.5\"/><rect x=\"12\" y=\"17\" width=\"3\" height=\"2.5\"/><rect x=\"17\" y=\"17\" width=\"3\" height=\"2.5\"/></g><rect x=\"14\" y=\"23\" width=\"4\" height=\"7\" fill=\"#f2d16b\"/><rect x=\"2\" y=\"30\" width=\"28\" height=\"1.5\" fill=\"#6c8fb8\"/>", "p5": "<path d=\"M5 18h22l-5 10h-12Z\" fill=\"#a8835a\"/><path d=\"M5 18h22\" stroke=\"#6dbb6a\" stroke-width=\"3\" stroke-linecap=\"round\"/><path d=\"M11 18l-.5-6 4.5 0 .2 6Z\" fill=\"#fff4dc\"/><path d=\"M9.8 12.3 L12.7 8 L15.6 12.3Z\" fill=\"#e8726a\"/><path d=\"M19 17 Q21 9 24 11\" stroke=\"#9a6b43\" stroke-width=\"1.2\" fill=\"none\"/><circle cx=\"24\" cy=\"10\" r=\"3\" fill=\"#7fca73\"/><ellipse cx=\"6\" cy=\"7\" rx=\"4\" ry=\"2\" fill=\"#e9f3ff\"/><ellipse cx=\"25\" cy=\"25\" rx=\"3\" ry=\"1.5\" fill=\"#e9f3ff\"/>", "p6": "<rect x=\"0\" y=\"0\" width=\"32\" height=\"32\" rx=\"6\" fill=\"#2f6f9c\" opacity=\".35\"/><path d=\"M6 28 Q6 12 16 12 Q26 12 26 28Z\" fill=\"#9fe3ea\"/><path d=\"M16 12 V5\" stroke=\"#9fe3ea\" stroke-width=\"2\"/><circle cx=\"16\" cy=\"4\" r=\"2\" fill=\"#f2d16b\"/><rect x=\"13.5\" y=\"21\" width=\"5\" height=\"7\" rx=\"2.5\" fill=\"#4f9fb8\"/><circle cx=\"5\" cy=\"9\" r=\"1.5\" fill=\"none\" stroke=\"#e9f3ff\" stroke-width=\".9\"/><circle cx=\"8\" cy=\"5\" r=\"1\" fill=\"none\" stroke=\"#e9f3ff\" stroke-width=\".9\"/><circle cx=\"26\" cy=\"7\" r=\"1.3\" fill=\"none\" stroke=\"#e9f3ff\" stroke-width=\".9\"/><path d=\"M2 30 Q8 27 16 30 Q24 27 30 30\" stroke=\"#e6cf7a\" stroke-width=\"1.6\" fill=\"none\"/>", "p7": "<rect x=\"14\" y=\"17\" width=\"4\" height=\"14\" fill=\"#9a6b43\"/><path d=\"M14 31 Q10 30 8 31 M18 31 Q22 30 24 31\" stroke=\"#9a6b43\" stroke-width=\"1.5\"/><circle cx=\"16\" cy=\"13\" r=\"10\" fill=\"#6dbb6a\"/><circle cx=\"8\" cy=\"17\" r=\"5\" fill=\"#5aa85a\"/><circle cx=\"24\" cy=\"17\" r=\"5\" fill=\"#5aa85a\"/><rect x=\"12\" y=\"3\" width=\"8\" height=\"6\" fill=\"#efe6d4\"/><rect x=\"11\" y=\"1.5\" width=\"2\" height=\"3\" fill=\"#efe6d4\"/><rect x=\"15\" y=\"1.5\" width=\"2\" height=\"3\" fill=\"#efe6d4\"/><rect x=\"19\" y=\"1.5\" width=\"2\" height=\"3\" fill=\"#efe6d4\"/><rect x=\"15\" y=\"6\" width=\"2\" height=\"3\" fill=\"#6b54b8\"/>", "legend": "<path d=\"M16 2l3.6 7.3 8 1.2-5.8 5.7 1.4 8L16 20.4l-7.2 3.8 1.4-8-5.8-5.7 8-1.2z\" fill=\"#f2d16b\"/><path d=\"M16 8l1.6 3.3 3.6.5-2.6 2.6.6 3.6-3.2-1.7-3.2 1.7.6-3.6-2.6-2.6 3.6-.5z\" fill=\"#fff4dc\"/><rect x=\"6\" y=\"27\" width=\"20\" height=\"3\" rx=\"1.5\" fill=\"#c99a5b\"/>"};
+const LOCAL_COL=["#9bb7e0", "#e39a6b", "#b8c7f0", "#7ec9b8", "#c7b8f0", "#e8eef7", "#a59ad6", "#e6cf7a", "#f0b8c8"];
+const svgIc=(b,cls)=>'<svg class="ic'+(cls?' '+cls:'')+'" viewBox="0 0 32 32" aria-hidden="true">'+b+'</svg>';
+const localIc=c=>'<ellipse cx="16" cy="19" rx="10.5" ry="9.5" fill="'+c+'"/><circle cx="12.5" cy="17" r="1.6" fill="#2b2b33"/><circle cx="19.5" cy="17" r="1.6" fill="#2b2b33"/><ellipse cx="10" cy="20.5" rx="1.8" ry="1" fill="#f19aa6" opacity=".8"/><ellipse cx="22" cy="20.5" rx="1.8" ry="1" fill="#f19aa6" opacity=".8"/><path d="M14.5 21.2q1.5 1.3 3 0" stroke="#2b2b33" stroke-width="1.1" fill="none" stroke-linecap="round"/><circle cx="25" cy="9" r="4.2" fill="#f2d16b"/><path d="M25 6.6l.8 1.6 1.7.2-1.3 1.2.3 1.7-1.5-.8-1.5.8.3-1.7-1.3-1.2 1.7-.2z" fill="#fff"/>';
+const uIcon=u=>svgIc(ICON_U[u.id]||localIc(LOCAL_COL[(u.city||1)-1]||'#c7b8f0'));
+const pIcon=(i,cls)=>svgIc(i<PROPS.length?ICON_P['p'+i]:ICON_P.legend,cls);
 const unitIndex={};UNITS.forEach((u,i)=>unitIndex[u.id]=i);
 const AMTS=[1,5,10,50,'max'];
 
@@ -533,7 +549,7 @@ const RENO_NAMES=['原始屋況','補漆換燈','整修大廳','更新管線','�
 const RENO_MAX=10;
 
 const CONTRACT_NAMES=['公共區域清潔外包','外牆清洗','電梯年度保養','消防安全檢查','管委會年度大會籌辦','停車場標線重劃','屋頂防水工程','水塔清洗','中庭景觀改造','保全系統升級','魔法燈具汰換','結界年度檢測','排水溝清淤','招牌與外觀修繕','垃圾分類宣導週'];
-const CONTRACT_TIERS=[{label:'短期',dur:5*60,mult:1.2},{label:'中期',dur:30*60,mult:1.5},{label:'長期',dur:4*3600,mult:2}];
+const CONTRACT_TIERS=[{label:'短期',dur:5*60,mult:0.5},{label:'中期',dur:30*60,mult:0.4},{label:'長期',dur:4*3600,mult:0.3}];
 const POLICIES=[
  {id:'patrol',name:'勤務優先',d:'巡視公寓的收入 ×3'},
  {id:'staff',name:'長期維護',d:'所有員工產出 +25%'},
@@ -566,28 +582,28 @@ const TALENTS=[
  {branch:'營運',items:[
   {id:'inc',name:'品牌溢價',d:l=>'全體收入 +'+(25*l)+'%'},
   {id:'seed',name:'開業資金',d:l=>l?'開業時帶 '+fmt(Math.pow(10,l+2))+' 金幣':'開業時帶一筆資金'},
-  {id:'fast',name:'展店效率',d:l=>'物件解鎖需求 −'+Math.round((1-Math.pow(0.85,l))*100)+'%'}]},
+  {id:'fast',name:'展店效率',max:10,d:l=>'物件解鎖需求 −'+Math.round((1-Math.pow(0.85,l))*100)+'%'}]},
  {branch:'人事',items:[
-  {id:'disc',name:'集中採購',d:l=>'員工價格 −'+(4*l)+'%'},
-  {id:'vet',name:'資深團隊',d:l=>l?'開業時前 '+l+' 種員工各有 10 名':'開業時直接帶員工'},
-  {id:'mentor',name:'師徒制',d:l=>'每個員工里程碑 ×'+(2+0.1*l).toFixed(1)}]},
+  {id:'disc',name:'集中採購',d:l=>'員工價格 −'+Math.round((1-Math.max(0.2,Math.pow(0.96,l)))*100)+'%'},
+  {id:'vet',name:'資深團隊',max:10,d:l=>l?'開業時前 '+l+' 種員工各有 10 名':'開業時直接帶員工'},
+  {id:'mentor',name:'師徒制',max:10,d:l=>'每個員工里程碑 ×'+(2+0.1*l).toFixed(1)}]},
  {branch:'客服',items:[
   {id:'comp',name:'客訴專家',d:l=>'客訴金幣獎勵 +'+(50*l)+'%'},
   {id:'buff',name:'口碑發酵',d:l=>'限時加成時間 +'+(20*l)+'%'},
   {id:'daily',name:'住戶回饋',d:l=>'每日登入獎勵 +'+(50*l)+'%'}]},
  {branch:'工程',items:[
-  {id:'contract',name:'工程承攬',d:l=>'承攬合約報酬 +'+(30*l)+'%'},
-  {id:'night',name:'夜間管理',d:l=>'離線收益上限 +'+(2*l)+' 小時'},
-  {id:'facil',name:'設施採購',d:l=>'設施投資價格 −'+(5*l)+'%'}]}
+  {id:'contract',name:'工程承攬',max:10,d:l=>'承攬合約報酬 +'+(10*l)+'%'},
+  {id:'night',name:'夜間管理',max:10,d:l=>'離線收益上限 +'+(2*l)+' 小時'},
+  {id:'facil',name:'設施採購',d:l=>'設施投資價格 −'+Math.round((1-Math.max(0.3,Math.pow(0.95,l)))*100)+'%'}]}
 ];
 TALENTS.push({branch:'自動化',items:[
   {id:'a_collect',name:'自動驗收',one:true,cost:3,d:()=>'合約完工時自動驗收，並自動接下新合約（優先長期）'},
   {id:'a_team',name:'自動補員',one:true,cost:5,d:()=>'每 5 秒自動雇用人數最少的基本員工（每次花費不超過金幣的 10%）'},
   {id:'a_comp',name:'客訴代理',one:true,cost:8,d:()=>'客訴出現 30 秒後自動選擇金幣選項'}]});
 const TAL_MAX=10;
-const talCost=lv=>lv+1;
+const talCost=lv=>lv<10?lv+1:Math.ceil(10*Math.pow(1.25,lv-9));
 const talDef=id=>TALENTS.flatMap(b=>b.items).find(x=>x.id===id);
-const talMax=t=>t.one?1:TAL_MAX;
+const talMax=t=>t.one?1:(t.max||Infinity);
 const talPrice=t=>t.one?t.cost:talCost(tal(t.id));
 const autoOn=id=>tal(id)>=1&&!(S.autoOff&&S.autoOff[id]);
 /* manager stations: each property has slots and an affinity */
@@ -947,28 +963,28 @@ const CASE3=[
   when:edgeAt('edge1',2,2,4),
   text:['礦坑爆破時，邊境那排舊宿舍搖得比別棟都厲害。','你請來矮人結構技師做初步的耐震評估。他敲了敲柱子，臉色不太好看。','「還站得住，但不能再等了。」','你沒有嚇唬住戶，只把評估結果一頁一頁講清楚：哪裡要補強、要花多少、可以申請哪些補助。'],
   file:'赤岩鎮邊境宿舍完成耐震初評，住戶開始討論補強。'},
- {id:'edge3',title:'星泉城 · 誰的屋頂',hint:'第 3 次上市後，在星泉城接管 4 個物件',
-  when:edgeAt('edge2',3,3,4),
+ {id:'edge3',title:'星泉城 · 誰的屋頂',hint:'第 2 次上市後，在星泉城接管 4 個物件',
+  when:edgeAt('edge2',2,3,4),
   text:['星泉城邊境的老公寓，頂樓被一位占星師圍起來，蓋成了私人觀星室。','「我住頂樓，屋頂當然是我的。」他理直氣壯。','你帶著住戶一起上樓。屋頂平台是全體住戶共用的，也是火災時往上逃生的地方。','最後，占星師同意拆掉圍牆。作為交換，管委會決定每個月在屋頂辦一次全社區的觀星夜，由他主講。'],
   file:'星泉城老公寓的屋頂平台恢復為共用空間，改辦社區觀星夜。'},
  {id:'edge4',title:'翡翠灣 · 存不夠的修繕費',hint:'第 3 次上市後，在翡翠灣接管 4 個物件',
   when:edgeAt('edge3',3,4,4),
   text:['翡翠灣邊境的珊瑚公寓，外牆每年都在剝落，但公共基金只夠修一面牆。','住戶們吵成兩派：一派要大家一次分攤補齊，一派說「等壞了再說」。','你拿出一張表：未來二十年，屋頂、外牆、水管、電梯各要在哪一年修、要花多少，平均每月每戶要存多少。','看到那個數字，比吵架小得多。長期修繕計畫，全票通過。'],
   file:'翡翠灣珊瑚公寓訂出二十年長期修繕計畫。'},
- {id:'edge5',title:'白霜堡 · 三樓的燈',hint:'第 4 次上市後，在白霜堡接管 5 個物件',
-  when:edgeAt('edge4',4,6,5),
+ {id:'edge5',title:'白霜堡 · 三樓的燈',hint:'第 3 次上市後，在白霜堡接管 5 個物件',
+  when:edgeAt('edge4',3,6,5),
   text:['雪妖保全回報：邊境公寓三樓的燈，已經三天沒有亮了。','你們敲門沒人應，請鎖匠開門，屋裡的老矮人倒在暖爐旁，還有呼吸。','他住了五十年，兒女都在別的城市。','從那天起，你在白霜堡的每一棟樓都排了關懷巡視：獨居的住戶，每天至少有一個人敲他的門。'],
   file:'白霜堡建立獨居住戶的每日關懷巡視。'},
- {id:'edge6',title:'月影市 · 空了十年的房間',hint:'第 4 次上市後，在月影市接管 5 個物件',
-  when:edgeAt('edge5',4,7,5),
+ {id:'edge6',title:'月影市 · 空了十年的房間',hint:'第 3 次上市後，在月影市接管 5 個物件',
+  when:edgeAt('edge5',3,7,5),
   text:['月影市邊境有上百間空屋，房東搬走了，房子一間一間在黑暗裡變舊。','同一時間，夜班工作的年輕住戶，在城裡找不到租得起的房間。','你向房東們提出一個辦法：由金鑰負責修繕、找房客、收租和日常管理，房東每個月安心收租。','第一批二十間空屋重新亮燈。搬進來的，是夜班護理師、麵包師和清潔工。'],
   file:'月影市空屋以包租代管方式重新出租給在地工作者。'},
- {id:'edge7',title:'金麥平原 · 最後一個簽名',hint:'第 5 次上市後，在金麥平原接管 5 個物件',
-  when:edgeAt('edge6',5,8,5),
+ {id:'edge7',title:'金麥平原 · 最後一個簽名',hint:'第 4 次上市後，在金麥平原接管 5 個物件',
+  when:edgeAt('edge6',4,8,5),
   text:['金麥平原邊境的老糧倉公寓，已經老到補強也來不及了，唯一的辦法是重建。','重建需要全體所有權人同意。二十九戶都簽了，只差頂樓的老稻草人。','「我在這裡看了六十年的麥田，」他說，「新房子還看得到嗎？」','你請建築師把新大樓的頂樓設計成公共的觀景台。老稻草人在同意書上，用麥稈簽下了名字。'],
   file:'金麥平原老糧倉公寓取得全體同意，啟動重建。'},
- {id:'edge8',title:'第四部完 · 地圖上的新名字',hint:'第 5 次上市後，把事務所開到王都並接管 5 個物件',
-  when:s=>s.ipos>=5&&s.story.includes('edge7')&&cityIdx()===9&&s.props>=5,
+ {id:'edge8',title:'第四部完 · 地圖上的新名字',hint:'第 4 次上市後，把事務所開到王都並接管 5 個物件',
+  when:s=>s.ipos>=4&&s.story.includes('edge7')&&cityIdx()===9&&s.props>=5,
   text:['公會年度大會上，你把那張泛黃的地圖還給叔叔。','地圖邊緣的「無人」兩個字，已經一個一個被劃掉，旁邊寫上了社區的名字。','叔叔的學生們接手了邊境的十幾個社區，有的在當主委，有的在修屋頂。','叔叔把地圖翻到背面，上面還有一片更大的空白。「這次，」他說，「換你來畫了。」'],
   file:'第四部完：邊境的無人房子都有了名字和管理者。'}
 ];
@@ -1181,12 +1197,14 @@ const teamMin=()=>{const ids=BASE_UNITS.map(u=>u[0]).filter(id=>S.seen.includes(
 const teamCur=()=>TEAM_STEPS.filter(x=>teamMin()>=x).length;
 const teamMult=()=>Math.pow(2,S.teamLv||0);
 const below=u=>{const i=unitIndex[u.id];return i>0?UNITS[i-1]:null;};
-const synMult=u=>{const b=below(u);return b?1+0.01*cnt(b.id):1;};
-const unitEach=u=>u.prod*msMult(cnt(u.id))*synMult(u)*mgrMult(u.id)*(inCity(6)?1.5:1)*globalMult();
+const above=u=>{const i=unitIndex[u.id];return i<UNITS.length-1&&UNITS[i+1].city===u.city?UNITS[i+1]:null;};
+const synMult=u=>{const b=below(u),a=above(u);return (b?1+0.01*cnt(b.id):1)*(a?1+0.01*cnt(a.id):1);};
+const profMult=c=>1+0.01*c;
+const unitEach=u=>u.prod*msMult(cnt(u.id))*profMult(cnt(u.id))*synMult(u)*mgrMult(u.id)*(inCity(6)?1.5:1)*globalMult();
 function baseRate(){let r=0;availUnits().forEach(u=>{const n=cnt(u.id);if(n)r+=n*unitEach(u);});return r;}
 function buffMult(){const now=Date.now();return S.buffs.filter(b=>b.until>now).reduce((m,b)=>m*b.mult,1);}
 const rate=()=>baseRate()*buffMult();
-const priceMod=()=>Math.max(0.2,1-0.04*tal('disc'))*(inCity(2)?0.7:1);
+const priceMod=()=>Math.max(0.2,Math.pow(0.96,tal('disc')))*(inCity(2)?0.7:1);
 const firstCost=u=>u.cost*Math.pow(growth(),cnt(u.id))*priceMod();
 const bulkCost=(u,k)=>Math.ceil(firstCost(u)*(Math.pow(growth(),k)-1)/(growth()-1));
 function maxAfford(u){const f=firstCost(u),g=growth();if(S.coins<f)return 0;let k=Math.floor(Math.log(S.coins*(g-1)/f+1)/Math.log(g));while(k>0&&bulkCost(u,k)>S.coins)k--;return k;}
@@ -1194,9 +1212,9 @@ function plan(u){if(S.amt==='max'){const k=maxAfford(u);return k>0?{k,c:bulkCost
 const patrolGain=()=>(seasonOn('moon')?3:1)*(1+baseRate()*0.1)*buffMult()*(hasPerk(7)?5:1)*(policyOn('patrol')?3:1)*mgrMult('@patrol')*(inCity(2)?0.5:1)*(inCity(5)?5:1);
 const needOf=i=>propAt(i).need*Math.pow(0.85,tal('fast'))*(inCity(9)?10:1);
 const renoCost=i=>propAt(i).reno*Math.pow(10,S.reno[i]||0);
-const facCost=f=>f.cost*Math.max(0.3,1-0.05*tal('facil'))*(inCity(8)?0.5:1);
+const facCost=f=>f.cost*Math.max(0.3,Math.pow(0.95,tal('facil')))*(inCity(8)?0.5:1);
 const offlineCapH=()=>(hasPerk(5)?24:hasPerk(1)?12:8)+2*tal('night');
-const contractReward=t=>(seasonOn('typhoon')?1.5:1)*Math.max(100,baseRate()*t.dur*t.mult)*(1+0.3*tal('contract'))*mgrMult('@contract')*(inCity(4)?2:1);
+const contractReward=t=>(seasonOn('typhoon')?1.5:1)*Math.max(100,baseRate()*t.dur*t.mult)*(1+0.1*tal('contract'))*mgrMult('@contract')*(inCity(4)?2:1);
 const complaintReward=val=>(seasonOn('halloween')?1.5:1)*Math.max(50,baseRate()*val*60)*(hasPerk(3)?2:1)*(policyOn('resident')?1.5:1)*(1+0.5*tal('comp'))*mgrMult('@complaint')*(inCity(1)?3:1);
 const buffDur=()=>10*60*1000*(1+0.2*tal('buff'));
 function earn(n){S.coins+=n;S.life+=n;S.run+=n;}
@@ -1550,18 +1568,20 @@ function renderTop(){
 function staffList(){const av=availUnits();const shown=av.filter(u=>S.seen.includes(u.id));const next=av.find(u=>!S.seen.includes(u.id));return {shown,next};}
 function buildStaff(){
   const {shown,next}=staffList();const box=$('staff');let html='';
-  shown.forEach(u=>{html+='<div class="row" id="u-'+u.id+'"><div class="info"><span class="name">'+u.name+(u.city?'<span class="own" style="color:var(--good)">'+CITIES[u.city].name+'</span>':'')+'<span class="own">×<span data-k="own">0</span></span></span><span class="desc">'+u.desc+'</span><span class="meta num" data-k="meta"></span></div><button class="buy" type="button" data-act="hire" data-v="'+u.id+'"><b data-k="qty">雇用</b><span data-k="cost"></span></button></div>';});
+  shown.forEach(u=>{html+='<div class="row" id="u-'+u.id+'"><div class="info"><span class="name">'+uIcon(u)+u.name+'<span class="best" data-k="best" hidden>最划算</span>'+(u.city?'<span class="own" style="color:var(--good)">'+CITIES[u.city].name+'</span>':'')+'<span class="own">×<span data-k="own">0</span></span></span><span class="desc">'+u.desc+'</span><span class="meta num" data-k="meta"></span></div><button class="buy" type="button" data-act="hire" data-v="'+u.id+'"><b data-k="qty">雇用</b><span data-k="cost"></span></button></div>';});
   if(next)html+='<div class="row locked"><div class="info"><span class="name">？？？</span><span class="desc">還沒有人來應徵。本輪累積 '+fmt(next.cost*priceMod()*0.4)+' 金幣後出現。</span></div></div>';
   box.innerHTML=html;staffBuilt=shown.map(u=>u.id).join(',')+'|'+(next?next.id:'');
 }
 function updateStaff(){
   const {shown,next}=staffList();const sig=shown.map(u=>u.id).join(',')+'|'+(next?next.id:'');
   if(sig!==staffBuilt)buildStaff();
-  shown.forEach(u=>{const row=$('u-'+u.id);if(!row)return;const n=cnt(u.id);
+  const r0=baseRate(),gains={};let bestId=null,bestCp=0;
+  shown.forEach(u=>{const n=cnt(u.id);S.units[u.id]=n+1;const g=baseRate()-r0;S.units[u.id]=n;gains[u.id]=g;const cp=g/firstCost(u);if(cp>bestCp){bestCp=cp;bestId=u.id;}});
+  shown.forEach(u=>{const row=$('u-'+u.id);if(!row)return;const n=cnt(u.id);row.querySelector('[data-k=best]').hidden=u.id!==bestId||shown.length<2;
     row.querySelector('[data-k=own]').textContent=n;
     const mm=mgrMult(u.id);
-    const sy=synMult(u),b=below(u);
-    row.querySelector('[data-k=meta]').textContent=rank(n)+'（×'+fmt(msMult(n))+'）'+(mm>1?' · 主管 ×'+fmt(mm):'')+(b&&sy>1?' · '+b.name+'支援 +'+fmt(Math.round((sy-1)*100))+'%':'')+' · 每名每秒 '+fmt(unitEach(u))+' · 再 '+(nextMs(n)-n)+' 名升級';
+    const sy=synMult(u);
+    row.querySelector('[data-k=meta]').textContent=rank(n)+'（×'+fmt(msMult(n))+'）'+(mm>1?' · 主管 ×'+fmt(mm):'')+(n?' · 熟練 +'+n+'%':'')+(sy>1?' · 前後階支援 +'+fmt(Math.round((sy-1)*100))+'%':'')+' · 再雇 1 名 +'+fmt(gains[u.id])+'/秒 · 再 '+(nextMs(n)-n)+' 名大升級';
     const p=plan(u);row.querySelector('[data-k=qty]').textContent='雇用 ×'+p.k;row.querySelector('[data-k=cost]').textContent=fmt(p.c)+' 金幣';row.querySelector('button').disabled=!p.ok;});
 }
 function renderProps(){
@@ -1571,14 +1591,14 @@ function renderProps(){
     if(on){const c=renoCost(i);right='<span class="reno">'+RENO_NAMES[lv]+' · Lv'+lv+'</span>'+(lv<RENO_MAX?'<br><button class="mini" type="button" data-act="reno" data-v="'+i+'" '+(S.coins<c?'disabled':'')+'>裝修 '+fmt(c)+'</button>':'');}
     else right='本輪累積 '+fmt(needOf(i))+'<br>解鎖：'+p.sys;
     const occ=on?occupants(i):[];const st=on?'<small class="stn">派駐 '+occ.length+'/'+slotsOf(i)+'：'+(occ.map(g=>g.name).join('、')||'無')+' · 適性：'+affOf(i).text+'</small>':'';
-    html+='<div class="prop '+(on?'on':'off')+'"><span class="lv">'+(i+1)+'</span><span class="pn">'+esc(on?propLabel(i):p.name)+'<small>'+p.desc+(on?' · 系統：'+p.sys:'')+'</small>'+st+'</span><span class="ps">'+right+'</span></div>';}
+    html+='<div class="prop '+(on?'on':'off')+'"><span class="lv">'+pIcon(i,on?'':'dim')+'</span><span class="pn">'+esc(on?propLabel(i):p.name)+'<small>'+p.desc+(on?' · 系統：'+p.sys:'')+'</small>'+st+'</span><span class="ps">'+right+'</span></div>';}
   html+='<div class="prop off"><span class="lv">'+(S.props+2)+'</span><span class="pn">？？？</span><span class="ps"></span></div>';
   setHTML($('props'),html);
   $('propMult').textContent='物件 ×'+fmt(propMult())+' · 裝修 ×'+fmt(renoMult());
-  $('msNote').textContent='滿 10、25、50 名，之後每 25 名，產出 ×'+msBase().toFixed(1);
+  $('msNote').textContent='每多 1 名 +1%；滿 10、25、50 名，之後每 25 名，產出 ×'+msBase().toFixed(1);
   const lv=S.teamLv||0,nx=TEAM_STEPS[lv],mn=teamMin();
   const low=BASE_UNITS.filter(u=>S.seen.includes(u[0])).sort((x,y)=>cnt(x[0])-cnt(y[0]))[0];
-  setHTML($('team'),'<b>團隊等級 Lv'+lv+'（全體收入 ×'+fmt(teamMult())+'）</b><span>'+(nx?'所有已出現的基本員工都達到 '+nx+' 名，可升到 Lv'+(lv+1)+'（再 ×2）。'+(low?'目前最少的是'+low[1]+'（'+cnt(low[0])+' 名）。':''):'已達最高等級。')+' 另外，每種員工會因前一種員工的人數獲得支援（每 1 名 +1%）。</span>'+(nx?'<div class="bar"><i style="width:'+Math.min(100,mn/nx*100).toFixed(1)+'%"></i></div>':''));
+  setHTML($('team'),'<b>團隊等級 Lv'+lv+'（全體收入 ×'+fmt(teamMult())+'）</b><span>'+(nx?'所有已出現的基本員工都達到 '+nx+' 名，可升到 Lv'+(lv+1)+'（再 ×2）。'+(low?'目前最少的是'+low[1]+'（'+cnt(low[0])+' 名）。':''):'已達最高等級。')+' 另外，每多雇 1 名，該員工產出 +1%（熟練）；相鄰兩階的員工互相支援，每 1 名 +1%。</span>'+(nx?'<div class="bar"><i style="width:'+Math.min(100,mn/nx*100).toFixed(1)+'%"></i></div>':''));
 }
 function lockedNote(n){return '<p class="sub">接管第 '+n+' 個物件「'+propAt(n-1).name+'」後開放（本輪累積 '+fmt(needOf(n-1))+' 金幣）。</p>';}
 function renderBiz(){
@@ -1636,7 +1656,7 @@ function renderCorp(){
   $('talSum').textContent='已投入 '+talTotal()+' 級';
   setHTML($('tree'),TALENTS.map(b=>'<div class="branch"><h3>'+b.branch+'</h3>'+b.items.map(t=>{const lv=tal(t.id),max=lv>=talMax(t),c=talPrice(t);
     if(t.one){const on=autoOn(t.id);return '<div class="tal"><div><div class="tn">'+t.name+' <span class="num" style="color:var(--muted);font-weight:400">'+(lv?(on?'開啟中':'已關閉'):'未解鎖')+'</span></div><div class="td">'+t.d(1)+'</div></div>'+(lv?'<button class="mini" type="button" data-act="autotog" data-v="'+t.id+'">'+(on?'關閉':'開啟')+'</button>':'<button class="mini" type="button" data-act="tal" data-v="'+t.id+'" '+(S.fame<c?'disabled':'')+'>'+c+' 聲望</button>')+'</div>';}
-    let pips='';for(let k=1;k<=TAL_MAX;k++)pips+='<i'+(k<=lv?' class="on"':'')+'></i>';
+    let pips='';for(let k=1;k<=TAL_MAX;k++)pips+='<i'+(k<=lv?' class="on"':'')+'></i>';if(lv>TAL_MAX&&!t.max)pips+='<span class="pipx">+'+(lv-TAL_MAX)+'</span>';
     return '<div class="tal"><div><div class="tn">'+t.name+' <span class="num" style="color:var(--muted);font-weight:400">Lv'+lv+'</span></div><div class="td">'+(lv?t.d(lv):t.d(1)+'（Lv1）')+'</div><div class="pips">'+pips+'</div></div><button class="mini" type="button" data-act="tal" data-v="'+t.id+'" '+(max||S.fame<c?'disabled':'')+'>'+(max?'已滿級':c+' 聲望')+'</button></div>';}).join('')+'</div>').join(''));
   setHTML($('perks'),PERKS.map(([n,name,d])=>{const on=hasPerk(n);return '<div class="perk'+(on?' on':'')+'"><span class="need">'+(on?'已解鎖':'重組 '+n+' 次')+'</span><div><b>'+name+'</b><span class="d">'+d+'</span></div></div>';}).join(''));
 }
@@ -1654,7 +1674,7 @@ function renderMgr(){
     if(!lv)return '<div class="mgr off r'+g.r+'"><span class="rar">'+RARITY[g.r].name+'</span><b>？？？</b><span class="t">專長：'+target+'</span></div>';
     const st=stationOf(g.id),eff=mgrEff(g);let opts='<option value="">待命（無效果）</option>';
     for(let i=0;i<S.props;i++){const a=affOf(i).test(g);const used=occupants(i).length;opts+='<option value="'+i+'"'+(st===i?' selected':'')+'>'+(a?'★ ':'')+esc(propLabel(i))+'（'+used+'/'+slotsOf(i)+'）</option>';}
-    return '<div class="mgr r'+g.r+'"><span class="rar">'+RARITY[g.r].name+' · Lv'+lv+'</span><b>'+g.name+'</b><span class="t">'+g.title+' · '+g.d+'</span><span class="e">'+(st==null?'待命中，沒有效果':target+' ×'+fmt(eff)+(affOf(st).test(g)?'（適性加成）':''))+'</span><label class="t" style="margin-top:4px">派駐<select data-assign="'+g.id+'" id="as-'+g.id+'">'+opts+'</select></label></div>';}).join(''));
+    return '<div class="mgr r'+g.r+'"><span class="rar">'+RARITY[g.r].name+' · Lv'+lv+'</span><b><span class="av">'+g.name.charAt(0)+'</span>'+g.name+'</b><span class="t">'+g.title+' · '+g.d+'</span><span class="e">'+(st==null?'待命中，沒有效果':target+' ×'+fmt(eff)+(affOf(st).test(g)?'（適性加成）':''))+'</span><label class="t" style="margin-top:4px">派駐<select data-assign="'+g.id+'" id="as-'+g.id+'">'+opts+'</select></label></div>';}).join(''));
   $('resSum').textContent='已入住 '+S.residents.length+' / '+RESIDENTS.length+' · 收入 ×'+resMult().toFixed(2);
   setHTML($('res'),PROPS.map((p,i)=>{const list=RESIDENTS.filter(x=>x[0]===i);const full=list.every(x=>S.residents.includes(x[1]));
     return '<li><b>'+(i<S.props||list.some(x=>S.residents.includes(x[1]))?esc(i<S.props?propLabel(i):p.name):'？？？')+(full?'（全棟滿租 ×1.1）':'')+'</b>'+list.map(x=>S.residents.includes(x[1])?'<span>'+x[2]+'：'+x[3]+'</span>':'<span class="off">？？？</span>').join('')+'</li>';}).join(''));
