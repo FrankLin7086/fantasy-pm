@@ -251,6 +251,9 @@ a.lab:hover{text-decoration:underline}
 .mgr.r1 .av{background:#5d7fa8;color:#fff}.mgr.r2 .av{background:var(--brass);color:var(--brass-ink)}
 .pipx{font-size:10px;color:var(--brass);margin-left:4px;font-family:var(--f-num)}
 .prop .lv{align-self:start}
+/* 手機快速連點不放大頁面（保留雙指縮放） */
+html,body,button,.tab,.patrol{touch-action:manipulation}
+.cf input,.cf select,textarea{font-size:16px}
 </style>
 
 <div class="wrap">
@@ -464,7 +467,7 @@ a.lab:hover{text-decoration:underline}
 'use strict';
 const KEY='fantasy-pm-save-v1';
 const OFFLINE_MIN=60;
-const VERSION='v0.7.0';
+const VERSION='v0.7.2';
 
 /* ================= DATA ================= */
 const CITIES=[
@@ -581,7 +584,7 @@ const PERKS=[
 const TALENTS=[
  {branch:'營運',items:[
   {id:'inc',name:'品牌溢價',d:l=>'全體收入 +'+(25*l)+'%'},
-  {id:'seed',name:'開業資金',d:l=>l?'開業時帶 '+fmt(Math.pow(10,l+2))+' 金幣':'開業時帶一筆資金'},
+  {id:'seed',name:'開業資金',max:10,d:l=>l?'開業時帶 '+fmt(Math.pow(10,l+2))+' 金幣':'開業時帶一筆資金'},
   {id:'fast',name:'展店效率',max:10,d:l=>'物件解鎖需求 −'+Math.round((1-Math.pow(0.85,l))*100)+'%'}]},
  {branch:'人事',items:[
   {id:'disc',name:'集中採購',d:l=>'員工價格 −'+Math.round((1-Math.max(0.2,Math.pow(0.96,l)))*100)+'%'},
@@ -1130,6 +1133,7 @@ function merge(o){
   f.custom=Object.assign({office:'',player:'',title:'rookie',slogan:'',accent:'brass',props:{}},f.custom||{});if(!f.custom.props||typeof f.custom.props!=='object')f.custom.props={};
   if(o.maxCity===undefined){f.maxCity=Math.min(f.rebirths||0,CITIES.length-1);f.maxRebirths=f.rebirths||0;}
   if(!f.sev||typeof f.sev!=='object')f.sev={key:'',c:{},got:[]};
+  if(f.talents&&f.talents.seed>10)f.talents.seed=10;
   f.stats=Object.assign({start:0,sessions:0,days:[],playSec:0,firsts:{}},f.stats||{});if(!Array.isArray(f.stats.days))f.stats.days=[];if(!f.stats.firsts||typeof f.stats.firsts!=='object')f.stats.firsts={};
   if(migrated){const old=Number(o.fame)||0;f.fameTotal=Math.floor(Math.sqrt(old));f.fame=f.fameTotal;f.seen=[];f.v=2;
     f.log.unshift({t:'--:--',text:'存檔已升級到 v0.2。舊的聲望依新公式換算為 '+f.fameTotal+' 點，可以到「集團」頁點天賦。',kind:'story'});}
@@ -1339,7 +1343,7 @@ function useGlass(kind,j){
 function doPatrol(){const g=patrolGain();earn(g);S.patrols++;sevTrack('patrol');
   if(S.patrols===1||S.patrols%25===0){const lines=['你巡了一圈，順手修好一盞壞掉的魔法燈。','地下二樓的矮人請你喝了一杯黑麥酒。','你在信箱裡收到一封沒有署名的感謝信。','你發現有人在樓梯間偷養史萊姆。','你收齊了這個月的管理費。'];log(lines[Math.floor(Math.random()*lines.length)]);}
   check();renderTop();}
-function hire(id){const u=UNITS[unitIndex[id]];if(!u||u.city>cityIdx())return;const p=plan(u);if(!p.ok)return;const before=cnt(id);S.coins-=p.c;S.units[id]=before+p.k;const n=S.units[id];
+function hire(id){const u=UNITS[unitIndex[id]];if(!u||u.city>Math.max(cityIdx(),S.maxCity||0))return;const p=plan(u);if(!p.ok)return;const before=cnt(id);S.coins-=p.c;S.units[id]=before+p.k;const n=S.units[id];
   if(before===0)log('雇用了第一位'+u.name+'。');else if(p.k>1)log('一次雇用 '+p.k+' 名'+u.name+'，花費 '+fmt(p.c)+' 金幣。');
   for(let l=msLevel(before)+1;l<=msLevel(n);l++){const r=RANKS[Math.min(l,RANKS.length-1)];
     log((l===1?u.ms:u.name+'晉升為「'+r+'」等級。')+'（產出 ×'+msBase().toFixed(1)+'）','story');toast(u.name+'晉升「'+r+'」');}
@@ -1370,7 +1374,7 @@ function buyTalent(id){const t=talDef(id);if(!t)return;const lv=tal(id);if(lv>=t
 /* ================= IPO: second prestige layer ================= */
 const IPO_MIN_FAME=250, IPO_GROW=3;
 const BOARD=[
- {id:'aura',name:'上市光環',max:10,cost:l=>2*(l+1),d:l=>'全體收入 ×'+fmt(Math.pow(1.3,l))},
+ {id:'aura',name:'上市光環',max:Infinity,cost:l=>l<10?2*(l+1):Math.ceil(20*Math.pow(1.5,l-9)),d:l=>'全體收入 ×'+fmt(Math.pow(1.3,l))},
  {id:'brand',name:'品牌授權',max:10,cost:l=>l+1,d:l=>'重組獲得的聲望 +'+(25*l)+'%'},
  {id:'head',name:'資深董事',max:3,cost:l=>2*(l+1),d:l=>'每次開業直接接管前 '+(l+1)+' 個物件'},
  {id:'bonus',name:'股東紅利',max:3,cost:l=>l+2,d:l=>'每日登入多 '+l+' 個沙漏'},
@@ -1397,7 +1401,7 @@ function doIPO(){
     :['金鑰物業集團再次增資上市，股東們的掌聲比上次更響。','你回到銀橡城，準備打下更大的版圖。'];
   lines.push({text:'獲得股份 +'+g+'（可用 '+S.shares+' 股，累計 '+S.sharesTotal+' 股，全體收入 ×'+fmt(shareMult())+'）',cls:'gain'});
   lines.push({text:'下一次上市需要累計聲望 '+fmt(ipoNeed())+' 點（每上市一次，門檻 ×'+IPO_GROW+'）。',cls:'sub'});
-  lines.push({text:'聲望、天賦、重組次數已歸零；自動化規則、主管、住戶、知識小卡、在地員工都保留。到「集團」頁用股份通過董事會決議。',cls:'sub'});
+  lines.push({text:'聲望、天賦、重組次數已歸零；自動化規則、主管、住戶、知識小卡都保留；到過的城市的在地員工會留在名冊上，回到該城市才能再雇用。到「集團」頁用股份通過董事會決議。',cls:'sub'});
   log('集團上市（第 '+S.ipos+' 次），股份 +'+g+'。','story');
   queue({title:first?'敲鐘上市':'第 '+S.ipos+' 次上市',lines,btn:'回到銀橡城'});
   check();renderAll();save();
@@ -1576,12 +1580,14 @@ function updateStaff(){
   const {shown,next}=staffList();const sig=shown.map(u=>u.id).join(',')+'|'+(next?next.id:'');
   if(sig!==staffBuilt)buildStaff();
   const r0=baseRate(),gains={};let bestId=null,bestCp=0;
-  shown.forEach(u=>{const n=cnt(u.id);S.units[u.id]=n+1;const g=baseRate()-r0;S.units[u.id]=n;gains[u.id]=g;const cp=g/firstCost(u);if(cp>bestCp){bestCp=cp;bestId=u.id;}});
+  const locked=u=>u.city>cityIdx();
+  shown.forEach(u=>{if(locked(u))return;const n=cnt(u.id);S.units[u.id]=n+1;const g=baseRate()-r0;S.units[u.id]=n;gains[u.id]=g;const cp=g/firstCost(u);if(cp>bestCp){bestCp=cp;bestId=u.id;}});
   shown.forEach(u=>{const row=$('u-'+u.id);if(!row)return;const n=cnt(u.id);row.querySelector('[data-k=best]').hidden=u.id!==bestId||shown.length<2;
     row.querySelector('[data-k=own]').textContent=n;
     const mm=mgrMult(u.id);
     const sy=synMult(u);
-    row.querySelector('[data-k=meta]').textContent=rank(n)+'（×'+fmt(msMult(n))+'）'+(mm>1?' · 主管 ×'+fmt(mm):'')+(n?' · 熟練 +'+n+'%':'')+(sy>1?' · 前後階支援 +'+fmt(Math.round((sy-1)*100))+'%':'')+' · 再雇 1 名 +'+fmt(gains[u.id])+'/秒 · 再 '+(nextMs(n)-n)+' 名大升級';
+    row.querySelector('[data-k=meta]').textContent=rank(n)+'（×'+fmt(msMult(n))+'）'+(mm>1?' · 主管 ×'+fmt(mm):'')+(u.city>cityIdx()?' · 在地員工，回到'+CITIES[u.city].name+'才能雇用':'')+(n?' · 熟練 +'+n+'%':'')+(sy>1?' · 前後階支援 +'+fmt(Math.round((sy-1)*100))+'%':'')+(gains[u.id]!=null?' · 再雇 1 名 +'+fmt(gains[u.id])+'/秒':'')+' · 再 '+(nextMs(n)-n)+' 名大升級';
+    if(locked(u)){row.querySelector('[data-k=qty]').textContent='尚未抵達';row.querySelector('[data-k=cost]').textContent='抵達'+CITIES[u.city].name+'後可雇用';row.querySelector('button').disabled=true;return;}
     const p=plan(u);row.querySelector('[data-k=qty]').textContent='雇用 ×'+p.k;row.querySelector('[data-k=cost]').textContent=fmt(p.c)+' 金幣';row.querySelector('button').disabled=!p.ok;});
 }
 function renderProps(){
@@ -1650,7 +1656,7 @@ function renderCorp(){
   $('ipoNext').textContent=ready?'累計聲望達 '+fmt(Math.pow(sg+1,2)*10)+' 點，可再多 1 股。':'上市後聲望、天賦、重組次數會歸零，換成永久保留的股份。';
   $('ipoBtn').disabled=!ready||sg<=0;
   setHTML($('board'),BOARD.map(b=>{const lv=brd(b.id),max=lv>=b.max,c=b.cost(lv);
-    return '<div class="tal"><div><div class="tn">'+b.name+' <span class="num" style="color:var(--muted);font-weight:400">Lv'+lv+'/'+b.max+'</span></div><div class="td">'+(lv?b.d(lv):b.d(1)+'（Lv1）')+'</div></div><button class="mini" type="button" data-act="board" data-v="'+b.id+'" '+(max||S.shares<c?'disabled':'')+'>'+(max?'已滿級':c+' 股')+'</button></div>';}).join(''));
+    return '<div class="tal"><div><div class="tn">'+b.name+' <span class="num" style="color:var(--muted);font-weight:400">Lv'+lv+(b.max===Infinity?'':'/'+b.max)+'</span></div><div class="td">'+(lv?b.d(lv):b.d(1)+'（Lv1）')+'</div></div><button class="mini" type="button" data-act="board" data-v="'+b.id+'" '+(max||S.shares<c?'disabled':'')+'>'+(max?'已滿級':c+' 股')+'</button></div>';}).join(''));
   const canTal=TALENTS.some(b=>b.items.some(t=>tal(t.id)<talMax(t)&&S.fame>=talPrice(t)));
   setHTML($('tab-corp'),'集團'+(can||canTal||ipoReady()||BOARD.some(b=>brd(b.id)<b.max&&S.shares>=b.cost(brd(b.id)))?'<span class="dot"></span>':''));
   $('talSum').textContent='已投入 '+talTotal()+' 級';
