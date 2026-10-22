@@ -252,8 +252,9 @@ a.lab:hover{text-decoration:underline}
 .pipx{font-size:10px;color:var(--brass);margin-left:4px;font-family:var(--f-num)}
 .prop .lv{align-self:start}
 /* 手機快速連點不放大頁面（保留雙指縮放） */
-html,body,button,.tab,.patrol{touch-action:manipulation}
+*{touch-action:manipulation}
 .cf input,.cf select,textarea{font-size:16px}
+@media (max-width:420px){.amt{gap:5px}.amt button{min-width:0;padding:4px 9px}.amt span{font-size:12px}}
 </style>
 
 <div class="wrap">
@@ -276,6 +277,7 @@ html,body,button,.tab,.patrol{touch-action:manipulation}
       <button type="button" data-amt="5" id="amt-5">5</button>
       <button type="button" data-amt="10" id="amt-10">10</button>
       <button type="button" data-amt="50" id="amt-50">50</button>
+      <button type="button" data-amt="ms" id="amt-ms">下一級</button>
       <button type="button" data-amt="max" id="amt-max">最多</button>
     </div>
   </header>
@@ -359,6 +361,7 @@ html,body,button,.tab,.patrol{touch-action:manipulation}
     <div>
       <div class="sec-title"><h2>聲望天賦</h2><span id="talSum"></span></div>
       <p class="explain" style="margin-bottom:10px">花聲望升級天賦，效果永久保留。花掉的聲望不會減少累計聲望的被動加成。</p>
+      <div class="amt" id="talAmtBar" role="group" aria-label="一次升級數量" style="margin-bottom:10px"><span>一次升級</span><button type="button" data-tamt="1">1</button><button type="button" data-tamt="10">10</button><button type="button" data-tamt="100">100</button><button type="button" data-tamt="1000">1000</button><button type="button" data-tamt="all">全部</button></div>
       <div class="tree" id="tree"></div>
     </div>
     <div>
@@ -467,7 +470,7 @@ html,body,button,.tab,.patrol{touch-action:manipulation}
 'use strict';
 const KEY='fantasy-pm-save-v1';
 const OFFLINE_MIN=60;
-const VERSION='v0.7.2';
+const VERSION='v0.7.3';
 
 /* ================= DATA ================= */
 const CITIES=[
@@ -529,7 +532,8 @@ const localIc=c=>'<ellipse cx="16" cy="19" rx="10.5" ry="9.5" fill="'+c+'"/><cir
 const uIcon=u=>svgIc(ICON_U[u.id]||localIc(LOCAL_COL[(u.city||1)-1]||'#c7b8f0'));
 const pIcon=(i,cls)=>svgIc(i<PROPS.length?ICON_P['p'+i]:ICON_P.legend,cls);
 const unitIndex={};UNITS.forEach((u,i)=>unitIndex[u.id]=i);
-const AMTS=[1,5,10,50,'max'];
+const AMTS=[1,5,10,50,'ms','max'];
+const TAMTS=[1,10,100,1000,'all'];
 
 const PROPS=[
  {name:'矮人地下公寓',need:0,sys:'巡視、雇用員工',desc:'潮濕、昏暗、水管常鬧脾氣，但這是一切的起點。',reno:200},
@@ -1112,14 +1116,14 @@ function fresh(){return {v:2,amt:1,dbg:false,dbgSpeed:false,coins:0,life:0,run:0
   units:{},props:1,reno:[],ach:[],patrols:0,complaints:0,offlineClaims:0,buffs:[],daily:{last:null,day:0,cycles:0},
   story:[],log:[],seen:[],event:null,nextEvent:null,lastEventIdx:null,lastSeen:Date.now(),
   contracts:{offers:[],active:[]},contractsDone:0,council:{on:[],changed:0},councilSet:0,facs:[],
-  talents:{},mgr:{},seenEv:[],teamLv:0,assign:{},assignInit:true,autoOff:{},glass:GLASS_GIFT,glassUsed:0,eventAt:0,shares:0,sharesTotal:0,ipos:0,board:{},maxCity:0,maxRebirths:0,cityOverride:null,nextCity:null,tabsSeen:[],seasonDone:0,supporter:false,adDay:null,adViews:0,custom:{office:'',player:'',title:'rookie',slogan:'',accent:'brass',props:{}},residents:[],nextRes:0,cards:[],sev:{key:'',c:{},got:[]},stats:{start:0,sessions:0,days:[],playSec:0,firsts:{}}};}
+  talents:{},mgr:{},seenEv:[],teamLv:0,assign:{},assignInit:true,autoOff:{},glass:GLASS_GIFT,glassUsed:0,eventAt:0,shares:0,sharesTotal:0,ipos:0,board:{},maxCity:0,maxRebirths:0,cityOverride:null,nextCity:null,tabsSeen:[],talAmt:1,seasonDone:0,supporter:false,adDay:null,adViews:0,custom:{office:'',player:'',title:'rookie',slogan:'',accent:'brass',props:{}},residents:[],nextRes:0,cards:[],sev:{key:'',c:{},got:[]},stats:{start:0,sessions:0,days:[],playSec:0,firsts:{}}};}
 function merge(o){
   const f=fresh();if(!o||typeof o!=='object')return f;
   const migrated=o.v!==2;
   for(const k in f){if(o[k]!==undefined)f[k]=o[k];}
   if(Array.isArray(o.units)){f.units={};o.units.forEach((c,i)=>{if(UNITS[i])f.units[UNITS[i].id]=Number(c)||0;});}
   if(typeof f.units!=='object'||!f.units)f.units={};
-  if(!AMTS.includes(f.amt))f.amt=1;
+  if(!AMTS.includes(f.amt))f.amt=1;if(!TAMTS.includes(f.talAmt))f.talAmt=1;
   f.daily=Object.assign({last:null,day:0,cycles:0},f.daily||{});
   f.contracts=Object.assign({offers:[],active:[]},f.contracts||{});
   f.council=Object.assign({on:[],changed:0},f.council||{});
@@ -1212,7 +1216,7 @@ const priceMod=()=>Math.max(0.2,Math.pow(0.96,tal('disc')))*(inCity(2)?0.7:1);
 const firstCost=u=>u.cost*Math.pow(growth(),cnt(u.id))*priceMod();
 const bulkCost=(u,k)=>Math.ceil(firstCost(u)*(Math.pow(growth(),k)-1)/(growth()-1));
 function maxAfford(u){const f=firstCost(u),g=growth();if(S.coins<f)return 0;let k=Math.floor(Math.log(S.coins*(g-1)/f+1)/Math.log(g));while(k>0&&bulkCost(u,k)>S.coins)k--;return k;}
-function plan(u){if(S.amt==='max'){const k=maxAfford(u);return k>0?{k,c:bulkCost(u,k),ok:true}:{k:1,c:Math.ceil(firstCost(u)),ok:false};}const k=S.amt,c=bulkCost(u,k);return {k,c,ok:S.coins>=c};}
+function plan(u){if(S.amt==='ms'){const k=nextMs(cnt(u.id))-cnt(u.id),c=bulkCost(u,k);return {k,c,ok:S.coins>=c};}if(S.amt==='max'){const k=maxAfford(u);return k>0?{k,c:bulkCost(u,k),ok:true}:{k:1,c:Math.ceil(firstCost(u)),ok:false};}const k=S.amt,c=bulkCost(u,k);return {k,c,ok:S.coins>=c};}
 const patrolGain=()=>(seasonOn('moon')?3:1)*(1+baseRate()*0.1)*buffMult()*(hasPerk(7)?5:1)*(policyOn('patrol')?3:1)*mgrMult('@patrol')*(inCity(2)?0.5:1)*(inCity(5)?5:1);
 const needOf=i=>propAt(i).need*Math.pow(0.85,tal('fast'))*(inCity(9)?10:1);
 const renoCost=i=>propAt(i).reno*Math.pow(10,S.reno[i]||0);
@@ -1367,15 +1371,18 @@ function togglePolicy(id){if(S.props<4)return;const now=Date.now();const on=S.co
   log('管委會通過新方針：'+names+'。');check();renderAll();save();}
 function buyFac(id){const f=FACS.find(x=>x.id===id);if(!f||S.props<5||S.facs.includes(id))return;const c=facCost(f);if(S.coins<c)return;S.coins-=c;S.facs.push(id);
   log('完成設施投資「'+f.name+'」，全體收入 ×'+f.mult+'。','story');toast(f.name+'完工，收入 ×'+f.mult);check();renderAll();save();}
-function buyTalent(id){const t=talDef(id);if(!t)return;const lv=tal(id);if(lv>=talMax(t))return;const c=talPrice(t);if(S.fame<c)return;S.fame-=c;S.talents[id]=lv+1;
-  log(t.one?'解鎖自動化「'+t.name+'」：'+t.d(1)+'。':'天賦「'+t.name+'」升到 Lv'+(lv+1)+'：'+t.d(lv+1)+'。');check();renderAll();save();}
+function talPlan(t){const want=t.one?1:(S.talAmt==='all'?Infinity:(S.talAmt||1));let lv=tal(t.id),k=0,c=0;
+  while(k<want&&lv+k<talMax(t)){const n=t.one?t.cost:talCost(lv+k);if(c+n>S.fame)break;c+=n;k++;if(k>100000)break;}
+  return {k,c,next:t.one?t.cost:talCost(lv)};}
+function buyTalent(id){const t=talDef(id);if(!t)return;const lv=tal(id);if(lv>=talMax(t))return;const p=talPlan(t);if(!p.k)return;S.fame-=p.c;S.talents[id]=lv+p.k;
+  log(t.one?'解鎖自動化「'+t.name+'」：'+t.d(1)+'。':'天賦「'+t.name+'」'+(p.k>1?'連升 '+p.k+' 級，':'')+'升到 Lv'+(lv+p.k)+'：'+t.d(lv+p.k)+'。');check();renderAll();save();}
 
 /* ================= REBIRTH ================= */
 /* ================= IPO: second prestige layer ================= */
 const IPO_MIN_FAME=250, IPO_GROW=3;
 const BOARD=[
  {id:'aura',name:'上市光環',max:Infinity,cost:l=>l<10?2*(l+1):Math.ceil(20*Math.pow(1.5,l-9)),d:l=>'全體收入 ×'+fmt(Math.pow(1.3,l))},
- {id:'brand',name:'品牌授權',max:10,cost:l=>l+1,d:l=>'重組獲得的聲望 +'+(25*l)+'%'},
+ {id:'brand',name:'品牌授權',max:Infinity,cost:l=>l<10?l+1:Math.ceil(10*Math.pow(1.5,l-9)),d:l=>'重組獲得的聲望 +'+(25*l)+'%'},
  {id:'head',name:'資深董事',max:3,cost:l=>2*(l+1),d:l=>'每次開業直接接管前 '+(l+1)+' 個物件'},
  {id:'bonus',name:'股東紅利',max:3,cost:l=>l+2,d:l=>'每日登入多 '+l+' 個沙漏'},
  {id:'perma',name:'永久特權',max:1,cost:()=>2,d:()=>'集團特權改以歷史最高重組次數計算，上市後不會失去'},
@@ -1663,7 +1670,7 @@ function renderCorp(){
   setHTML($('tree'),TALENTS.map(b=>'<div class="branch"><h3>'+b.branch+'</h3>'+b.items.map(t=>{const lv=tal(t.id),max=lv>=talMax(t),c=talPrice(t);
     if(t.one){const on=autoOn(t.id);return '<div class="tal"><div><div class="tn">'+t.name+' <span class="num" style="color:var(--muted);font-weight:400">'+(lv?(on?'開啟中':'已關閉'):'未解鎖')+'</span></div><div class="td">'+t.d(1)+'</div></div>'+(lv?'<button class="mini" type="button" data-act="autotog" data-v="'+t.id+'">'+(on?'關閉':'開啟')+'</button>':'<button class="mini" type="button" data-act="tal" data-v="'+t.id+'" '+(S.fame<c?'disabled':'')+'>'+c+' 聲望</button>')+'</div>';}
     let pips='';for(let k=1;k<=TAL_MAX;k++)pips+='<i'+(k<=lv?' class="on"':'')+'></i>';if(lv>TAL_MAX&&!t.max)pips+='<span class="pipx">+'+(lv-TAL_MAX)+'</span>';
-    return '<div class="tal"><div><div class="tn">'+t.name+' <span class="num" style="color:var(--muted);font-weight:400">Lv'+lv+'</span></div><div class="td">'+(lv?t.d(lv):t.d(1)+'（Lv1）')+'</div><div class="pips">'+pips+'</div></div><button class="mini" type="button" data-act="tal" data-v="'+t.id+'" '+(max||S.fame<c?'disabled':'')+'>'+(max?'已滿級':c+' 聲望')+'</button></div>';}).join('')+'</div>').join(''));
+    return '<div class="tal"><div><div class="tn">'+t.name+' <span class="num" style="color:var(--muted);font-weight:400">Lv'+lv+'</span></div><div class="td">'+(lv?t.d(lv):t.d(1)+'（Lv1）')+'</div><div class="pips">'+pips+'</div></div>'+(()=>{const p=talPlan(t);return '<button class="mini" type="button" data-act="tal" data-v="'+t.id+'" '+(max||!p.k?'disabled':'')+'>'+(max?'已滿級':p.k>1?'+'+p.k+' 級 · '+fmt(p.c)+' 聲望':fmt(p.k?p.c:p.next)+' 聲望')+'</button>';})()+'</div>';}).join('')+'</div>').join(''));
   setHTML($('perks'),PERKS.map(([n,name,d])=>{const on=hasPerk(n);return '<div class="perk'+(on?' on':'')+'"><span class="need">'+(on?'已解鎖':'重組 '+n+' 次')+'</span><div><b>'+name+'</b><span class="d">'+d+'</span></div></div>';}).join(''));
 }
 function renderCase(){
@@ -1701,7 +1708,7 @@ function renderSlip(){
   $('choiceA').querySelector('b').textContent=ev[1][0];$('choiceA').querySelector('span').textContent='約 +'+fmt(complaintReward(ev[1][1]))+' 金幣';
   $('choiceB').querySelector('b').textContent=ev[2][0];$('choiceB').querySelector('span').textContent='收入 ×'+ev[2][1]+'，持續 '+dur(buffDur()/1000);
 }
-function renderAmt(){document.querySelectorAll('.amt button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.amt)===String(S.amt)?'true':'false'));}
+function renderAmt(){document.querySelectorAll('.amt button[data-amt]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.amt)===String(S.amt)?'true':'false'));document.querySelectorAll('.amt button[data-tamt]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tamt)===String(S.talAmt)?'true':'false'));}
 function renderDebug(){$('debug').hidden=!S.dbg;$('dbgToggle').textContent=S.dbg?'關閉測試模式':'開啟測試模式';$('dbgToggle').setAttribute('aria-pressed',S.dbg?'true':'false');$('dbg-speed').setAttribute('aria-pressed',S.dbgSpeed?'true':'false');}
 function renderSeason(){
   const n=seasonNow(),box=$('eventBox');if(!box)return;
@@ -1805,7 +1812,8 @@ function wire(){
   $('rbNo').onclick=()=>{$('rbRow').hidden=false;$('rbConfirm').hidden=true;};
   $('rbYes').onclick=()=>{$('rbRow').hidden=false;$('rbConfirm').hidden=true;doRebirth();};
   $('dbgToggle').onclick=()=>{S.dbg=!S.dbg;if(!S.dbg)S.dbgSpeed=false;renderDebug();save();};
-  document.querySelectorAll('.amt button').forEach(b=>b.onclick=()=>{const v=b.dataset.amt;S.amt=v==='max'?'max':Number(v);renderAmt();updateStaff();});
+  document.querySelectorAll('.amt button[data-amt]').forEach(b=>b.onclick=()=>{const v=b.dataset.amt;S.amt=(v==='max'||v==='ms')?v:Number(v);renderAmt();updateStaff();});
+  document.querySelectorAll('.amt button[data-tamt]').forEach(b=>b.onclick=()=>{const v=b.dataset.tamt;S.talAmt=v==='all'?'all':Number(v);renderAmt();renderCorp();});
   $('choiceA').onclick=()=>resolveEvent(1);$('choiceB').onclick=()=>resolveEvent(2);
   document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
     document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected',x===t?'true':'false'));
