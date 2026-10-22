@@ -470,7 +470,7 @@ a.lab:hover{text-decoration:underline}
 'use strict';
 const KEY='fantasy-pm-save-v1';
 const OFFLINE_MIN=60;
-const VERSION='v0.7.3';
+const VERSION='v0.7.4';
 
 /* ================= DATA ================= */
 const CITIES=[
@@ -576,7 +576,11 @@ const FACS=[
 ];
 /* fame: since-reset earnings with a flat 1/4 power curve */
 const REBIRTH_MIN=1e8, FAME_PASSIVE=0.02;
-const fameFor=run=>Math.floor(Math.pow(run/1e8,0.2));
+/* 聲望依本輪累積的位數計算：0.12 ×（位數 − 8）³，避免長時間不重組時聲望指數暴增 */
+const FAME_K=0.12;
+const fameRaw=run=>run<=1e8?0:FAME_K*Math.pow(Math.log10(run)-8,3);
+const fameFor=run=>Math.floor(fameRaw(run));
+const runForFame=f=>1e8*Math.pow(10,Math.cbrt(f/FAME_K));
 const PERKS=[
  [1,'夜班魔像','離線收益上限從 8 小時延長到 12 小時'],
  [2,'老班底','每次開業直接擁有 10 名哥布林清潔工'],
@@ -1393,7 +1397,7 @@ const shareMult=()=>(1+0.05*S.sharesTotal)*Math.pow(1.3,brd('aura'));
 const sharesFor=ft=>Math.floor(Math.sqrt(ft/10));
 const ipoNeed=()=>Math.round(IPO_MIN_FAME*Math.pow(IPO_GROW,S.ipos||0));
 const ipoReady=()=>S.rebirths>=CITIES.length-1&&S.fameTotal>=ipoNeed();
-const fameGain=()=>Math.floor(fameFor(S.run)*(1+0.25*brd('brand')));
+const fameGain=()=>Math.floor(fameRaw(S.run)*(1+0.25*brd('brand')));
 const startProps=()=>Math.max(hasPerk(10)?2:1,brd('head')?brd('head')+1:1);
 function buyBoard(id){const b=BOARD.find(x=>x.id===id);if(!b)return;const lv=brd(id);if(lv>=b.max)return;const c=b.cost(lv);if(S.shares<c)return;
   S.shares-=c;S.board[id]=lv+1;log('董事會通過「'+b.name+'」Lv'+(lv+1)+'：'+b.d(lv+1)+'。','story');check();renderAll();save();}
@@ -1650,7 +1654,7 @@ function renderCorp(){
   $('corpCity').textContent='第 '+(S.rebirths+1)+' 座城市';
   const c=CITIES[cityIdx()];
   setHTML($('cityNow'),'<b>目前城市：'+cityName()+'</b><span class="rule">'+c.rule+'</span>');
-  if(can){$('rbGain').textContent='現在重組可得 '+g+' 點聲望';$('rbNext').textContent='本輪累積到 '+fmt(Math.pow(g+1,5)*1e8)+' 金幣，可再多 1 點。';}
+  if(can){$('rbGain').textContent='現在重組可得 '+g+' 點聲望';$('rbNext').textContent='本輪累積到 '+fmt(runForFame((g+1)/(1+0.25*brd('brand'))))+' 金幣，可再多 1 點。';}
   else{$('rbGain').textContent='本輪累積 '+fmt(REBIRTH_MIN)+' 金幣後可以重組';$('rbNext').textContent='目前 '+fmt(S.run)+' / '+fmt(REBIRTH_MIN)+'。賺得越多，拿到的聲望越多，但增加得越來越慢。';}
   const ni=Math.min(S.rebirths+1,CITIES.length-1),nc=CITIES[ni];const nl=LOCAL_UNITS.filter(l=>l[0]===ni).map(l=>l[2]);
   $('rbCity').textContent=S.rebirths+1<CITIES.length?'下一座城市：'+nc.name+' — '+nc.rule+(nl.length?' 在地員工：'+nl.join('、')+'。':''):'下一站：王都的新區域（規則同王都）。';
