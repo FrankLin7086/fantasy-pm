@@ -255,6 +255,7 @@ a.lab:hover{text-decoration:underline}
 *{touch-action:manipulation}
 .cf input,.cf select,textarea{font-size:16px}
 @media (max-width:420px){.amt{gap:5px}.amt button{min-width:0;padding:4px 9px}.amt span{font-size:12px}}
+.ptools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 </style>
 
 <div class="wrap">
@@ -327,7 +328,7 @@ a.lab:hover{text-decoration:underline}
       <div class="list" id="staff"></div>
     </div>
     <div>
-      <div class="sec-title"><h2>管理物件</h2><span id="propMult">物件加成 ×1</span></div>
+      <div class="sec-title"><h2>管理物件</h2><span class="ptools"><span id="propMult">物件加成 ×1</span><button class="mini" type="button" data-act="renoall">一鍵裝修</button></span></div>
       <div id="props"></div>
     </div>
   </section>
@@ -470,7 +471,7 @@ a.lab:hover{text-decoration:underline}
 'use strict';
 const KEY='fantasy-pm-save-v1';
 const OFFLINE_MIN=60;
-const VERSION='v0.7.4';
+const VERSION='v0.7.5';
 
 /* ================= DATA ================= */
 const CITIES=[
@@ -567,12 +568,22 @@ const POLICY_COOLDOWN=10*60*1000;
 const FACS=[
  {id:'gate',name:'智慧門禁系統',cost:5e9,mult:1.25,d:'住戶刷臉就能進門，連幽靈都要登記。'},
  {id:'lift',name:'電梯汰舊換新',cost:1e11,mult:1.25,d:'新電梯不會再跟住戶聊天了。大概。'},
+ {id:'mail',name:'智慧包裹櫃',cost:1e12,mult:1.2,d:'包裹不再堆滿管理室，哥布林也沒辦法順手帶走了。'},
  {id:'solar',name:'太陽能屋頂',cost:5e12,mult:1.5,d:'白天發電，晚上由精靈負責發光。'},
+ {id:'water',name:'雨水回收系統',cost:1e14,mult:1.2,d:'收集來的雨水拿來澆樹人，樹人說味道不錯。'},
  {id:'hvac',name:'中央空調更新',cost:1e15,mult:1.5,d:'冰龍與火龍住戶終於不再為溫度吵架。'},
+ {id:'ev',name:'魔力馬車充電站',cost:1e17,mult:1.2,d:'獅鷲表示自己不需要充電，但有點羨慕。'},
  {id:'shield',name:'魔法防災結界',cost:1e18,mult:1.5,d:'颱風、地震、隕石，一次擋下。'},
+ {id:'seismic',name:'耐震補強工程',cost:1e20,mult:1.3,d:'龍族住戶跺腳時，整棟樓終於不會跟著跳。'},
  {id:'root',name:'世界樹灌溉系統',cost:1e21,mult:2,d:'整座城的綠意都從這裡開始。'},
+ {id:'bms',name:'中央監控中心',cost:1e23,mult:1.3,d:'所有物件的水電、電梯、消防狀態，都接到同一面水晶螢幕上。'},
  {id:'portal',name:'城際傳送門',cost:1e25,mult:2,d:'住戶早上在霧港買早餐，中午回王都上班。'},
- {id:'clock',name:'時光管理局',cost:1e30,mult:2.5,d:'延遲的工程可以倒轉時間重來。'}
+ {id:'robot',name:'魔像巡檢隊',cost:1e27,mult:1.3,d:'巡檢魔像二十四小時巡樓，回報漏水比住戶還快。'},
+ {id:'clock',name:'時光管理局',cost:1e30,mult:2.5,d:'延遲的工程可以倒轉時間重來。'},
+ {id:'sky',name:'浮空停車塔',cost:1e33,mult:2,d:'馬車、獅鷲、飛毯，各有各的停車層。'},
+ {id:'star',name:'星界物流港',cost:1e37,mult:2,d:'包裹從別的星球寄來，也不會送錯樓層。'},
+ {id:'dream',name:'夢境管理室',cost:1e42,mult:2.5,d:'住戶在夢裡報修，醒來前就修好了。'},
+ {id:'genesis',name:'創世建築學院',cost:1e48,mult:3,d:'把蓋好一座城的方法，教給下一代管家。'}
 ];
 /* fame: since-reset earnings with a flat 1/4 power curve */
 const REBIRTH_MIN=1e8, FAME_PASSIVE=0.02;
@@ -1356,6 +1367,11 @@ function hire(id){const u=UNITS[unitIndex[id]];if(!u||u.city>Math.max(cityIdx(),
   for(let l=msLevel(before)+1;l<=msLevel(n);l++){const r=RANKS[Math.min(l,RANKS.length-1)];
     log((l===1?u.ms:u.name+'晉升為「'+r+'」等級。')+'（產出 ×'+msBase().toFixed(1)+'）','story');toast(u.name+'晉升「'+r+'」');}
   check();renderAll();}
+function renoUp(i){const lv=S.reno[i]||0;if(i>=S.props||lv>=RENO_MAX)return false;const c=renoCost(i);if(S.coins<c)return false;S.coins-=c;for(let k=S.reno.length;k<=i;k++)if(S.reno[k]==null)S.reno[k]=0;S.reno[i]=lv+1;return true;}
+function renoMaxPlan(i){let lv=S.reno[i]||0,c=0,k=0;while(lv+k<RENO_MAX){const n=propAt(i).reno*Math.pow(10,lv+k);if(c+n>S.coins)break;c+=n;k++;}return {k,c};}
+function renovateMax(i){const lv0=S.reno[i]||0;let k=0;while(renoUp(i))k++;if(!k)return;log(propAt(i).name+'一次裝修 '+k+' 級：'+RENO_NAMES[lv0+k]+'（Lv'+(lv0+k)+'）。');toast(propAt(i).name+' 裝修到 Lv'+(lv0+k));check();renderAll();save();}
+function renovateAll(){let n=0;for(;;){let best=-1,bc=Infinity;for(let i=0;i<S.props;i++){const lv=S.reno[i]||0;if(lv>=RENO_MAX)continue;const c=renoCost(i);if(c<=S.coins&&c<bc){bc=c;best=i;}}if(best<0)break;renoUp(best);n++;if(n>2000)break;}
+  if(!n){toast('目前的金幣不夠任何一項裝修');return;}log('一鍵裝修：共完成 '+n+' 級裝修。');toast('一鍵裝修完成 '+n+' 級');check();renderAll();save();}
 function renovate(i){if(i>=S.props)return;const lv=S.reno[i]||0;if(lv>=RENO_MAX)return;const c=renoCost(i);if(S.coins<c)return;S.coins-=c;
   for(let k=S.reno.length;k<=i;k++)if(S.reno[k]==null)S.reno[k]=0;S.reno[i]=lv+1;
   log(propAt(i).name+'完成裝修：'+RENO_NAMES[lv+1]+'（Lv'+(lv+1)+'，全體收入 ×1.05）。');toast(propAt(i).name+' 裝修到 Lv'+(lv+1));check();renderAll();}
@@ -1410,10 +1426,10 @@ function doIPO(){
   resetRun();S.coins=1e4*S.sharesTotal;S.props=startProps();
   const lines=first?['王都證券交易所的大廳擠滿了人。叔叔把敲鐘的木槌交給你。','「當年那間快倒閉的事務所，今天要上市了。」','鐘聲響起，金鑰物業集團正式掛牌。你帶著新的資本，回到一切開始的銀橡城。']
     :['金鑰物業集團再次增資上市，股東們的掌聲比上次更響。','你回到銀橡城，準備打下更大的版圖。'];
-  lines.push({text:'獲得股份 +'+g+'（可用 '+S.shares+' 股，累計 '+S.sharesTotal+' 股，全體收入 ×'+fmt(shareMult())+'）',cls:'gain'});
+  lines.push({text:'獲得股份 +'+fmt(g)+'（可用 '+fmt(S.shares)+' 股，累計 '+fmt(S.sharesTotal)+' 股，全體收入 ×'+fmt(shareMult())+'）',cls:'gain'});
   lines.push({text:'下一次上市需要累計聲望 '+fmt(ipoNeed())+' 點（每上市一次，門檻 ×'+IPO_GROW+'）。',cls:'sub'});
   lines.push({text:'聲望、天賦、重組次數已歸零；自動化規則、主管、住戶、知識小卡都保留；到過的城市的在地員工會留在名冊上，回到該城市才能再雇用。到「集團」頁用股份通過董事會決議。',cls:'sub'});
-  log('集團上市（第 '+S.ipos+' 次），股份 +'+g+'。','story');
+  log('集團上市（第 '+S.ipos+' 次），股份 +'+fmt(g)+'。','story');
   queue({title:first?'敲鐘上市':'第 '+S.ipos+' 次上市',lines,btn:'回到銀橡城'});
   check();renderAll();save();
 }
@@ -1432,12 +1448,12 @@ function doRebirth(){
   const c=CITIES[cityIdx()];
   const lines=first?['叔叔終於回來了，手上拿著一份王都集團的合約。','「把事務所併進集團吧。你在'+from+'打下的名聲，到哪座城市都用得上。」','你帶著「金鑰」這塊招牌，前往下一座城市：'+cityName()+'。']
     :['你把'+from+'的事務所交給在地團隊，帶著「金鑰」品牌前往'+cityName()+'重新開業。'];
-  lines.push({text:'品牌聲望 +'+g+'（可用 '+S.fame+' 點，累計 '+S.fameTotal+' 點）',cls:'gain'});
+  lines.push({text:'品牌聲望 +'+fmt(g)+'（可用 '+fmt(S.fame)+' 點，累計 '+fmt(S.fameTotal)+' 點）',cls:'gain'});
   if(S.rebirths<CITIES.length||S.cityOverride!=null){lines.push({text:'城市規則：'+c.rule,cls:'sub'});
     const locals=LOCAL_UNITS.filter(l=>l[0]===cityIdx()).map(l=>l[2]);if(locals.length)lines.push({text:'新的在地員工：'+locals.join('、'),cls:'sub'});}
   const np=PERKS.find(p=>p[0]===S.rebirths);if(np)lines.push({text:'解鎖集團特權：'+np[1]+' — '+np[2],cls:'sub'});
   lines.push({text:'記得到「集團」頁用聲望升級天賦。',cls:'sub'});
-  log('集團重組，前往'+cityName()+'。品牌聲望 +'+g+'。','story');
+  log('集團重組，前往'+cityName()+'。品牌聲望 +'+fmt(g)+'。','story');
   queue({title:first?'集團重組':'第 '+S.rebirths+' 次重組',lines,btn:'重新開業'});
   check();renderAll();save();
 }
@@ -1561,8 +1577,8 @@ function nextGoal(){
   const sn=seasonNow();if(sn&&S.sev.key===sn.key&&SEASON_TASKS.some(t=>!S.sev.got.includes(t.k)&&(S.sev.c[t.k]||0)>=t.need))return {text:sn.s.name+'活動任務完成了，領取沙漏',tab:'run'};
   if(!cnt('goblin'))return S.coins<10?{text:'按「巡視公寓」存到 10 金幣，雇用第一位哥布林清潔工',pct:S.coins/10}:{text:'雇用第一位哥布林清潔工',tab:'run'};
   if(ipoReady())return {text:'可以集團上市了：到「集團」敲鐘',tab:'corp'};
-  if(veteran()&&S.run>=REBIRTH_MIN){const fg=fameGain();if(fg>=3&&fg>=S.fameTotal*0.5)return {text:'重組時機到了：這輪可得 '+fg+' 聲望（累計 '+S.fameTotal+'），下一輪會跑得更快',tab:'corp'};}
-  if(!veteran()&&S.run>=REBIRTH_MIN&&fameGain()>=3)return {text:'可以發動集團重組了：帶著 '+fameGain()+' 點聲望前往下一座城市',tab:'corp'};
+  if(veteran()&&S.run>=REBIRTH_MIN){const fg=fameGain();if(fg>=3&&fg>=S.fameTotal*0.5)return {text:'重組時機到了：這輪可得 '+fmt(fg)+' 聲望（累計 '+fmt(S.fameTotal)+'），下一輪會跑得更快',tab:'corp'};}
+  if(!veteran()&&S.run>=REBIRTH_MIN&&fameGain()>=3)return {text:'可以發動集團重組了：帶著 '+fmt(fameGain())+' 點聲望前往下一座城市',tab:'corp'};
   if(S.props>=3&&!S.contracts.active.length&&!autoOn('a_collect'))return {text:'接一件承攬合約，離線時也會施工',tab:'biz'};
   const need=needOf(S.props),lv=S.teamLv||0,nx=TEAM_STEPS[lv],mn=teamMin();
   if(nx&&S.seen.length>=3&&mn/nx>=0.7&&mn<nx){const low=BASE_UNITS.filter(u=>S.seen.includes(u[0])).sort((x,y)=>cnt(x[0])-cnt(y[0]))[0];return {text:'團隊升級還差：'+low[1]+' 再 '+(nx-mn)+' 名（全體收入 ×2）',pct:mn/nx,tab:'run'};}
@@ -1605,7 +1621,7 @@ function renderProps(){
   let html='';
   for(let i=0;i<=S.props;i++){const p=propAt(i),on=i<S.props;const lv=S.reno[i]||0;
     let right;
-    if(on){const c=renoCost(i);right='<span class="reno">'+RENO_NAMES[lv]+' · Lv'+lv+'</span>'+(lv<RENO_MAX?'<br><button class="mini" type="button" data-act="reno" data-v="'+i+'" '+(S.coins<c?'disabled':'')+'>裝修 '+fmt(c)+'</button>':'');}
+    if(on){const c=renoCost(i);const mp=renoMaxPlan(i);right='<span class="reno">'+RENO_NAMES[lv]+' · Lv'+lv+'</span>'+(lv<RENO_MAX?'<br><button class="mini" type="button" data-act="reno" data-v="'+i+'" '+(S.coins<c?'disabled':'')+'>裝修 '+fmt(c)+'</button>'+(mp.k>1?'<br><button class="mini" type="button" data-act="renomax" data-v="'+i+'">升 '+mp.k+' 級 · '+fmt(mp.c)+'</button>':''):'');}
     else right='本輪累積 '+fmt(needOf(i))+'<br>解鎖：'+p.sys;
     const occ=on?occupants(i):[];const st=on?'<small class="stn">派駐 '+occ.length+'/'+slotsOf(i)+'：'+(occ.map(g=>g.name).join('、')||'無')+' · 適性：'+affOf(i).text+'</small>':'';
     html+='<div class="prop '+(on?'on':'off')+'"><span class="lv">'+pIcon(i,on?'':'dim')+'</span><span class="pn">'+esc(on?propLabel(i):p.name)+'<small>'+p.desc+(on?' · 系統：'+p.sys:'')+'</small>'+st+'</span><span class="ps">'+right+'</span></div>';}
@@ -1654,7 +1670,7 @@ function renderCorp(){
   $('corpCity').textContent='第 '+(S.rebirths+1)+' 座城市';
   const c=CITIES[cityIdx()];
   setHTML($('cityNow'),'<b>目前城市：'+cityName()+'</b><span class="rule">'+c.rule+'</span>');
-  if(can){$('rbGain').textContent='現在重組可得 '+g+' 點聲望';$('rbNext').textContent='本輪累積到 '+fmt(runForFame((g+1)/(1+0.25*brd('brand'))))+' 金幣，可再多 1 點。';}
+  if(can){$('rbGain').textContent='現在重組可得 '+fmt(g)+' 點聲望';$('rbNext').textContent='本輪累積到 '+fmt(runForFame((g+1)/(1+0.25*brd('brand'))))+' 金幣，可再多 1 點。';}
   else{$('rbGain').textContent='本輪累積 '+fmt(REBIRTH_MIN)+' 金幣後可以重組';$('rbNext').textContent='目前 '+fmt(S.run)+' / '+fmt(REBIRTH_MIN)+'。賺得越多，拿到的聲望越多，但增加得越來越慢。';}
   const ni=Math.min(S.rebirths+1,CITIES.length-1),nc=CITIES[ni];const nl=LOCAL_UNITS.filter(l=>l[0]===ni).map(l=>l[2]);
   $('rbCity').textContent=S.rebirths+1<CITIES.length?'下一座城市：'+nc.name+' — '+nc.rule+(nl.length?' 在地員工：'+nl.join('、')+'。':''):'下一站：王都的新區域（規則同王都）。';
@@ -1662,8 +1678,8 @@ function renderCorp(){
   if(brd('pick')){let o='<option value="">依順序（'+CITIES[Math.min(S.rebirths+1,CITIES.length-1)].name+'）</option>';for(let i=0;i<=Math.max(S.maxCity||0,cityIdx());i++)o+='<option value="'+i+'"'+(String(S.nextCity)===String(i)?' selected':'')+'>'+CITIES[i].name+' — '+CITIES[i].rule+'</option>';
     setHTML($('rbPick'),'<label class="sub">下一座城市（城市直營）<select data-pick="1" id="cityPick">'+o+'</select></label>');}else setHTML($('rbPick'),'');
   const sg=sharesFor(S.fameTotal),ready=ipoReady();
-  $('shares').textContent=S.shares;$('shareBonus').textContent='累計 '+S.sharesTotal+' 股 · 全體收入 ×'+fmt(shareMult());$('ipos').textContent=S.ipos;
-  $('ipoGain').textContent=ready?'現在上市可得 '+sg+' 股':'條件：把事務所開到王都（目前第 '+(S.rebirths+1)+' 座城市），且累計聲望達 '+fmt(ipoNeed())+' 點（目前 '+fmt(S.fameTotal)+'）';
+  $('shares').textContent=fmt(S.shares);$('shareBonus').textContent='累計 '+fmt(S.sharesTotal)+' 股 · 全體收入 ×'+fmt(shareMult());$('ipos').textContent=S.ipos;
+  $('ipoGain').textContent=ready?'現在上市可得 '+fmt(sg)+' 股':'條件：把事務所開到王都（目前第 '+(S.rebirths+1)+' 座城市），且累計聲望達 '+fmt(ipoNeed())+' 點（目前 '+fmt(S.fameTotal)+'）';
   $('ipoNext').textContent=ready?'累計聲望達 '+fmt(Math.pow(sg+1,2)*10)+' 點，可再多 1 股。':'上市後聲望、天賦、重組次數會歸零，換成永久保留的股份。';
   $('ipoBtn').disabled=!ready||sg<=0;
   setHTML($('board'),BOARD.map(b=>{const lv=brd(b.id),max=lv>=b.max,c=b.cost(lv);
@@ -1805,7 +1821,7 @@ function debugAct(v){
 }
 function wire(){
   document.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const v=b.dataset.v;
-    switch(b.dataset.act){case 'hire':hire(v);break;case 'reno':renovate(+v);break;case 'accept':acceptContract(+v);break;case 'collect':collectContract(+v);break;
+    switch(b.dataset.act){case 'hire':hire(v);break;case 'reno':renovate(+v);break;case 'renomax':renovateMax(+v);break;case 'renoall':renovateAll();break;case 'accept':acceptContract(+v);break;case 'collect':collectContract(+v);break;
       case 'policy':togglePolicy(v);break;case 'fac':buyFac(v);break;case 'tal':buyTalent(v);break;case 'dbg':debugAct(v);break;case 'glass':useGlass(v,+b.dataset.j);break;case 'autotog':toggleAuto(v);break;case 'season':claimSeason(v);break;case 'board':buyBoard(v);break;case 'accent':setCustom('accent',v);break;case 'adglass':adForGlass();break;case 'supporter':buySupporter();break;}});
   document.addEventListener('change',e=>{const el=e.target.closest('[data-assign]');if(el)setStation(el.dataset.assign,el.value);const cu=e.target.closest('[data-cust]');if(cu)setCustom(cu.dataset.cust,cu.value,cu.dataset.i);const pk=e.target.closest('[data-pick]');if(pk){S.nextCity=pk.value===''?null:pk.value;save();}});
   $('ipoBtn').onclick=()=>{$('ipoRow').hidden=true;$('ipoConfirm').hidden=false;};
