@@ -256,6 +256,34 @@ a.lab:hover{text-decoration:underline}
 .cf input,.cf select,textarea{font-size:16px}
 @media (max-width:420px){.amt{gap:5px}.amt button{min-width:0;padding:4px 9px}.amt span{font-size:12px}}
 .ptools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.btncol{display:flex;flex-direction:column;gap:6px;align-items:stretch}
+.keep{display:flex;gap:6px;align-items:flex-start;margin-top:6px}
+.keep input{margin-top:4px}
+#recruitPick{max-width:100%;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:4px 6px;font-size:13px;margin-top:4px}
+.subtabs{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:4px 0 8px}
+.subtabs button{background:none;border:1px solid var(--line);border-radius:16px;padding:4px 14px;font-size:14px;color:var(--muted)}
+.subtabs button[aria-selected=true]{border-color:var(--brass);color:var(--brass);background:rgba(214,168,73,.08)}
+.subtabs .upall{margin-left:auto;border-color:var(--good);color:var(--good)}
+.subtabs .upall:disabled{opacity:.45}
+[data-subp][hidden]{display:none!important}
+.career{border:1px solid var(--line);border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.career b{font-family:var(--f-display);font-size:18px;color:var(--brass)}
+.career .ladder{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.career .ladder span{font-size:11px;padding:2px 6px;border-radius:4px;border:1px solid var(--line);color:var(--muted)}
+.career .ladder span.on{border-color:var(--brass);color:var(--brass)}
+.career .ladder span.cur{background:var(--brass);color:var(--brass-ink);border-color:var(--brass)}
+.mgr .pair{font-size:12px;color:var(--muted)}
+.mgr .pair.on{color:var(--good)}
+.dq,.kpi{border:1px solid var(--line);border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
+.dq b,.kpi b{font-family:var(--f-display);font-size:15px;color:var(--brass)}
+.dq.done{flex-direction:row;gap:10px;align-items:center;font-size:13px;color:var(--muted)}
+.dqi{display:flex;justify-content:space-between;gap:10px;font-size:14px}
+.dqi.ok{color:var(--good)}
+.rbchal{display:flex;flex-direction:column;gap:4px;margin-top:6px}
+.rbchal select{margin-top:4px;max-width:100%;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:4px 6px;font-size:13px}
+.chalnow{display:block;margin-top:4px;color:var(--warn)}
+.sec-title h2{white-space:nowrap}
+.dq b small{font-family:var(--f-body);font-size:12px;color:var(--muted);font-weight:400;margin-left:8px}
 </style>
 
 <div class="wrap">
@@ -321,23 +349,33 @@ a.lab:hover{text-decoration:underline}
   </div>
 
   <section class="page" id="page-run">
-    <div id="eventBox"></div>
-    <div>
-      <div class="sec-title"><h2>員工與設施</h2><span id="msNote"></span></div>
+    <div id="dqBox" hidden></div>
+    <div class="subtabs" id="runSub" role="tablist" aria-label="經營分類">
+      <button type="button" data-sub="staff">員工</button>
+      <button type="button" data-sub="props">物件</button>
+      <button type="button" data-sub="facs">設施</button>
+      <button type="button" class="upall" id="upAll" data-act="upall" hidden>一鍵升級</button>
+    </div>
+    <div data-subp="staff">
+      <div class="sec-title"><h2>員工</h2><span id="msNote"></span></div>
       <div class="team" id="team"></div>
       <div class="list" id="staff"></div>
     </div>
-    <div>
+    <div data-subp="props">
       <div class="sec-title"><h2>管理物件</h2><span class="ptools"><span id="propMult">物件加成 ×1</span><button class="mini" type="button" data-act="renoall">一鍵裝修</button></span></div>
       <div id="props"></div>
+    </div>
+    <div data-subp="facs">
+      <div class="sec-title"><h2>設施投資</h2><span>王都中央商辦塔</span></div>
+      <div class="list" id="bizFacs"></div>
     </div>
   </section>
 
   <section class="page" id="page-biz" hidden>
+    <div id="eventBox"></div>
     <div><div class="sec-title"><h2>時光沙漏</h2><span id="glassSum"></span></div><div class="list" id="bizGlass"></div></div>
     <div><div class="sec-title"><h2>承攬合約</h2><span>哥布林市集商場</span></div><div class="list" id="bizContracts"></div></div>
     <div><div class="sec-title"><h2>管委會方針</h2><span>龍族山頂豪宅</span></div><div class="list" id="bizCouncil"></div></div>
-    <div><div class="sec-title"><h2>設施投資</h2><span>王都中央商辦塔</span></div><div class="list" id="bizFacs"></div></div>
   </section>
 
   <section class="page" id="page-corp" hidden>
@@ -352,6 +390,8 @@ a.lab:hover{text-decoration:underline}
       <p class="sub" id="rbNext"></p>
       <p class="sub" id="rbCity"></p>
       <div id="rbPick"></div>
+      <div id="rbKeep"></div>
+      <div id="rbChal" class="rbchal"></div>
       <div class="btns" id="rbRow"><button class="patrol rb" id="rbBtn" type="button">發動集團重組</button></div>
       <div class="btns" id="rbConfirm" hidden>
         <span style="align-self:center;font-size:14px">金幣、員工、物件、裝修、設施會歸零，確定要重組？</span>
@@ -374,6 +414,7 @@ a.lab:hover{text-decoration:underline}
       <div class="rebirth-box" style="margin-top:10px">
         <p class="gainline" id="ipoGain"></p>
         <p class="sub" id="ipoNext"></p>
+        <div id="kpiBox"></div>
         <div class="btns" id="ipoRow"><button class="patrol rb" id="ipoBtn" type="button">集團上市</button></div>
         <div class="btns" id="ipoConfirm" hidden>
           <span style="align-self:center;font-size:14px">聲望、天賦、重組次數會歸零並回到銀橡城，確定要上市？</span>
@@ -418,6 +459,8 @@ a.lab:hover{text-decoration:underline}
   </section>
 
   <section class="page" id="page-ach" hidden>
+    <div class="sec-title"><h2>管理職級</h2><span id="careerSum"></span></div>
+    <div class="career" id="career"></div>
     <div class="sec-title"><h2>成就</h2><span id="achSum"></span></div>
     <div class="ach" id="ach"></div>
   </section>
@@ -471,7 +514,7 @@ a.lab:hover{text-decoration:underline}
 'use strict';
 const KEY='fantasy-pm-save-v1';
 const OFFLINE_MIN=60;
-const VERSION='v0.7.5';
+const VERSION='v0.8.0';
 
 /* ================= DATA ================= */
 const CITIES=[
@@ -600,23 +643,26 @@ const PERKS=[
  [7,'品牌口碑','巡視公寓的收入 ×5'],
  [10,'集團併購','每次開業直接接管精靈樹屋社區']
 ];
+/* 遞減與不碰底的天賦公式 */
+const hyp=l=>1/(1+0.1*l);
+const dimMult=(l,k)=>1+(k||2)*Math.log10(1+l);
 const TALENTS=[
  {branch:'營運',items:[
   {id:'inc',name:'品牌溢價',d:l=>'全體收入 +'+(25*l)+'%'},
   {id:'seed',name:'開業資金',max:10,d:l=>l?'開業時帶 '+fmt(Math.pow(10,l+2))+' 金幣':'開業時帶一筆資金'},
   {id:'fast',name:'展店效率',max:10,d:l=>'物件解鎖需求 −'+Math.round((1-Math.pow(0.85,l))*100)+'%'}]},
  {branch:'人事',items:[
-  {id:'disc',name:'集中採購',d:l=>'員工價格 −'+Math.round((1-Math.max(0.2,Math.pow(0.96,l)))*100)+'%'},
+  {id:'disc',name:'集中採購',d:l=>'員工價格 −'+Math.round((1-hyp(l))*100)+'%'},
   {id:'vet',name:'資深團隊',max:10,d:l=>l?'開業時前 '+l+' 種員工各有 10 名':'開業時直接帶員工'},
   {id:'mentor',name:'師徒制',max:10,d:l=>'每個員工里程碑 ×'+(2+0.1*l).toFixed(1)}]},
  {branch:'客服',items:[
-  {id:'comp',name:'客訴專家',d:l=>'客訴金幣獎勵 +'+(50*l)+'%'},
-  {id:'buff',name:'口碑發酵',d:l=>'限時加成時間 +'+(20*l)+'%'},
-  {id:'daily',name:'住戶回饋',d:l=>'每日登入獎勵 +'+(50*l)+'%'}]},
+  {id:'comp',name:'客訴專家',d:l=>'客訴金幣獎勵 ×'+dimMult(l).toFixed(2)+'（每張最多 30 分鐘收入，霧港 60 分鐘）'},
+  {id:'buff',name:'口碑發酵',d:l=>'限時加成時間 ×'+dimMult(l,1.5).toFixed(2)+'（最長 60 分鐘）'},
+  {id:'daily',name:'住戶回饋',d:l=>'每日登入獎勵 ×'+dimMult(l).toFixed(2)+'（最多 2 小時收入）'}]},
  {branch:'工程',items:[
   {id:'contract',name:'工程承攬',max:10,d:l=>'承攬合約報酬 +'+(10*l)+'%'},
   {id:'night',name:'夜間管理',max:10,d:l=>'離線收益上限 +'+(2*l)+' 小時'},
-  {id:'facil',name:'設施採購',d:l=>'設施投資價格 −'+Math.round((1-Math.max(0.3,Math.pow(0.95,l)))*100)+'%'}]}
+  {id:'facil',name:'工程發包',d:l=>'設施投資與物件裝修價格 −'+Math.round((1-hyp(l))*100)+'%'}]}
 ];
 TALENTS.push({branch:'自動化',items:[
   {id:'a_collect',name:'自動驗收',one:true,cost:3,d:()=>'合約完工時自動驗收，並自動接下新合約（優先長期）'},
@@ -719,6 +765,34 @@ const MGRS=[
  {id:'uncle',name:'叔叔',title:'前任事務所所長',r:2,t:'@global',d:'他終於肯正式上班了。'}
 ];
 const MGR_MAX=5;
+/* 管理職級：9 級 × 銅鑰／銀鑰／金鑰，依不歸零的管理資歷晉升 */
+const CAREER=['行政秘書','副總幹事','總幹事','襄理','副理','經理','協理','副總','總經理'];
+const MEDALS=['銅鑰','銀鑰','金鑰'];
+const CAREER_STEPS=CAREER.length*3;
+const careerT=i=>i<=0?0:Math.round(15*Math.pow(i,1.6));
+const STAR_XP=300;
+function careerStep(xp){let i=0;while(i<CAREER_STEPS-1&&xp>=careerT(i+1))i++;return i;}
+function careerInfo(){const xp=S.career.xp;const st=careerStep(xp);const rank=Math.floor(st/3),medal=st%3;
+  const top=st===CAREER_STEPS-1;const stars=top?Math.floor((xp-careerT(st))/STAR_XP):0;
+  const lo=top?careerT(st)+stars*STAR_XP:careerT(st),hi=top?lo+STAR_XP:careerT(st+1);
+  return {xp,st,rank,medal,stars,label:CAREER[rank]+' · '+MEDALS[medal]+(stars?' ★'+stars:''),next:top?'下一顆星':CAREER[Math.floor((st+1)/3)]+' · '+MEDALS[(st+1)%3],pct:(xp-lo)/(hi-lo),need:hi-xp};}
+const careerMult=()=>{const c=careerInfo();return Math.pow(1.05,c.rank)*(1+0.01*c.stars);};
+function addXP(n,why){if(!n||!S.career)return;const before=careerInfo();S.career.xp+=n;kpiTrack('xp',n);const after=careerInfo();
+  if(after.st>before.st){for(let s2=before.st+1;s2<=after.st;s2++){const rk=Math.floor(s2/3),md=s2%3;
+      if(md===0){gainGlass(5,'晉升'+CAREER[rk]);queue({title:'晉升：'+CAREER[rk],lines:[CAREER_LINES[rk]||'集團發來新的聘書。',{text:'職級加成：全體收入 ×'+Math.pow(1.05,rk).toFixed(2)+'；獲得時光沙漏 +5',cls:'gain'}],btn:'接下聘書'});log('晉升為「'+CAREER[rk]+'」。','story');}
+      else{gainGlass(2,CAREER[rk]+MEDALS[md]);toast('職級：'+CAREER[rk]+' · '+MEDALS[md]);log('職級升到「'+CAREER[rk]+' · '+MEDALS[md]+'」。');}}}
+  else if(after.stars>before.stars){gainGlass(2,'職級星數');toast('職級：'+after.label+'（收入 +1%）');}}
+const CAREER_LINES=[
+ '你從整理帳簿和接電話開始。叔叔說：「行政做得好，事務所就倒不了。」',
+ '住戶開始記得你的名字。你第一次代表管理單位出席區分所有權人會議。',
+ '管委會把總幹事的識別證交給你。從今天起，報修單的最後一個簽名是你。',
+ '你開始同時管理好幾個社區。集團把「襄理」的名片印好放在你桌上。',
+ '各城市的總幹事每週要向你回報。你學會先看數字，再聽故事。',
+ '你成為集團的物業經理。新進管家的訓練教材，有一章是你寫的。',
+ '你負責整個區域的營運。叔叔說：「你現在看的不是一棟樓，是一座城。」',
+ '董事會邀你列席。你提出的修繕計畫，第一次被寫進集團的年度預算。',
+ '你成為金鑰集團的總經理。辦公室牆上還掛著第一天的那串鑰匙。'
+];
 const TARGET_TEXT={'@patrol':'巡視收入','@complaint':'客訴金幣獎勵','@contract':'承攬合約報酬','@offline':'離線收益','@global':'全體收入'};
 
 const STORY=[
@@ -1131,7 +1205,7 @@ function fresh(){return {v:2,amt:1,dbg:false,dbgSpeed:false,coins:0,life:0,run:0
   units:{},props:1,reno:[],ach:[],patrols:0,complaints:0,offlineClaims:0,buffs:[],daily:{last:null,day:0,cycles:0},
   story:[],log:[],seen:[],event:null,nextEvent:null,lastEventIdx:null,lastSeen:Date.now(),
   contracts:{offers:[],active:[]},contractsDone:0,council:{on:[],changed:0},councilSet:0,facs:[],
-  talents:{},mgr:{},seenEv:[],teamLv:0,assign:{},assignInit:true,autoOff:{},glass:GLASS_GIFT,glassUsed:0,eventAt:0,shares:0,sharesTotal:0,ipos:0,board:{},maxCity:0,maxRebirths:0,cityOverride:null,nextCity:null,tabsSeen:[],talAmt:1,seasonDone:0,supporter:false,adDay:null,adViews:0,custom:{office:'',player:'',title:'rookie',slogan:'',accent:'brass',props:{}},residents:[],nextRes:0,cards:[],sev:{key:'',c:{},got:[]},stats:{start:0,sessions:0,days:[],playSec:0,firsts:{}}};}
+  talents:{},mgr:{},seenEv:[],teamLv:0,assign:{},assignInit:true,autoOff:{},glass:GLASS_GIFT,glassUsed:0,eventAt:0,shares:0,sharesTotal:0,ipos:0,board:{},maxCity:0,maxRebirths:0,cityOverride:null,nextCity:null,tabsSeen:[],talAmt:1,keepReno:false,mig8:true,career:{xp:0},runSub:'staff',dq:null,chal:null,nextChal:'',chalDone:{},kpi:null,runStats:{start:0,comp:0,ct:0},rstory:{cur:null,part:0,done:[]},seasonDone:0,supporter:false,adDay:null,adViews:0,custom:{office:'',player:'',title:'rookie',slogan:'',accent:'brass',props:{}},residents:[],nextRes:0,cards:[],sev:{key:'',c:{},got:[]},stats:{start:0,sessions:0,days:[],playSec:0,firsts:{}}};}
 function merge(o){
   const f=fresh();if(!o||typeof o!=='object')return f;
   const migrated=o.v!==2;
@@ -1153,6 +1227,13 @@ function merge(o){
   if(o.maxCity===undefined){f.maxCity=Math.min(f.rebirths||0,CITIES.length-1);f.maxRebirths=f.rebirths||0;}
   if(!f.sev||typeof f.sev!=='object')f.sev={key:'',c:{},got:[]};
   if(f.talents&&f.talents.seed>10)f.talents.seed=10;
+  if(!f.career||typeof f.career!=='object'||!isFinite(f.career.xp))f.career={xp:0};
+  if(!f.chalDone||typeof f.chalDone!=='object')f.chalDone={};
+  f.rstory=Object.assign({cur:null,part:0,done:[]},f.rstory||{});if(!Array.isArray(f.rstory.done))f.rstory.done=[];
+  f.runStats=Object.assign({start:Date.now(),comp:0,ct:0},f.runStats||{});
+  if(f.kpi&&(!Array.isArray(f.kpi.list)||!f.kpi.c))f.kpi=null;
+  if(o.career===undefined){f.career.xp=Math.round((Number(o.rebirths)||0)*10+(Number(o.maxRebirths)||0)*5+(Number(o.ipos)||0)*50+(Number(o.contractsDone)||0)*2+(Number(o.complaints)||0)+((o.story&&o.story.length)||0)*5);}
+  if(!o.mig8){let back=0;['comp','buff','daily'].forEach(id=>{const lv=(f.talents&&f.talents[id])||0;for(let k=0;k<lv;k++)back+=talCost(k);if(f.talents)f.talents[id]=0;});f.mig8=true;if(back>0){f.fame+=back;f.refund8=back;}}
   f.stats=Object.assign({start:0,sessions:0,days:[],playSec:0,firsts:{}},f.stats||{});if(!Array.isArray(f.stats.days))f.stats.days=[];if(!f.stats.firsts||typeof f.stats.firsts!=='object')f.stats.firsts={};
   if(migrated){const old=Number(o.fame)||0;f.fameTotal=Math.floor(Math.sqrt(old));f.fame=f.fameTotal;f.seen=[];f.v=2;
     f.log.unshift({t:'--:--',text:'存檔已升級到 v0.2。舊的聲望依新公式換算為 '+f.fameTotal+' 點，可以到「集團」頁點天賦。',kind:'story'});}
@@ -1166,7 +1247,22 @@ const hasPerk=n=>(brd('perma')?Math.max(S.rebirths,S.maxRebirths||0):S.rebirths)
 const mgrLv=id=>S.mgr[id]||0;
 const mgrBase=g=>g.t==='@global'?1.5:RARITY[g.r].base;
 const stationOf=id=>{const v=S.assign[id];return (v==null||v>=S.props)?null:v;};
-function mgrEff(g){const lv=mgrLv(g.id);if(!lv)return 1;const st=stationOf(g.id);if(st==null)return 1;const a=affOf(st);return 1+(mgrBase(g)-1)*lv*(a.test(g)?a.m:1);}
+/* 主管搭檔：兩位主管派駐在同一個物件時，兩人效果各 ×1.5 */
+const PAIRS=[
+ ['hammer','gear','工程搭檔','「圖我畫，施工你盯。」'],
+ ['barton','ethel','櫃台雙璧','一個泡茶，一個微笑，客訴還沒開口就消了一半。'],
+ ['mona','glenn','巡守雙人組','老騎士帶著狗，夜裡的走廊比白天還安全。'],
+ ['nightingale','aurora','夜間監控','一個看螢幕，一個看水晶，誰也逃不過。'],
+ ['mimika','bean','清潔與總務','掃帚和包裹清單，從此有了同一張班表。'],
+ ['oak','gale','空中花園','樹人種花，獅鷲從天上澆水。'],
+ ['vera','ember','防災小組','結界擋火，火焰工匠負責試擋。'],
+ ['tide','frost','遠行嚮導','一個認得海，一個認得雪，哪裡都送得到。'],
+ ['goldscale','uncle','家族帳房','叔叔終於找到能管住他帳本的人。']
+];
+const PAIR_MULT=1.5;
+const partnerOf=id=>{const p=PAIRS.find(x=>x[0]===id||x[1]===id);return p?{id:p[0]===id?p[1]:p[0],name:p[2],line:p[3]}:null;};
+const pairOn=id=>{const p=partnerOf(id);if(!p)return false;const a=stationOf(id),b=stationOf(p.id);return a!=null&&a===b&&mgrLv(p.id)>0;};
+function mgrEff(g){const lv=mgrLv(g.id);if(!lv)return 1;const st=stationOf(g.id);if(st==null)return 1;const a=affOf(st);return 1+(mgrBase(g)-1)*lv*(a.test(g)?a.m:1)*(pairOn(g.id)?PAIR_MULT:1);}
 function mgrMult(target){let m=1;MGRS.forEach(g=>{if(g.t===target)m*=mgrEff(g);});return m;}
 const occupants=i=>MGRS.filter(g=>mgrLv(g.id)&&S.assign[g.id]===i);
 function autoAssign(g){if(S.assign[g.id]!=null&&S.assign[g.id]<S.props)return;
@@ -1181,7 +1277,7 @@ function setStation(id,v){const g=MGRS.find(x=>x.id===id);if(!g||!mgrLv(id))retu
 const contractSlots=()=>S.props>=6?2:1;
 const policySlots=()=>S.props>=7?2:1;
 const policyOn=id=>S.props>=4&&S.council.on.includes(id);
-const availUnits=()=>UNITS.filter(u=>u.city<=Math.max(cityIdx(),S.maxCity||0));
+const availUnits=()=>UNITS.filter(u=>u.city<=Math.max(cityIdx(),S.maxCity||0)&&!(chalOn('nodragon')&&(u.id==='crystal'||u.id==='dragon')));
 
 /* ================= FORMAT ================= */
 function fmt(n){
@@ -1206,7 +1302,7 @@ const RANKS=['見習','正式','資深','主任','經理','總監','協理','副
 const rank=c=>RANKS[Math.min(msLevel(c),RANKS.length-1)];
 const propMult=()=>Math.pow(1.3,S.props-1);
 const renoMult=()=>Math.pow(1.05,sum(S.reno));
-const facMult=()=>FACS.filter(f=>S.facs.includes(f.id)).reduce((m,f)=>m*f.mult,1);
+const facMult=()=>chalOn('nofacs')?1:FACS.filter(f=>S.facs.includes(f.id)).reduce((m,f)=>m*f.mult,1);
 const fameMult=()=>S.fameTotal<=100?1+FAME_PASSIVE*S.fameTotal:3*Math.sqrt(S.fameTotal/100);
 const achMult=()=>1+0.02*S.ach.length;
 const dexMult=()=>1+0.01*S.seenEv.length;
@@ -1214,7 +1310,7 @@ const cityMult=()=>(inCity(9)?2:1)*(inCity(7)&&isNight()?2:1);
 const resFull=()=>PROPS.map((_,i)=>RESIDENTS.filter(x=>x[0]===i)).filter(g=>g.every(x=>S.residents.includes(x[1]))).length;
 const resMult=()=>(1+0.01*S.residents.length)*Math.pow(1.1,resFull());
 const cardMult=()=>1+0.01*S.cards.length;
-function globalMult(){return caseMult()*shareMult()*resMult()*cardMult()*(seasonOn('cny')?1.5:1)*teamMult()*achMult()*propMult()*renoMult()*fameMult()*(1+0.25*tal('inc'))*facMult()*(policyOn('staff')?1.25:1)*(S.props>=8?2:1)*dexMult()*mgrMult('@global')*cityMult();}
+function globalMult(){return careerMult()*chalMult()*rstoryMult()*caseMult()*shareMult()*resMult()*cardMult()*(seasonOn('cny')?1.5:1)*teamMult()*achMult()*propMult()*renoMult()*fameMult()*(1+0.25*tal('inc'))*facMult()*(policyOn('staff')?1.25:1)*(S.props>=8?2:1)*dexMult()*mgrMult('@global')*cityMult();}
 const TEAM_STEPS=[10,25,50,100,150,200,250,300,400,500,750,1000];
 const teamMin=()=>{const ids=BASE_UNITS.map(u=>u[0]).filter(id=>S.seen.includes(id));return ids.length?Math.min(...ids.map(cnt)):0;};
 const teamCur=()=>TEAM_STEPS.filter(x=>teamMin()>=x).length;
@@ -1227,19 +1323,21 @@ const unitEach=u=>u.prod*msMult(cnt(u.id))*profMult(cnt(u.id))*synMult(u)*mgrMul
 function baseRate(){let r=0;availUnits().forEach(u=>{const n=cnt(u.id);if(n)r+=n*unitEach(u);});return r;}
 function buffMult(){const now=Date.now();return S.buffs.filter(b=>b.until>now).reduce((m,b)=>m*b.mult,1);}
 const rate=()=>baseRate()*buffMult();
-const priceMod=()=>Math.max(0.2,Math.pow(0.96,tal('disc')))*(inCity(2)?0.7:1);
+const priceMod=()=>hyp(tal('disc'))*(chalOn('frugal')?3:1)*(inCity(2)?0.7:1);
 const firstCost=u=>u.cost*Math.pow(growth(),cnt(u.id))*priceMod();
 const bulkCost=(u,k)=>Math.ceil(firstCost(u)*(Math.pow(growth(),k)-1)/(growth()-1));
 function maxAfford(u){const f=firstCost(u),g=growth();if(S.coins<f)return 0;let k=Math.floor(Math.log(S.coins*(g-1)/f+1)/Math.log(g));while(k>0&&bulkCost(u,k)>S.coins)k--;return k;}
 function plan(u){if(S.amt==='ms'){const k=nextMs(cnt(u.id))-cnt(u.id),c=bulkCost(u,k);return {k,c,ok:S.coins>=c};}if(S.amt==='max'){const k=maxAfford(u);return k>0?{k,c:bulkCost(u,k),ok:true}:{k:1,c:Math.ceil(firstCost(u)),ok:false};}const k=S.amt,c=bulkCost(u,k);return {k,c,ok:S.coins>=c};}
 const patrolGain=()=>(seasonOn('moon')?3:1)*(1+baseRate()*0.1)*buffMult()*(hasPerk(7)?5:1)*(policyOn('patrol')?3:1)*mgrMult('@patrol')*(inCity(2)?0.5:1)*(inCity(5)?5:1);
 const needOf=i=>propAt(i).need*Math.pow(0.85,tal('fast'))*(inCity(9)?10:1);
-const renoCost=i=>propAt(i).reno*Math.pow(10,S.reno[i]||0);
-const facCost=f=>f.cost*Math.max(0.3,Math.pow(0.95,tal('facil')))*(inCity(8)?0.5:1);
+const renoCostAt=(i,lv)=>propAt(i).reno*Math.pow(10,lv)*hyp(tal('facil'));
+const renoCost=i=>renoCostAt(i,S.reno[i]||0);
+const facCost=f=>f.cost*hyp(tal('facil'))*(inCity(8)?0.5:1);
 const offlineCapH=()=>(hasPerk(5)?24:hasPerk(1)?12:8)+2*tal('night');
 const contractReward=t=>(seasonOn('typhoon')?1.5:1)*Math.max(100,baseRate()*t.dur*t.mult)*(1+0.1*tal('contract'))*mgrMult('@contract')*(inCity(4)?2:1);
-const complaintReward=val=>(seasonOn('halloween')?1.5:1)*Math.max(50,baseRate()*val*60)*(hasPerk(3)?2:1)*(policyOn('resident')?1.5:1)*(1+0.5*tal('comp'))*mgrMult('@complaint')*(inCity(1)?3:1);
-const buffDur=()=>10*60*1000*(1+0.2*tal('buff'));
+const COMPLAINT_CAP_MIN=()=>inCity(1)?60:30;
+const complaintReward=val=>{const r=baseRate();const raw=(seasonOn('halloween')?1.5:1)*Math.max(50,r*val*15)*(hasPerk(3)?2:1)*(policyOn('resident')?1.5:1)*dimMult(tal('comp'))*mgrMult('@complaint')*(inCity(1)?3:1)*(chalOn('storm')?0.5:1);return r>0?Math.min(raw,Math.max(50,r*COMPLAINT_CAP_MIN()*60)):raw;};
+const buffDur=()=>Math.min(60*60*1000,10*60*1000*dimMult(tal('buff'),1.5));
 function earn(n){S.coins+=n;S.life+=n;S.run+=n;}
 
 /* ================= UI HELPERS ================= */
@@ -1268,10 +1366,11 @@ function showNext(){
 function check(){
   availUnits().forEach(u=>{if(!S.seen.includes(u.id)&&(S.run>=u.cost*priceMod()*0.4||cnt(u.id)>0))S.seen.push(u.id);});
   const tl=teamCur();if(tl>(S.teamLv||0)){S.teamLv=tl;log('團隊晉升到 Lv'+tl+'：所有員工都達到 '+TEAM_STEPS[tl-1]+' 名，全體收入 ×2（累計 ×'+fmt(teamMult())+'）。','story');toast('團隊晉升 Lv'+tl+'，全體收入 ×2');}
-  while(S.run>=needOf(S.props)){S.props++;const p=propAt(S.props-1);log('接管新物件：'+p.name+'。全體收入 ×1.3。','story');if(p.legend)toast('接管'+p.name);if(S.props===3)fillOffers();MGRS.filter(g=>mgrLv(g.id)&&stationOf(g.id)==null).forEach(autoAssign);}
+  while(S.run>=needOf(S.props)){S.props++;addXP(S.props-1);dqTrack('prop');kpiTrack('props',S.props);const p=propAt(S.props-1);log('接管新物件：'+p.name+'。全體收入 ×1.3。','story');if(p.legend)toast('接管'+p.name);if(S.props===3)fillOffers();MGRS.filter(g=>mgrLv(g.id)&&stationOf(g.id)==null).forEach(autoAssign);}
   ACH.forEach(([id,name,,fn])=>{if(!S.ach.includes(id)&&fn(S)){S.ach.push(id);toast('達成成就：'+name+'（收入 +2%）');log('達成成就「'+name+'」。');}});
-  STORY.forEach(st=>{if(!S.story.includes(st.id)&&st.when(S)){S.story.push(st.id);log(st.title+'：'+st.text[st.text.length-1],'story');queue({title:st.title,lines:st.reward?[...st.text,{text:'獲得時光沙漏 +'+st.reward,cls:'sub'}]:st.text,btn:st.btn,onOk:st.id==='open'?()=>{doPatrol();returnReport(0);}:st.reward?()=>gainGlass(st.reward,st.title):null});}});
+  STORY.forEach(st=>{if(!S.story.includes(st.id)&&st.when(S)){S.story.push(st.id);if(st.id!=='open')addXP(5);log(st.title+'：'+st.text[st.text.length-1],'story');queue({title:st.title,lines:st.reward?[...st.text,{text:'獲得時光沙漏 +'+st.reward,cls:'sub'}]:st.text,btn:st.btn,onOk:st.id==='open'?()=>{doPatrol();returnReport(0);}:st.reward?()=>gainGlass(st.reward,st.title):null});}});
   if(S.story.includes('open'))checkCards();
+  dqCheckDay();chalCheck();if(S.ipos>=1&&!S.kpi)kpiRoll();
   if(cnt('goblin'))stFirst('g1');if(S.props>=2&&S.props<=8)for(let i=2;i<=S.props;i++)stFirst('p'+i);
   if(S.complaints)stFirst('ev1');if(S.contractsDone)stFirst('ct1');if(S.ipos)stFirst('ipo1');[1,2,3,5].forEach(n=>{if(S.maxRebirths>=n||S.rebirths>=n)stFirst('rb'+n);});
   if(S.story.includes('case0'))stFirst('case0');if(S.story.includes('case10'))stFirst('case10');if(S.story.includes('ash0'))stFirst('ash0');if(S.story.includes('ash10'))stFirst('ash10');if(S.story.includes('edge0'))stFirst('edge0');if(S.story.includes('edge8'))stFirst('edge8');if(S.ipos>=3)stFirst('ipo3');if(S.ipos>=5)stFirst('ipo5');
@@ -1279,7 +1378,7 @@ function check(){
   if(S.props>=2&&S.event==null){if(S.nextEvent==null)S.nextEvent=now+60*1000;else if(now>=S.nextEvent)spawnEvent();}
   S.buffs=S.buffs.filter(b=>b.until>now);
 }
-function eventGap(){let m=policyOn('resident')?(2+Math.random()*3):(5+Math.random()*5);if(inCity(1))m/=2;if(seasonOn('halloween'))m/=1.5;return m*60*1000;}
+function eventGap(){let m=policyOn('resident')?(2+Math.random()*3):(5+Math.random()*5);if(chalOn('storm'))m/=3;if(inCity(1))m/=2;if(seasonOn('halloween'))m/=1.5;return m*60*1000;}
 function spawnEvent(){
   const pool=EVENTS.map((e,k)=>k).filter(k=>evAllowed(EVENTS[k])&&k!==S.lastEventIdx);if(!pool.length)return;
   const unseen=pool.filter(k=>!S.seenEv.includes(k));
@@ -1293,8 +1392,8 @@ function resolveEvent(which){
   if(!S.seenEv.includes(S.event)){S.seenEv.push(S.event);toast('客訴圖鑑 +1（收入 +1%）');}
   if(which===1){const gain=complaintReward(val);earn(gain);log('客訴「'+ev[0]+'」→ '+label+'，+'+fmt(gain)+' 金幣。');toast('+'+fmt(gain)+' 金幣');}
   else{const d=buffDur();S.buffs.push({mult:val,until:Date.now()+d,label});log('客訴「'+ev[0]+'」→ '+label+'，收入 ×'+val+' 持續 '+dur(d/1000)+'。');toast('收入 ×'+val+'，持續 '+dur(d/1000));}
-  S.complaints++;sevTrack('complaint');if(ev[0].includes('國王的表弟'))unlockCards(['c_fee']);if(Math.random()<0.1)tryResident('住戶介紹');S.event=null;S.nextEvent=Date.now()+eventGap();
-  if(Math.random()<0.2)gainGlass(1,'住戶的謝禮');
+  S.complaints++;addXP(1);dqTrack('comp');kpiTrack('comp');S.runStats.comp++;sevTrack('complaint');if(ev[0].includes('國王的表弟'))unlockCards(['c_fee']);if(Math.random()<0.1)tryResident('住戶介紹');S.event=null;S.nextEvent=Date.now()+eventGap();
+  if(Math.random()<0.1)gainGlass(1,'住戶的謝禮');
   tryRecruit(0.15);check();renderAll();save();
 }
 
@@ -1350,51 +1449,67 @@ function checkCards(){const ids=[];
 
 /* ================= TIME GLASS ================= */
 function gainGlass(n,why){S.glass+=n;log('獲得時光沙漏 +'+n+'（'+why+'）。');toast('時光沙漏 +'+n);}
+const KEEP_RENO_COST=10;
+function keepRenoPlan(){const n=(S.reno||[]).filter(l=>l>0).length;return {n,cost:n*KEEP_RENO_COST};}
+function dateKey(d){return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
+function missedDays(){const t=S.stats;if(!t||!t.start)return [];const out=[];const d=new Date(t.start);d.setHours(12,0,0,0);const end=new Date();end.setHours(12,0,0,0);
+  let guard=0;while(d<end&&guard++<400){const k=dateKey(d);if(k!==today()&&!t.days.includes(k))out.push(k);d.setDate(d.getDate()+1);}return out;}
+const GLASS_COST={boost:1,skip:2,rush:1,skip8:12,recruit:30,makeup:2};
+function makeupDay(k){S.stats.days.push(k);S.daily.day=S.daily.day%7+1;const day=S.daily.day;const g=dailyGain(day);earn(g);
+  let extra='';if(day===7){S.daily.cycles++;const x=weekGift();if(x)extra='，七日保底：'+x;}
+  log('補簽到 '+k+'（第 '+day+' 天），+'+fmt(g)+' 金幣'+extra+'。');return day;}
+function weekGift(){
+  const free=MGRS.filter(g=>!g.event&&mgrLv(g.id)<MGR_MAX);
+  if(!free.length){gainGlass(10,'七日保底');return '時光沙漏 +10（主管都已滿級）';}
+  const top=Math.max(...free.map(g=>g.r));const pool=free.filter(g=>g.r===top);
+  const g=pool.find(x=>!mgrLv(x.id))||pool[Math.floor(Math.random()*pool.length)];const x={g,lv:mgrLv(g.id)};applyRecruit(x);
+  return '【'+RARITY[g.r].name+'】'+g.name+' · '+g.title+(x.lv?' 升到 Lv'+(x.lv+1):' 加入事務所');}
 function useGlass(kind,j){
-  const cost=kind==='skip'?2:1;if(S.glass<cost)return;
+  const cost=GLASS_COST[kind];if(cost==null||S.glass<cost)return;
   if(kind==='boost'){const now=Date.now();const b=S.buffs.find(x=>x.label==='時光加速'&&x.until>now);if(b)b.until+=10*60*1000;else S.buffs.push({mult:2,until:now+10*60*1000,label:'時光加速'});log('使用沙漏：收入 ×2 延長 10 分鐘。');}
-  else if(kind==='skip'){const g=baseRate()*3600;earn(g);log('使用沙漏：快轉 1 小時，+'+fmt(g)+' 金幣。');toast('快轉 1 小時 +'+fmt(g)+' 金幣');}
+  else if(kind==='skip'||kind==='skip8'){const h=kind==='skip'?1:8;const g=baseRate()*3600*h;earn(g);log('使用沙漏：快轉 '+h+' 小時，+'+fmt(g)+' 金幣。');toast('快轉 '+h+' 小時 +'+fmt(g)+' 金幣');}
   else if(kind==='rush'){const c=S.contracts.active[j];if(!c||c.end<=Date.now())return;c.end=Date.now();log('使用沙漏：合約「'+c.name+'」立刻完工。');}
-  S.glass-=cost;S.glassUsed++;check();renderAll();save();
+  else if(kind==='recruit'){const sel=$('recruitPick');const id=j||(sel&&sel.value);const g=MGRS.find(x=>x.id===id&&!x.event);if(!g||mgrLv(g.id)>=MGR_MAX)return;const x={g,lv:mgrLv(g.id)};applyRecruit(x);toast((x.lv?'升級：':'錄用：')+g.name+' Lv'+(x.lv+1));}
+  else if(kind==='makeup'){const m=missedDays();if(!m.length)return;const n=j==='all'?Math.min(m.length,Math.floor(S.glass/cost)):1;if(n<1)return;
+    for(let i=0;i<n;i++)makeupDay(m[i]);S.glass-=cost*n;S.glassUsed+=n;dqTrack('glass');toast('補簽到 '+n+' 天');check();renderAll();save();return;}
+  S.glass-=cost;S.glassUsed++;dqTrack('glass');check();renderAll();save();
 }
-
-/* ================= ACTIONS ================= */
-function doPatrol(){const g=patrolGain();earn(g);S.patrols++;sevTrack('patrol');
+function doPatrol(){const g=patrolGain();earn(g);S.patrols++;dqTrack('patrol');sevTrack('patrol');
   if(S.patrols===1||S.patrols%25===0){const lines=['你巡了一圈，順手修好一盞壞掉的魔法燈。','地下二樓的矮人請你喝了一杯黑麥酒。','你在信箱裡收到一封沒有署名的感謝信。','你發現有人在樓梯間偷養史萊姆。','你收齊了這個月的管理費。'];log(lines[Math.floor(Math.random()*lines.length)]);}
   check();renderTop();}
-function hire(id){const u=UNITS[unitIndex[id]];if(!u||u.city>Math.max(cityIdx(),S.maxCity||0))return;const p=plan(u);if(!p.ok)return;const before=cnt(id);S.coins-=p.c;S.units[id]=before+p.k;const n=S.units[id];
+function hire(id){const u=UNITS[unitIndex[id]];if(!u||u.city>Math.max(cityIdx(),S.maxCity||0))return;const p=plan(u);if(!p.ok)return;const before=cnt(id);S.coins-=p.c;S.units[id]=before+p.k;dqTrack('hire',p.k);const n=S.units[id];
   if(before===0)log('雇用了第一位'+u.name+'。');else if(p.k>1)log('一次雇用 '+p.k+' 名'+u.name+'，花費 '+fmt(p.c)+' 金幣。');
   for(let l=msLevel(before)+1;l<=msLevel(n);l++){const r=RANKS[Math.min(l,RANKS.length-1)];
-    log((l===1?u.ms:u.name+'晉升為「'+r+'」等級。')+'（產出 ×'+msBase().toFixed(1)+'）','story');toast(u.name+'晉升「'+r+'」');}
+    log((l===1?u.ms:u.name+'晉升為「'+r+'」等級。')+'（產出 ×'+msBase().toFixed(2)+'）','story');toast(u.name+'晉升「'+r+'」');}
   check();renderAll();}
-function renoUp(i){const lv=S.reno[i]||0;if(i>=S.props||lv>=RENO_MAX)return false;const c=renoCost(i);if(S.coins<c)return false;S.coins-=c;for(let k=S.reno.length;k<=i;k++)if(S.reno[k]==null)S.reno[k]=0;S.reno[i]=lv+1;return true;}
-function renoMaxPlan(i){let lv=S.reno[i]||0,c=0,k=0;while(lv+k<RENO_MAX){const n=propAt(i).reno*Math.pow(10,lv+k);if(c+n>S.coins)break;c+=n;k++;}return {k,c};}
+function renoUp(i){const lv=S.reno[i]||0;if(i>=S.props||lv>=RENO_MAX)return false;const c=renoCost(i);if(S.coins<c)return false;S.coins-=c;dqTrack('reno');for(let k=S.reno.length;k<=i;k++)if(S.reno[k]==null)S.reno[k]=0;S.reno[i]=lv+1;return true;}
+function renoMaxPlan(i){let lv=S.reno[i]||0,c=0,k=0;while(lv+k<RENO_MAX){const n=renoCostAt(i,lv+k);if(c+n>S.coins)break;c+=n;k++;}return {k,c};}
 function renovateMax(i){const lv0=S.reno[i]||0;let k=0;while(renoUp(i))k++;if(!k)return;log(propAt(i).name+'一次裝修 '+k+' 級：'+RENO_NAMES[lv0+k]+'（Lv'+(lv0+k)+'）。');toast(propAt(i).name+' 裝修到 Lv'+(lv0+k));check();renderAll();save();}
 function renovateAll(){let n=0;for(;;){let best=-1,bc=Infinity;for(let i=0;i<S.props;i++){const lv=S.reno[i]||0;if(lv>=RENO_MAX)continue;const c=renoCost(i);if(c<=S.coins&&c<bc){bc=c;best=i;}}if(best<0)break;renoUp(best);n++;if(n>2000)break;}
   if(!n){toast('目前的金幣不夠任何一項裝修');return;}log('一鍵裝修：共完成 '+n+' 級裝修。');toast('一鍵裝修完成 '+n+' 級');check();renderAll();save();}
 function renovate(i){if(i>=S.props)return;const lv=S.reno[i]||0;if(lv>=RENO_MAX)return;const c=renoCost(i);if(S.coins<c)return;S.coins-=c;
-  for(let k=S.reno.length;k<=i;k++)if(S.reno[k]==null)S.reno[k]=0;S.reno[i]=lv+1;
+  for(let k=S.reno.length;k<=i;k++)if(S.reno[k]==null)S.reno[k]=0;S.reno[i]=lv+1;dqTrack('reno');
   log(propAt(i).name+'完成裝修：'+RENO_NAMES[lv+1]+'（Lv'+(lv+1)+'，全體收入 ×1.05）。');toast(propAt(i).name+' 裝修到 Lv'+(lv+1));check();renderAll();}
 function pick(a){return a[Math.floor(Math.random()*a.length)];}
 function fillOffers(){const used=S.contracts.active.map(c=>c.name);S.contracts.offers=CONTRACT_TIERS.map((t,k)=>{let n,guard=0;do{n=pick(CONTRACT_NAMES);}while(used.includes(n)&&guard++<30);used.push(n);return {name:n,tier:k};});}
-function acceptContract(j,quiet){if(S.props<3||S.contracts.active.length>=contractSlots())return;const o=S.contracts.offers[j];if(!o)return;const t=CONTRACT_TIERS[o.tier];
+function acceptContract(j,quiet){if(chalOn('nocontract')||S.props<3||S.contracts.active.length>=contractSlots())return;const o=S.contracts.offers[j];if(!o)return;const t=CONTRACT_TIERS[o.tier];
   S.contracts.active.push({name:o.name,tier:o.tier,end:Date.now()+t.dur*1000});S.contracts.offers.splice(j,1);
   if(!S.contracts.offers.length)fillOffers();log((quiet?'［自動］':'')+'接下承攬合約「'+o.name+'」（'+t.label+'，'+dur(t.dur)+'）。');if(!quiet){renderAll();save();}}
 function collectContract(j,quiet){const c=S.contracts.active[j];if(!c||c.end>Date.now())return 0;const t=CONTRACT_TIERS[c.tier];
-  const gain=contractReward(t);earn(gain);S.contractsDone++;sevTrack('contract');S.contracts.active.splice(j,1);
+  const gain=contractReward(t);earn(gain);S.contractsDone++;addXP(2);dqTrack('ct');kpiTrack('ct');S.runStats.ct++;sevTrack('contract');S.contracts.active.splice(j,1);
   log((quiet?'［自動］':'')+'承攬合約「'+c.name+'」驗收完成，+'+fmt(gain)+' 金幣。');if(!quiet)toast('合約完工 +'+fmt(gain)+' 金幣');fillOffers();
-  if(Math.random()<0.15)gainGlass(1,'業主加送');tryRecruit(0.25);if(!quiet){check();renderAll();save();}return gain;}
+  if(Math.random()<0.05)gainGlass(1,'業主加送');tryRecruit(0.25);if(!quiet){check();renderAll();save();}return gain;}
 function togglePolicy(id){if(S.props<4)return;const now=Date.now();const on=S.council.on;
   if(S.council.changed&&now-S.council.changed<POLICY_COOLDOWN){toast('管委會剛開完會，'+clock(POLICY_COOLDOWN-(now-S.council.changed))+' 後才能再調整');return;}
   if(on.includes(id))on.splice(on.indexOf(id),1);else{if(on.length>=policySlots())on.shift();on.push(id);}
   S.council.changed=now;S.councilSet++;const names=on.map(x=>POLICIES.find(p=>p.id===x).name).join('、')||'無';
   log('管委會通過新方針：'+names+'。');check();renderAll();save();}
-function buyFac(id){const f=FACS.find(x=>x.id===id);if(!f||S.props<5||S.facs.includes(id))return;const c=facCost(f);if(S.coins<c)return;S.coins-=c;S.facs.push(id);
+function buyFac(id){const f=FACS.find(x=>x.id===id);if(!f||chalOn('nofacs')||S.props<5||S.facs.includes(id))return;const c=facCost(f);if(S.coins<c)return;S.coins-=c;S.facs.push(id);
   log('完成設施投資「'+f.name+'」，全體收入 ×'+f.mult+'。','story');toast(f.name+'完工，收入 ×'+f.mult);check();renderAll();save();}
 function talPlan(t){const want=t.one?1:(S.talAmt==='all'?Infinity:(S.talAmt||1));let lv=tal(t.id),k=0,c=0;
   while(k<want&&lv+k<talMax(t)){const n=t.one?t.cost:talCost(lv+k);if(c+n>S.fame)break;c+=n;k++;if(k>100000)break;}
   return {k,c,next:t.one?t.cost:talCost(lv)};}
-function buyTalent(id){const t=talDef(id);if(!t)return;const lv=tal(id);if(lv>=talMax(t))return;const p=talPlan(t);if(!p.k)return;S.fame-=p.c;S.talents[id]=lv+p.k;
+function buyTalent(id){const t=talDef(id);if(!t)return;const lv=tal(id);if(lv>=talMax(t))return;const p=talPlan(t);if(!p.k)return;S.fame-=p.c;S.talents[id]=lv+p.k;dqTrack('tal');
   log(t.one?'解鎖自動化「'+t.name+'」：'+t.d(1)+'。':'天賦「'+t.name+'」'+(p.k>1?'連升 '+p.k+' 級，':'')+'升到 Lv'+(lv+p.k)+'：'+t.d(lv+p.k)+'。');check();renderAll();save();}
 
 /* ================= REBIRTH ================= */
@@ -1419,16 +1534,18 @@ function buyBoard(id){const b=BOARD.find(x=>x.id===id);if(!b)return;const lv=brd
   S.shares-=c;S.board[id]=lv+1;log('董事會通過「'+b.name+'」Lv'+(lv+1)+'：'+b.d(lv+1)+'。','story');check();renderAll();save();}
 function resetRun(){S.run=0;S.units={};S.reno=[];S.buffs=[];S.event=null;S.nextEvent=null;S.facs=[];S.contracts={offers:[],active:[]};S.seen=[];S.teamLv=0;staffBuilt='';}
 function doIPO(){
-  if(!ipoReady())return;const g=sharesFor(S.fameTotal);if(g<=0)return;const first=S.ipos===0;
-  S.shares+=g;S.sharesTotal+=g;S.ipos++;S.maxRebirths=Math.max(S.maxRebirths||0,S.rebirths);
+  if(!ipoReady())return;const g0=sharesFor(S.fameTotal);if(g0<=0)return;const first=S.ipos===0;const hit=kpiHit(),hadKpi=!!S.kpi;const g=Math.floor(g0*kpiBonus());
+  S.shares+=g;S.sharesTotal+=g;S.ipos++;addXP(50);S.maxRebirths=Math.max(S.maxRebirths||0,S.rebirths);
   const keep={};TALENTS.flatMap(b=>b.items).filter(t=>t.one).forEach(t=>{if(S.talents[t.id])keep[t.id]=S.talents[t.id];});
   S.fame=0;S.fameTotal=0;S.talents=keep;S.rebirths=0;S.cityOverride=null;S.nextCity=null;
-  resetRun();S.coins=1e4*S.sharesTotal;S.props=startProps();
+  resetRun();S.coins=1e4*S.sharesTotal;S.props=startProps();runReset();S.chal=null;S.nextChal='';
   const lines=first?['王都證券交易所的大廳擠滿了人。叔叔把敲鐘的木槌交給你。','「當年那間快倒閉的事務所，今天要上市了。」','鐘聲響起，金鑰物業集團正式掛牌。你帶著新的資本，回到一切開始的銀橡城。']
     :['金鑰物業集團再次增資上市，股東們的掌聲比上次更響。','你回到銀橡城，準備打下更大的版圖。'];
+  if(hadKpi)lines.push({text:'股東會 KPI 達成 '+hit+' / 3 項：股份 ×'+(1+hit/6).toFixed(2),cls:'sub'});
   lines.push({text:'獲得股份 +'+fmt(g)+'（可用 '+fmt(S.shares)+' 股，累計 '+fmt(S.sharesTotal)+' 股，全體收入 ×'+fmt(shareMult())+'）',cls:'gain'});
   lines.push({text:'下一次上市需要累計聲望 '+fmt(ipoNeed())+' 點（每上市一次，門檻 ×'+IPO_GROW+'）。',cls:'sub'});
   lines.push({text:'聲望、天賦、重組次數已歸零；自動化規則、主管、住戶、知識小卡都保留；到過的城市的在地員工會留在名冊上，回到該城市才能再雇用。到「集團」頁用股份通過董事會決議。',cls:'sub'});
+  kpiRoll();lines.push({text:'股東會開出新的本期 KPI，到「集團」頁查看。',cls:'sub'});
   log('集團上市（第 '+S.ipos+' 次），股份 +'+fmt(g)+'。','story');
   queue({title:first?'敲鐘上市':'第 '+S.ipos+' 次上市',lines,btn:'回到銀橡城'});
   check();renderAll();save();
@@ -1436,19 +1553,23 @@ function doIPO(){
 
 function doRebirth(){
   const g=fameGain();if(S.run<REBIRTH_MIN||g<=0)return;
-  const first=S.rebirths===0&&!S.ipos,from=cityName();
-  S.fame+=g;S.fameTotal+=g;S.rebirths++;S.maxRebirths=Math.max(S.maxRebirths||0,S.rebirths);
+  const first=S.rebirths===0&&!S.ipos,from=cityName();const rr=runReport();const gradeXP={S:10,A:6,B:3}[rr.grade]||0;if(gradeXP)addXP(gradeXP);
+  S.fame+=g;S.fameTotal+=g;S.rebirths++;addXP(10);S.maxRebirths=Math.max(S.maxRebirths||0,S.rebirths);
   S.cityOverride=(brd('pick')&&S.nextCity!=null&&S.nextCity!=='')?Number(S.nextCity):null;S.nextCity=null;S.maxCity=Math.max(S.maxCity||0,cityIdx());
-  S.coins=Math.max(tal('seed')?Math.pow(10,tal('seed')+2):0,500*S.fameTotal);S.run=0;S.units={};S.props=1;S.reno=[];S.buffs=[];S.event=null;S.nextEvent=null;S.facs=[];S.contracts={offers:[],active:[]};S.seen=[];S.teamLv=0;
+  const keepR=keepRenoPlan();let keptReno=0;if(S.keepReno&&keepR.n&&S.glass>=keepR.cost){S.glass-=keepR.cost;S.glassUsed++;keptReno=keepR.n;log('用 '+keepR.cost+' 個沙漏保留 '+keepR.n+' 個物件的裝修等級。');}
+  S.coins=Math.max(tal('seed')?Math.pow(10,tal('seed')+2):0,500*S.fameTotal);S.run=0;S.units={};S.props=1;if(!keptReno)S.reno=[];S.buffs=[];S.event=null;S.nextEvent=null;S.facs=[];S.contracts={offers:[],active:[]};S.seen=[];S.teamLv=0;
   BASE_UNITS.slice(0,Math.min(tal('vet'),10)).forEach(u=>S.units[u[0]]=10);
   if(hasPerk(2))S.units.goblin=Math.max(cnt('goblin'),10);
   S.props=startProps();
   if(S.sharesTotal)S.coins=Math.max(S.coins,1e4*S.sharesTotal);
-  staffBuilt='';
+  staffBuilt='';runReset();
+  S.chal=null;if(S.nextChal&&CHALLENGES.some(x=>x.id===S.nextChal)){S.chal={id:S.nextChal,city:cityIdx(),done:false};}S.nextChal='';
   const c=CITIES[cityIdx()];
   const lines=first?['叔叔終於回來了，手上拿著一份王都集團的合約。','「把事務所併進集團吧。你在'+from+'打下的名聲，到哪座城市都用得上。」','你帶著「金鑰」這塊招牌，前往下一座城市：'+cityName()+'。']
     :['你把'+from+'的事務所交給在地團隊，帶著「金鑰」品牌前往'+cityName()+'重新開業。'];
+  lines.unshift({text:rr.lines[0]+(gradeXP?'（管理資歷 +'+gradeXP+'）':''),cls:'gain'},{text:rr.lines[1],cls:'sub'});
   lines.push({text:'品牌聲望 +'+fmt(g)+'（可用 '+fmt(S.fame)+' 點，累計 '+fmt(S.fameTotal)+' 點）',cls:'gain'});
+  if(S.chal){const cc=CHALLENGES.find(x=>x.id===S.chal.id);lines.push({text:'城市挑戰「'+cc.name+'」開始：'+cc.d+'在這座城市接管第 '+CHAL_GOAL+' 個物件就算完成。',cls:'sub'});}
   if(S.rebirths<CITIES.length||S.cityOverride!=null){lines.push({text:'城市規則：'+c.rule,cls:'sub'});
     const locals=LOCAL_UNITS.filter(l=>l[0]===cityIdx()).map(l=>l[2]);if(locals.length)lines.push({text:'新的在地員工：'+locals.join('、'),cls:'sub'});}
   const np=PERKS.find(p=>p[0]===S.rebirths);if(np)lines.push({text:'解鎖集團特權：'+np[1]+' — '+np[2],cls:'sub'});
@@ -1458,10 +1579,109 @@ function doRebirth(){
   check();renderAll();save();
 }
 
+/* ================= v0.8：每日小委託 ================= */
+const DQ_POOL=[
+ {k:'patrol',need:10,t:'巡視公寓 10 次',ok:()=>true},
+ {k:'hire',need:30,t:'雇用 30 名員工',ok:()=>true},
+ {k:'comp',need:2,t:'處理 2 件客訴',ok:()=>S.props>=2},
+ {k:'reno',need:2,t:'完成 2 級物件裝修',ok:()=>S.props>=2},
+ {k:'prop',need:1,t:'接管 1 個新物件',ok:()=>true},
+ {k:'ct',need:1,t:'驗收 1 件承攬合約',ok:()=>S.props>=3&&!autoOn('a_collect')&&!chalOn('nocontract')},
+ {k:'tal',need:1,t:'升級 1 次聲望天賦',ok:()=>veteran()},
+ {k:'glass',need:1,t:'使用 1 次時光沙漏',ok:()=>S.glass>=2}
+];
+function dqRoll(){const pool=DQ_POOL.filter(q=>q.ok());const out=[];while(out.length<3&&pool.length){const i=Math.floor(Math.random()*pool.length);out.push({k:pool[i].k,need:pool[i].need,c:0,ok:false});pool.splice(i,1);}
+  S.dq={d:today(),list:out,all:false};}
+function dqCheckDay(){if(!S.story.includes('open')||!cnt('goblin'))return;if(!S.dq||S.dq.d!==today())dqRoll();}
+function dqTrack(k,n){if(!S.dq||S.dq.d!==today())return;let changed=false;
+  S.dq.list.forEach(q=>{if(q.k!==k||q.ok)return;q.c=Math.min(q.need,q.c+(n||1));changed=true;
+    if(q.c>=q.need){q.ok=true;gainGlass(1,'今日委託');addXP(3);toast('今日委託完成：'+DQ_POOL.find(x=>x.k===q.k).t);}});
+  if(changed&&!S.dq.all&&S.dq.list.length&&S.dq.list.every(q=>q.ok)){S.dq.all=true;gainGlass(2,'今日委託全數完成');addXP(5);log('今日三件委託全部完成。','story');}}
+function renderDQ(){const el=$('dqBox');if(!el)return;if(!S.dq||S.dq.d!==today()||!S.dq.list.length){el.hidden=true;return;}el.hidden=false;
+  if(S.dq.all){setHTML(el,'<div class="dq done"><b>今日委託</b><span>三件都完成了，明天會有新的委託。</span></div>');return;}
+  setHTML(el,'<div class="dq"><b>今日委託<small>每件 +1 沙漏，全完成再 +2</small></b>'+S.dq.list.map(q=>{const d=DQ_POOL.find(x=>x.k===q.k);return '<div class="dqi'+(q.ok?' ok':'')+'"><span>'+(q.ok?'✔ ':'')+d.t+'</span><span class="num">'+q.c+'/'+q.need+'</span></div>';}).join('')+'</div>');}
+
+/* ================= v0.8：城市挑戰 ================= */
+const CHALLENGES=[
+ {id:'nodragon',name:'龍族休假',d:'水晶監控塔與龍族財務顧問不能雇用。'},
+ {id:'storm',name:'客訴風暴',d:'客訴出現頻率 ×3，客訴金幣獎勵 ×0.5。'},
+ {id:'nocontract',name:'工程停擺',d:'不能承攬合約。'},
+ {id:'frugal',name:'預算凍結',d:'員工價格 ×3。'},
+ {id:'nofacs',name:'設施封存',d:'不能進行設施投資，已有的設施沒有效果。'}
+];
+const CHAL_GOAL=5;
+const chalOn=id=>!!(S.chal&&S.chal.id===id&&!S.chal.done);
+const chalDoneCount=()=>Object.keys(S.chalDone||{}).length;
+const chalMult=()=>1+0.02*chalDoneCount();
+function chalCheck(){if(!S.chal||S.chal.done)return;if(S.props>=CHAL_GOAL){S.chal.done=true;const key=S.chal.id+'@'+S.chal.city;const first=!S.chalDone[key];S.chalDone[key]=1;
+  const c=CHALLENGES.find(x=>x.id===S.chal.id);if(S.kpi)S.kpi.c.chal=(S.kpi.c.chal||0)+1;
+  if(first){gainGlass(5,'城市挑戰');addXP(20);}
+  queue({title:'城市挑戰完成：'+c.name,lines:['你在'+CITIES[S.chal.city].name+'的「'+c.name+'」限制下接管了第 '+CHAL_GOAL+' 個物件。',first?{text:'新的挑戰紀錄！全體收入永久 +2%（目前 '+chalDoneCount()+' 項，共 +'+(chalDoneCount()*2)+'%），時光沙漏 +5',cls:'gain'}:{text:'這座城市的這項挑戰之前已完成過，這次沒有額外獎勵。',cls:'sub'},{text:'挑戰限制已解除，這一輪可以照常經營。',cls:'sub'}],btn:'太好了'});
+  log('完成城市挑戰「'+c.name+'」（'+CITIES[S.chal.city].name+'）。','story');}}
+
+/* ================= v0.8：股東會 KPI ================= */
+const KPI_KINDS=[
+ {k:'props',t:n=>'單一輪接管 '+n+' 個物件',need:i=>6+Math.min(2,i)},
+ {k:'ct',t:n=>'完成 '+n+' 件承攬合約',need:i=>Math.round(20*(1+0.5*i))},
+ {k:'comp',t:n=>'處理 '+n+' 件客訴',need:i=>Math.round(15*(1+0.5*i))},
+ {k:'chal',t:n=>'完成 '+n+' 次城市挑戰',need:i=>1+Math.floor(i/2)},
+ {k:'xp',t:n=>'累積 '+n+' 點管理資歷',need:i=>Math.round(150*(1+0.5*i))}
+];
+function kpiRoll(){const i=Math.max(0,(S.ipos||1)-1);const pool=KPI_KINDS.slice();const list=[];while(list.length<3){const j=Math.floor(Math.random()*pool.length);list.push({k:pool[j].k,need:pool[j].need(i)});pool.splice(j,1);}
+  S.kpi={list,c:{props:S.props,ct:0,comp:0,chal:0,xp:0}};}
+function kpiVal(q){return q.k==='props'?(S.kpi.c.props||0):(S.kpi.c[q.k]||0);}
+function kpiHit(){return S.kpi?S.kpi.list.filter(q=>kpiVal(q)>=q.need).length:0;}
+function kpiTrack(k,n){if(!S.kpi)return;if(k==='props')S.kpi.c.props=Math.max(S.kpi.c.props||0,n);else S.kpi.c[k]=(S.kpi.c[k]||0)+(n||1);}
+const kpiBonus=()=>1+kpiHit()/6;
+
+/* ================= v0.8：交接報告 ================= */
+function runReport(){const r=S.runStats||{};const mins=r.start?Math.max(1,Math.round((Date.now()-r.start)/60000)):0;
+  const p=S.props;const grade=p>=8?'S':p>=7?'A':p>=6?'B':p>=5?'C':'D';
+  return {grade,lines:['交接報告：'+cityName()+' · 評等 '+grade,'接管 '+p+' 個物件 · 處理客訴 '+(r.comp||0)+' 件 · 合約完工 '+(r.ct||0)+' 件 · 本輪累積 '+fmt(S.run)+' 金幣'+(mins?' · 經營 '+dur(mins*60):'')]};}
+function runReset(){S.runStats={start:Date.now(),comp:0,ct:0};}
+
+/* ================= v0.8：住戶連續小故事 ================= */
+const RSTORY=[
+ {id:'anvil',p:0,title:'鐵砧婆婆的退休',reward:'全體收入 +2%',parts:[
+  ['鐵砧婆婆說她的手腕開始痛了，早上五點的敲打聲，一天比一天小。','「敲了六十年，」她說，「也該有人接手了。」'],
+  ['樓上的小矮人學徒偷偷在房間練習，整層樓被吵得睡不著，客訴單一張接一張。','你和住戶協調，把地下室的倉庫改成「社區工坊」，每天早上八點到十點可以使用。'],
+  ['鐵砧婆婆每天坐在工坊門口，看學徒敲錯一次就咳嗽一聲。','三個月後，學徒打出的第一副門鉸鏈，裝在了管理室的大門上。'],
+  ['退休那天，整棟樓的住戶一起到地下室。學徒敲出第一聲，大家跟著拍手、跺腳、敲水管。','那是地下公寓有史以來最吵的一個早上，卻沒有任何一張客訴單。']]},
+ {id:'wedding',p:1,title:'老樹下的婚禮',reward:'全體收入 +2%',parts:[
+  ['精靈住戶露娜要結婚了，她想在社區中庭那棵四百歲的老樹下辦婚禮。','中庭是全體住戶共用的空間，你請她先向管委會提出借用申請。'],
+  ['管委會同意了，但樹人園藝師來看過之後皺起眉頭：「這棵樹病了，有幾根枝幹撐不住。」','婚禮前，得先把老樹照顧好。'],
+  ['樹人園藝師修了三天，修掉枯枝、補上支架，還在樹根旁埋了一圈新的苔蘚。','露娜每天下班都來看樹，有時候還會對它說話。'],
+  ['婚禮那天，老樹開滿了白花。精靈們說，這棵樹已經一百年沒開過花了。','新郎新娘在樹下交換戒指，整個社區的住戶都來觀禮，連平常最挑剔的那幾位也來了。']]},
+ {id:'lost',p:2,title:'市集的失物招領櫃',reward:'全體收入 +2%',parts:[
+  ['哥布林市集的管理室，失物已經堆到天花板：雨傘、錢包、一隻會說話的鸚鵡。','沒有人知道哪件是誰的，哥布林們說，「找不到主人的就算市集的」。'],
+  ['你訂了一套簡單的規則：每件失物都要登記拾得時間和地點，公告招領，保管期滿再依規定處理。','哥布林們抱怨麻煩，但第一週就有十二件失物回到主人手上。'],
+  ['登記到第三百號時，你拿起一只舊懷錶。錶蓋內側刻著一行字：「給我的姪子，等你接手事務所那天。」','那是叔叔的字跡。原來他三十年前就在這裡弄丟了它。'],
+  ['叔叔收到懷錶時愣了很久，最後把它放進你的口袋：「本來就是要給你的。」','從那天起，失物招領櫃成了市集最熱鬧的角落，常常有人只是來看今天又撿到什麼。']]},
+ {id:'young',p:3,title:'小龍的第一次會議',reward:'全體收入 +2%',parts:[
+  ['老龍的孫子剛滿一百歲，第一次要代表家族出席區分所有權人會議。','他緊張得在走廊來回走，每走一步就冒一點煙，警報器響了三次。'],
+  ['你陪他看會議通知、議程和委託書，告訴他：想提案，要先寫清楚理由和經費。','小龍抱著一疊紙熬了整夜，煙從門縫一直冒到天亮。'],
+  ['會議上，小龍站起來提案：「山頂沒有給小孩玩的地方，我想蓋一座兒童遊戲場。」','老龍們面面相覷。兩百年來，從來沒有人在會上提過「小孩」。'],
+  ['表決通過了。遊戲場完工那天，小龍第一個衝上溜滑梯，然後卡在中間。','你們花了一個下午把他拉出來。隔週，管委會追加預算，換了一座龍族尺寸的溜滑梯。']]},
+ {id:'mural',p:4,title:'夜班清潔員的畫',reward:'全體收入 +2%',parts:[
+  ['商辦塔的晨班住戶發現，電梯廳的牆上每天早上都會多一張小小的畫：一隻貓、一扇窗、一片雲。','畫在便條紙上，用膠帶貼得很整齊。'],
+  ['有住戶抱怨「公共空間不能亂貼」，也有住戶偷偷把喜歡的畫拍下來。','你調了監視紀錄：是夜班的哥布林清潔員，每天收工前畫一張。'],
+  ['你沒有撕掉那些畫，而是向管委會提案：每個月在大廳辦一次「夜班畫展」，展期結束再收回。','哥布林清潔員知道之後，整整三天不敢來上班。'],
+  ['第一次畫展，大廳擠滿了人。管委會主委買下其中一幅，掛在會議室。','那年的大樓年報封面，就是那張畫：清晨五點，一扇亮著燈的管理室窗戶。']]}
+];
+function rstoryNext(){const done=S.rstory.done||[];return RSTORY.find(x=>!done.includes(x.id)&&x.p<S.props);}
+function rstoryAdvance(){const st=rstoryNext();if(!st)return false;if(S.rstory.cur!==st.id){S.rstory.cur=st.id;S.rstory.part=0;}
+  const i=S.rstory.part;const part=st.parts[i];S.rstory.part++;const last=S.rstory.part>=st.parts.length;
+  const lines=[...part];if(last){S.rstory.done.push(st.id);S.rstory.cur=null;S.rstory.part=0;lines.push({text:'故事完成：'+st.reward+'、時光沙漏 +3',cls:'gain'});}
+  else lines.push({text:'（'+(i+1)+'/'+st.parts.length+'）下次回來時，故事會繼續。',cls:'sub'});
+  log('住戶故事「'+st.title+'」第 '+(i+1)+' 段。','story');
+  queue({title:propLabel(st.p)+' · '+st.title,lines,btn:last?'收下回憶':'繼續經營',onOk:last?()=>{gainGlass(3,'住戶故事');addXP(10);}:null});return true;}
+const rstoryMult=()=>1+0.02*((S.rstory&&S.rstory.done)||[]).length;
+
 /* ================= OFFLINE & DAILY ================= */
 function today(){const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
+function dailyGain(day){const mins=day<=3?5:day<=6?15:60;const r=baseRate();return Math.max(20*day,Math.min(r*mins*60*dimMult(tal('daily')),r*7200));}
 function returnReport(gapSec){
-  const lines=[],recs=[];let offGain=0,capped=0,glass=0,daily=null;
+  const lines=[],recs=[];let offGain=0,capped=0,glass=0,daily=null;let doStory=S.story.includes('open')&&gapSec>=1800;
   if(gapSec>0&&gapSec<OFFLINE_MIN)earn(rate()*gapSec);
   else if(gapSec>=OFFLINE_MIN){
     const cap=offlineCapH()*3600;capped=Math.min(gapSec,cap);
@@ -1478,16 +1698,16 @@ function returnReport(gapSec){
   }
   const t=today();
   if(S.story.includes('open')&&S.daily.last!==t){
-    S.daily.last=t;S.daily.day=S.daily.day%7+1;const day=S.daily.day;
-    const mins=day<=3?10:day<=6?30:120;
-    daily={day,mins,gain:Math.max(baseRate()*mins*60,20*day)*(1+0.5*tal('daily'))};
+    S.daily.last=t;S.daily.day=S.daily.day%7+1;const day=S.daily.day;doStory=true;
+    const mins=day<=3?5:day<=6?15:60;
+    daily={day,mins,gain:dailyGain(day)};
     glass+=(day===7?5:2)+(seasonOn('moon')?2:0)+brd('bonus')+(S.supporter?5:0);
     lines.push({text:'每日登入第 '+day+' 天：+'+fmt(daily.gain)+' 金幣'+(day===7?'，收入 ×2 持續 30 分鐘':''),cls:'gain'});
-    const rc=rollRecruit(1);if(rc)recs.push(rc);
+    if(day===7){const w=weekGift();lines.push({text:'七日保底主管：'+w,cls:'gain'});}else{const rc=rollRecruit(1);if(rc)recs.push(rc);}
   }
   if(glass)lines.push({text:'時光沙漏 +'+glass,cls:'gain'});
   recs.forEach(x=>lines.push({text:(x.lv?'老朋友回來了：':'人才來訪：')+'【'+RARITY[x.g.r].name+'】'+x.g.name+' · '+x.g.title+(x.lv?' 升到 Lv'+(x.lv+1):'')+'（'+recruitEffect(x)+'）',cls:'sub'}));
-  if(!offGain&&!daily&&!recs.length)return;
+  if(!offGain&&!daily&&!recs.length){if(doStory)rstoryAdvance();return;}
   const apply=mult=>{
     if(offGain){earn(offGain*mult);S.offlineClaims++;log('領取離線收益 +'+fmt(offGain*mult)+' 金幣（'+dur(capped)+(mult>1?'，看廣告加倍':'')+'）。');}
     if(daily){earn(daily.gain);if(daily.day===7){S.buffs.push({mult:2,until:Date.now()+30*60*1000,label:'全勤獎勵'});S.daily.cycles++;}log('每日登入第 '+daily.day+' 天，+'+fmt(daily.gain)+' 金幣。');}
@@ -1498,6 +1718,7 @@ function returnReport(gapSec){
   queue({title:offGain?'歡迎回來':'每日登入',lines,btn:'全部領取',onOk:()=>apply(1),
     extra:daily?()=>{const w=document.createElement('div');w.className='week';for(let i=1;i<=7;i++){const x=document.createElement('i');if(i<=daily.day)x.className='on';w.appendChild(x);}return w;}:null,
     alt:offGain&&adsOn()?{text:'看廣告，離線收益 ×2',fn:async()=>{const ok=await Ads.rewarded('離線收益加倍');apply(ok?2:1);if(!ok)toast(Ads.last&&Ads.last!=='dismissed'?'目前沒有可播放的廣告，照常領取 1 倍':'沒有看完廣告，照常領取 1 倍');}}:null});
+  if(doStory)rstoryAdvance();
 }
 
 /* ================= RENDER ================= */
@@ -1507,7 +1728,7 @@ const DEFAULT_OFFICE='金鑰管家事務所';
 const TITLES=[
  {id:'rookie',name:'新手管家',hint:'一開始就有',ok:()=>true},
  {id:'senior',name:'資深管家',hint:'完成第 1 次集團重組',ok:s=>(s.maxRebirths||0)>=1||s.ipos>=1},
- {id:'chief',name:'總幹事',hint:'第一次制定管委會方針',ok:s=>s.councilSet>=1},
+ {id:'chief',name:'管委會軍師',hint:'第一次制定管委會方針',ok:s=>s.councilSet>=1},
  {id:'landlord',name:'包租公',hint:'住戶入住 16 位',ok:s=>s.residents.length>=16},
  {id:'landlady',name:'包租婆',hint:'住戶入住 16 位',ok:s=>s.residents.length>=16},
  {id:'expert',name:'物業達人',hint:'收集 10 張知識小卡',ok:s=>s.cards.length>=10},
@@ -1540,7 +1761,7 @@ function setCustom(k,v,idx){v=String(v||'').trim();
 function renderCustom(){
   const t=TITLES.find(x=>x.id===S.custom.title&&x.ok(S))||TITLES[0];
   $('officeName').textContent=officeName();
-  $('playerLine').textContent=t.name+(S.custom.player?' · '+S.custom.player:'')+(S.custom.slogan?'　「'+S.custom.slogan+'」':'');
+  $('playerLine').textContent=careerInfo().label+' · '+t.name+(S.custom.player?' · '+S.custom.player:'')+(S.custom.slogan?'　「'+S.custom.slogan+'」':'');
   const box=$('custom');if(!box)return;
   const titleOpts=TITLES.map(x=>'<option value="'+x.id+'"'+(x.id===t.id?' selected':'')+(x.ok(S)?'':' disabled')+'>'+x.name+(x.ok(S)?'':'（'+x.hint+'）')+'</option>').join('');
   const acc=ACCENTS.map(a=>{const ok=a.ok(S),on=(S.custom.accent===a.id&&ok)||(!ACCENTS.find(z=>z.id===S.custom.accent&&z.ok(S))&&a.id==='brass');
@@ -1564,7 +1785,7 @@ function renderTabs(){
     if(ok&&TAB_NAMES[k]&&!S.tabsSeen.includes(k)){S.tabsSeen.push(k);if(S.story.includes('open')&&!veteran())fresh.push(TAB_NAMES[k]);}});
   if(fresh.length){toast('新分頁開放：'+fresh.join('、'));log('新分頁開放：「'+fresh.join('」「')+'」。');}
   if(!TAB_RULES[curTab()]())$('tab-run').click();
-  $('amtBar').hidden=curTab()!=='run'||!(veteran()||totalStaff()>=10);
+  $('amtBar').hidden=curTab()!=='run'||(S.runSub||'staff')!=='staff'||!(veteran()||totalStaff()>=10);
   $('glassWrap').hidden=!TAB_RULES.biz();
   $('team').hidden=!(veteran()||S.seen.length>=3);
   $('eventBox').hidden=!(veteran()||S.props>=2);
@@ -1574,9 +1795,10 @@ function nextGoal(){
   const now=Date.now();
   if(S.event!=null)return {text:'有一張客訴單在等你處理'};
   if(S.contracts.active.some(c=>c.end<=now)&&!autoOn('a_collect'))return {text:'有承攬合約完工了，到「業務」驗收',tab:'biz'};
-  const sn=seasonNow();if(sn&&S.sev.key===sn.key&&SEASON_TASKS.some(t=>!S.sev.got.includes(t.k)&&(S.sev.c[t.k]||0)>=t.need))return {text:sn.s.name+'活動任務完成了，領取沙漏',tab:'run'};
+  const sn=seasonNow();if(sn&&S.sev.key===sn.key&&SEASON_TASKS.some(t=>!S.sev.got.includes(t.k)&&(S.sev.c[t.k]||0)>=t.need))return {text:sn.s.name+'活動任務完成了，領取沙漏',tab:'biz'};
   if(!cnt('goblin'))return S.coins<10?{text:'按「巡視公寓」存到 10 金幣，雇用第一位哥布林清潔工',pct:S.coins/10}:{text:'雇用第一位哥布林清潔工',tab:'run'};
   if(ipoReady())return {text:'可以集團上市了：到「集團」敲鐘',tab:'corp'};
+  if(S.chal&&!S.chal.done){const cc=CHALLENGES.find(x=>x.id===S.chal.id);return {text:'城市挑戰「'+cc.name+'」：接管第 '+CHAL_GOAL+' 個物件（目前 '+S.props+'）',pct:S.props/CHAL_GOAL,tab:'run'};}
   if(veteran()&&S.run>=REBIRTH_MIN){const fg=fameGain();if(fg>=3&&fg>=S.fameTotal*0.5)return {text:'重組時機到了：這輪可得 '+fmt(fg)+' 聲望（累計 '+fmt(S.fameTotal)+'），下一輪會跑得更快',tab:'corp'};}
   if(!veteran()&&S.run>=REBIRTH_MIN&&fameGain()>=3)return {text:'可以發動集團重組了：帶著 '+fmt(fameGain())+' 點聲望前往下一座城市',tab:'corp'};
   if(S.props>=3&&!S.contracts.active.length&&!autoOn('a_collect'))return {text:'接一件承攬合約，離線時也會施工',tab:'biz'};
@@ -1618,6 +1840,7 @@ function updateStaff(){
     const p=plan(u);row.querySelector('[data-k=qty]').textContent='雇用 ×'+p.k;row.querySelector('[data-k=cost]').textContent=fmt(p.c)+' 金幣';row.querySelector('button').disabled=!p.ok;});
 }
 function renderProps(){
+  renderRunSub();renderFacs();renderDQ();
   let html='';
   for(let i=0;i<=S.props;i++){const p=propAt(i),on=i<S.props;const lv=S.reno[i]||0;
     let right;
@@ -1628,22 +1851,48 @@ function renderProps(){
   html+='<div class="prop off"><span class="lv">'+(S.props+2)+'</span><span class="pn">？？？</span><span class="ps"></span></div>';
   setHTML($('props'),html);
   $('propMult').textContent='物件 ×'+fmt(propMult())+' · 裝修 ×'+fmt(renoMult());
-  $('msNote').textContent='每多 1 名 +1%；滿 10、25、50 名，之後每 25 名，產出 ×'+msBase().toFixed(1);
+  $('msNote').textContent='每多 1 名 +1%；滿 10、25、50 名，之後每 25 名，產出 ×'+msBase().toFixed(2);
   const lv=S.teamLv||0,nx=TEAM_STEPS[lv],mn=teamMin();
   const low=BASE_UNITS.filter(u=>S.seen.includes(u[0])).sort((x,y)=>cnt(x[0])-cnt(y[0]))[0];
   setHTML($('team'),'<b>團隊等級 Lv'+lv+'（全體收入 ×'+fmt(teamMult())+'）</b><span>'+(nx?'所有已出現的基本員工都達到 '+nx+' 名，可升到 Lv'+(lv+1)+'（再 ×2）。'+(low?'目前最少的是'+low[1]+'（'+cnt(low[0])+' 名）。':''):'已達最高等級。')+' 另外，每多雇 1 名，該員工產出 +1%（熟練）；相鄰兩階的員工互相支援，每 1 名 +1%。</span>'+(nx?'<div class="bar"><i style="width:'+Math.min(100,mn/nx*100).toFixed(1)+'%"></i></div>':''));
 }
 function lockedNote(n){return '<p class="sub">接管第 '+n+' 個物件「'+propAt(n-1).name+'」後開放（本輪累積 '+fmt(needOf(n-1))+' 金幣）。</p>';}
+function glassExtra(){
+  const avail=MGRS.filter(g=>!g.event&&mgrLv(g.id)<MGR_MAX).sort((a,b)=>b.r-a.r||mgrLv(b.id)-mgrLv(a.id));
+  const prev=$('recruitPick')?$('recruitPick').value:'';
+  let h='';
+  if(S.props>=2&&avail.length)h+='<div class="row"><div class="info"><span class="name">指名招募主管</span><span class="desc">指定一位主管加入，或讓已加入的主管升 1 級。</span><label class="desc">人選 <select id="recruitPick">'+avail.map(g=>'<option value="'+g.id+'"'+(g.id===prev?' selected':'')+'>【'+RARITY[g.r].name+'】'+g.name+' · '+g.title+(mgrLv(g.id)?'（Lv'+mgrLv(g.id)+' → '+(mgrLv(g.id)+1)+'）':'（新加入）')+'</option>').join('')+'</select></label></div><button class="buy" type="button" data-act="glass" data-v="recruit" '+(S.glass<GLASS_COST.recruit?'disabled':'')+'><b>招募</b><span>'+GLASS_COST.recruit+' 個沙漏</span></button></div>';
+  const m=missedDays();
+  if(m.length)h+='<div class="row"><div class="info"><span class="name">補簽到</span><span class="desc">有 '+m.length+' 天沒有登入。每補 1 天花 '+GLASS_COST.makeup+' 個沙漏，可拿到當天的金幣獎勵，並計入每週第 7 天的保底。</span></div><div class="btncol"><button class="buy" type="button" data-act="glass" data-v="makeup" '+(S.glass<GLASS_COST.makeup?'disabled':'')+'><b>補 1 天</b><span>'+GLASS_COST.makeup+' 個沙漏</span></button>'+(m.length>1?'<button class="mini" type="button" data-act="glass" data-v="makeup" data-j="all" '+(S.glass<GLASS_COST.makeup*2?'disabled':'')+'>能補的全補</button>':'')+'</div></div>';
+  return h;}
+function renderFacs(){
+  if(S.props<5)setHTML($('bizFacs'),lockedNote(5));
+  else setHTML($('bizFacs'),'<p class="sub">每項只能買一次，重組後歸零。目前設施加成 ×'+fmt(facMult())+'。</p>'+FACS.map(f=>{const own=S.facs.includes(f.id),c=facCost(f);
+      return '<div class="row"><div class="info"><span class="name">'+f.name+(own?'<span class="own">已完工</span>':'')+'</span><span class="desc">'+f.d+'</span><span class="meta num">全體收入 ×'+f.mult+'</span></div><button class="buy" type="button" data-act="fac" data-v="'+f.id+'" '+(own||S.coins<c?'disabled':'')+'><b>'+(own?'已完工':'投資')+'</b><span>'+(own?'':fmt(c)+' 金幣')+'</span></button></div>';}).join(''));
+}
+function renderRunSub(){const cur=S.runSub||'staff';
+  document.querySelectorAll('#runSub [data-sub]').forEach(b=>b.setAttribute('aria-selected',b.dataset.sub===cur?'true':'false'));
+  document.querySelectorAll('[data-subp]').forEach(el=>el.hidden=el.dataset.subp!==cur);
+  const up=$('upAll');up.hidden=!veteran();}
+function upgradeAll(){if(!veteran())return;const c0=S.coins;let nf=0,nu=0,nr=0;
+  if(S.props>=5&&!chalOn('nofacs'))FACS.slice().sort((a,b)=>facCost(a)-facCost(b)).forEach(f=>{if(!S.facs.includes(f.id)){const c=facCost(f);if(c<=S.coins){S.coins-=c;S.facs.push(f.id);nf++;}}});
+  for(let it=0;it<400;it++){const r0=baseRate();let best=null,bv=0;
+    staffList().shown.forEach(u=>{if(u.city>cityIdx())return;const n=cnt(u.id),k=nextMs(n)-n,c=bulkCost(u,k);if(c>S.coins)return;S.units[u.id]=n+k;const v=(baseRate()-r0)/c;S.units[u.id]=n;if(v>bv){bv=v;best={u,k,c};}});
+    if(!best)break;S.coins-=best.c;S.units[best.u.id]=cnt(best.u.id)+best.k;nu+=best.k;}
+  if(nu)dqTrack('hire',nu);
+  for(let it=0;it<2000;it++){let b=-1,bc=Infinity;for(let i=0;i<S.props;i++){const lv=S.reno[i]||0;if(lv>=RENO_MAX)continue;const c=renoCost(i);if(c<=S.coins&&c<bc){bc=c;b=i;}}if(b<0)break;renoUp(b);nr++;}
+  if(!nf&&!nu&&!nr){toast('目前的金幣不夠任何升級');return;}
+  const msg='一鍵升級：設施 '+nf+' 項、員工 '+nu+' 名、裝修 '+nr+' 級，花費 '+fmt(c0-S.coins)+' 金幣';log(msg+'。');toast(msg);check();renderAll();save();}
 function renderBiz(){
   const now=Date.now();let html='';
   $('glassSum').textContent='持有 '+S.glass+' 個';
   const left=adLeft();
-  setHTML($('bizGlass'),'<p class="sub">每日登入 +2（第 7 天 +5），處理客訴、完成合約、離線 4 小時以上也有機會獲得。</p>'+
+  setHTML($('bizGlass'),'<p class="sub">主要來源：每日登入 +2（第 7 天 +5）、劇情章節、季節活動；處理客訴、完成合約、離線 4 小時以上偶爾也會獲得。</p>'+
     (adsOn()?'<div class="row"><div class="info"><span class="name">看廣告換沙漏</span><span class="desc">看一則廣告，獲得 1 個沙漏。今日還可以看 '+left+' 次'+(Ads.mode==='mock'?'（目前為模擬廣告）':'')+'</span></div><button class="buy" type="button" data-act="adglass" '+(left<=0?'disabled':'')+'><b>看廣告</b><span>+1 沙漏</span></button></div>':'<p class="sub">支持者禮包已啟用：每日登入自動多 5 個沙漏。</p>')+
     (S.supporter?'':'<div class="row"><div class="info"><span class="name">支持者禮包</span><span class="desc">一次購買：移除所有廣告按鈕、每日登入多 5 個沙漏、稱號「金鑰贊助人」與招牌顏色「香檳金」。價格會在上架時決定。</span></div><button class="buy" type="button" data-act="supporter"><b>'+(Ads.mode==='mock'?(S.dbg?'模擬購買':'上架後開放'):'購買')+'</b><span></span></button></div>')+
-    [['boost',1,'時光加速','收入 ×2，持續 10 分鐘（可疊加時間）'],['skip',2,'快轉 1 小時','立刻獲得 1 小時份的收入，約 '+fmt(baseRate()*3600)+' 金幣']].map(([k,c,n,d])=>
+    [['boost',1,'時光加速','收入 ×2，持續 10 分鐘（可疊加時間）'],['skip',2,'快轉 1 小時','立刻獲得 1 小時份的收入，約 '+fmt(baseRate()*3600)+' 金幣'],['skip8',12,'快轉 8 小時','立刻獲得 8 小時份的收入，約 '+fmt(baseRate()*3600*8)+' 金幣']].map(([k,c,n,d])=>
     '<div class="row"><div class="info"><span class="name">'+n+'</span><span class="desc">'+d+'</span></div><button class="buy" type="button" data-act="glass" data-v="'+k+'" '+(S.glass<c?'disabled':'')+'><b>使用</b><span>'+c+' 個沙漏</span></button></div>').join('')+
-    '<p class="sub">施工中的合約也可以用 1 個沙漏立刻完工。</p>');
+    glassExtra()+'<p class="sub">施工中的合約也可以用 1 個沙漏立刻完工；重組時可以在「集團」頁用沙漏保留裝修。</p>');
   if(S.props<3)html=lockedNote(3);
   else{if(!S.contracts.offers.length)fillOffers();
     html+='<p class="sub">同時可接 '+contractSlots()+' 件。離線時照常施工，完工後回來驗收。</p>';
@@ -1657,9 +1906,6 @@ function renderBiz(){
   else{const cd=S.council.changed?Math.max(0,POLICY_COOLDOWN-(now-S.council.changed)):0;
     setHTML($('bizCouncil'),'<p class="sub">可同時採行 '+policySlots()+' 項方針。'+(cd?'下次可調整：'+clock(cd):'現在可以調整。')+'</p>'+POLICIES.map(p=>{const on=S.council.on.includes(p.id);
       return '<div class="row"><div class="info"><span class="name">'+p.name+(on?'<span class="own">採行中</span>':'')+'</span><span class="desc">'+p.d+'</span></div><button class="buy" type="button" data-act="policy" data-v="'+p.id+'" '+(cd?'disabled':'')+'><b>'+(on?'取消':'採行')+'</b><span>'+(cd?'冷卻中':'')+'</span></button></div>';}).join(''));}
-  if(S.props<5)setHTML($('bizFacs'),lockedNote(5));
-  else setHTML($('bizFacs'),'<p class="sub">每項只能買一次，重組後歸零。目前設施加成 ×'+fmt(facMult())+'。</p>'+FACS.map(f=>{const own=S.facs.includes(f.id),c=facCost(f);
-      return '<div class="row"><div class="info"><span class="name">'+f.name+(own?'<span class="own">已完工</span>':'')+'</span><span class="desc">'+f.d+'</span><span class="meta num">全體收入 ×'+f.mult+'</span></div><button class="buy" type="button" data-act="fac" data-v="'+f.id+'" '+(own||S.coins<c?'disabled':'')+'><b>'+(own?'已完工':'投資')+'</b><span>'+(own?'':fmt(c)+' 金幣')+'</span></button></div>';}).join(''));
   const ready=S.props>=3&&!autoOn('a_collect')&&(S.contracts.active.some(c=>c.end<=now)||S.contracts.active.length<contractSlots());
   setHTML($('tab-biz'),'業務'+(ready?'<span class="dot"></span>':''));
 }
@@ -1669,7 +1915,12 @@ function renderCorp(){
   $('rebirths').textContent=S.rebirths;$('runEarned').textContent='本輪累積 '+fmt(S.run)+' 金幣';
   $('corpCity').textContent='第 '+(S.rebirths+1)+' 座城市';
   const c=CITIES[cityIdx()];
-  setHTML($('cityNow'),'<b>目前城市：'+cityName()+'</b><span class="rule">'+c.rule+'</span>');
+  setHTML($('cityNow'),'<b>目前城市：'+cityName()+'</b><span class="rule">'+c.rule+'</span>'+(S.chal?(()=>{const cc=CHALLENGES.find(x=>x.id===S.chal.id);return '<span class="sub chalnow">城市挑戰「'+cc.name+'」'+(S.chal.done?'已完成':'進行中：'+cc.d+'目標：接管第 '+CHAL_GOAL+' 個物件（目前 '+S.props+'）')+'</span>';})():''));
+  if(veteran()){const total=CHALLENGES.length*CITIES.length;
+    setHTML($('rbChal'),'<label class="sub">下一輪城市挑戰（選填）<select data-chal="1" id="chalPick"><option value="">不挑戰</option>'+CHALLENGES.map(x=>'<option value="'+x.id+'"'+(S.nextChal===x.id?' selected':'')+'>'+x.name+' — '+x.d+'</option>').join('')+'</select></label><span class="sub">挑戰紀錄：'+chalDoneCount()+' / '+total+'（每座城市的每項挑戰第一次完成，全體收入永久 +2%）</span>');}
+  else setHTML($('rbChal'),'');
+  if(S.kpi&&S.ipos>=1){setHTML($('kpiBox'),'<div class="kpi"><b>股東會本期 KPI</b><span class="sub">下次上市時，每達成 1 項，股份 +17%（3 項全達成 +50%）。目前達成 '+kpiHit()+' / 3。</span>'+S.kpi.list.map(q=>{const d=KPI_KINDS.find(x=>x.k===q.k);const v=Math.min(kpiVal(q),q.need);return '<div class="dqi'+(v>=q.need?' ok':'')+'"><span>'+(v>=q.need?'✔ ':'')+d.t(q.need)+'</span><span class="num">'+fmt(v)+'/'+fmt(q.need)+'</span></div>';}).join('')+'</div>');}
+  else setHTML($('kpiBox'),'');
   if(can){$('rbGain').textContent='現在重組可得 '+fmt(g)+' 點聲望';$('rbNext').textContent='本輪累積到 '+fmt(runForFame((g+1)/(1+0.25*brd('brand'))))+' 金幣，可再多 1 點。';}
   else{$('rbGain').textContent='本輪累積 '+fmt(REBIRTH_MIN)+' 金幣後可以重組';$('rbNext').textContent='目前 '+fmt(S.run)+' / '+fmt(REBIRTH_MIN)+'。賺得越多，拿到的聲望越多，但增加得越來越慢。';}
   const ni=Math.min(S.rebirths+1,CITIES.length-1),nc=CITIES[ni];const nl=LOCAL_UNITS.filter(l=>l[0]===ni).map(l=>l[2]);
@@ -1677,6 +1928,7 @@ function renderCorp(){
   $('rbBtn').disabled=!can;
   if(brd('pick')){let o='<option value="">依順序（'+CITIES[Math.min(S.rebirths+1,CITIES.length-1)].name+'）</option>';for(let i=0;i<=Math.max(S.maxCity||0,cityIdx());i++)o+='<option value="'+i+'"'+(String(S.nextCity)===String(i)?' selected':'')+'>'+CITIES[i].name+' — '+CITIES[i].rule+'</option>';
     setHTML($('rbPick'),'<label class="sub">下一座城市（城市直營）<select data-pick="1" id="cityPick">'+o+'</select></label>');}else setHTML($('rbPick'),'');
+  {const kp=keepRenoPlan();setHTML($('rbKeep'),kp.n?'<label class="sub keep"><input type="checkbox" data-keep="1"'+(S.keepReno?' checked':'')+'> 重組時用沙漏保留裝修：'+kp.n+' 個物件 × '+KEEP_RENO_COST+' = '+kp.cost+' 個沙漏（持有 '+S.glass+'）'+(S.keepReno&&S.glass<kp.cost?'，沙漏不夠，將不會保留':'')+'</label>':'');}
   const sg=sharesFor(S.fameTotal),ready=ipoReady();
   $('shares').textContent=fmt(S.shares);$('shareBonus').textContent='累計 '+fmt(S.sharesTotal)+' 股 · 全體收入 ×'+fmt(shareMult());$('ipos').textContent=S.ipos;
   $('ipoGain').textContent=ready?'現在上市可得 '+fmt(sg)+' 股':'條件：把事務所開到王都（目前第 '+(S.rebirths+1)+' 座城市），且累計聲望達 '+fmt(ipoNeed())+' 點（目前 '+fmt(S.fameTotal)+'）';
@@ -1707,7 +1959,7 @@ function renderMgr(){
     if(!lv)return '<div class="mgr off r'+g.r+'"><span class="rar">'+RARITY[g.r].name+'</span><b>？？？</b><span class="t">專長：'+target+'</span></div>';
     const st=stationOf(g.id),eff=mgrEff(g);let opts='<option value="">待命（無效果）</option>';
     for(let i=0;i<S.props;i++){const a=affOf(i).test(g);const used=occupants(i).length;opts+='<option value="'+i+'"'+(st===i?' selected':'')+'>'+(a?'★ ':'')+esc(propLabel(i))+'（'+used+'/'+slotsOf(i)+'）</option>';}
-    return '<div class="mgr r'+g.r+'"><span class="rar">'+RARITY[g.r].name+' · Lv'+lv+'</span><b><span class="av">'+g.name.charAt(0)+'</span>'+g.name+'</b><span class="t">'+g.title+' · '+g.d+'</span><span class="e">'+(st==null?'待命中，沒有效果':target+' ×'+fmt(eff)+(affOf(st).test(g)?'（適性加成）':''))+'</span><label class="t" style="margin-top:4px">派駐<select data-assign="'+g.id+'" id="as-'+g.id+'">'+opts+'</select></label></div>';}).join(''));
+    return '<div class="mgr r'+g.r+'"><span class="rar">'+RARITY[g.r].name+' · Lv'+lv+'</span><b><span class="av">'+g.name.charAt(0)+'</span>'+g.name+'</b><span class="t">'+g.title+' · '+g.d+'</span>'+(()=>{const pp=partnerOf(g.id);if(!pp)return '';const pg=MGRS.find(x=>x.id===pp.id);const on=pairOn(g.id);return '<span class="pair'+(on?' on':'')+'">搭檔「'+pp.name+'」：'+(mgrLv(pp.id)?pg.name:'？？？')+(on?' · 同駐中，效果 ×'+PAIR_MULT:' · 派駐在同一個物件時效果 ×'+PAIR_MULT+'（第 5 個物件起有 2 個空位）')+'</span>';})()+'<span class="e">'+(st==null?'待命中，沒有效果':target+' ×'+fmt(eff)+(affOf(st).test(g)?'（適性加成）':''))+'</span><label class="t" style="margin-top:4px">派駐<select data-assign="'+g.id+'" id="as-'+g.id+'">'+opts+'</select></label></div>';}).join(''));
   $('resSum').textContent='已入住 '+S.residents.length+' / '+RESIDENTS.length+' · 收入 ×'+resMult().toFixed(2);
   setHTML($('res'),PROPS.map((p,i)=>{const list=RESIDENTS.filter(x=>x[0]===i);const full=list.every(x=>S.residents.includes(x[1]));
     return '<li><b>'+(i<S.props||list.some(x=>S.residents.includes(x[1]))?esc(i<S.props?propLabel(i):p.name):'？？？')+(full?'（全棟滿租 ×1.1）':'')+'</b>'+list.map(x=>S.residents.includes(x[1])?'<span>'+x[2]+'：'+x[3]+'</span>':'<span class="off">？？？</span>').join('')+'</li>';}).join(''));
@@ -1716,7 +1968,11 @@ function renderMgr(){
   $('dexSum').textContent='已收集 '+S.seenEv.length+' / '+EVENTS.length+' · 收入 +'+S.seenEv.length+'%';
   setHTML($('dex'),EVENTS.map((e,k)=>S.seenEv.includes(k)?'<li>'+e[0]+'</li>':'<li class="off">？？？'+(typeof e[3]==='string'&&e[3].startsWith('e:')?'（'+SEASONS.find(x=>x.id===e[3].slice(2)).name+'活動限定）':typeof e[3]==='string'?'（'+CITIES[Number(e[3].slice(1))].name+'限定）':e[3]?'（第 '+e[3]+' 個物件後）':'')+'</li>').join(''));
 }
-function renderAch(){
+function renderCareer(){const c=careerInfo();
+  $('careerSum').textContent='管理資歷 '+fmt(c.xp)+' · 收入 ×'+careerMult().toFixed(2);
+  let lad='';for(let i=0;i<CAREER.length;i++){lad+='<span class="'+(i<c.rank?'on':i===c.rank?'cur':'')+'">'+CAREER[i]+'</span>';}
+  setHTML($('career'),'<b>'+c.label+'</b><span class="sub">下一階：'+c.next+'，還差 '+fmt(Math.max(0,Math.ceil(c.need)))+' 點資歷</span><div class="bar"><i style="width:'+Math.min(100,c.pct*100).toFixed(1)+'%"></i></div><span class="sub">資歷來源：接管物件、處理客訴、合約完工、重組、上市、劇情章節。資歷不會因重組或上市歸零；每升一個職級，全體收入 ×1.05。</span><div class="ladder">'+lad+'</div>');}
+function renderAch(){renderCareer();
   setHTML($('ach'),ACH.map(([id,name,cond])=>{const got=S.ach.includes(id);return '<div class="badge'+(got?' got':'')+'"><b>'+(got?name:'？？？')+'</b><span>'+cond+'</span></div>';}).join(''));
   $('achSum').textContent='已達成 '+S.ach.length+' / '+ACH.length+' · 收入 +'+(S.ach.length*2)+'%';
 }
@@ -1774,7 +2030,7 @@ function decode(str){str=str.trim();if(!str.startsWith('GK1-'))throw new Error('
 
 /* ================= LOOP ================= */
 let tickN=0;
-function hireOne(u){const c=Math.ceil(firstCost(u));if(S.coins<c)return false;const before=cnt(u.id);S.coins-=c;S.units[u.id]=before+1;
+function hireOne(u){const c=Math.ceil(firstCost(u));if(S.coins<c)return false;const before=cnt(u.id);S.coins-=c;S.units[u.id]=before+1;dqTrack('hire');
   if(msLevel(before+1)>msLevel(before)){const r=RANKS[Math.min(msLevel(before+1),RANKS.length-1)];log('［自動］'+u.name+'晉升為「'+r+'」等級。','story');}return true;}
 function runAutomation(){
   const now=Date.now();
@@ -1821,9 +2077,9 @@ function debugAct(v){
 }
 function wire(){
   document.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const v=b.dataset.v;
-    switch(b.dataset.act){case 'hire':hire(v);break;case 'reno':renovate(+v);break;case 'renomax':renovateMax(+v);break;case 'renoall':renovateAll();break;case 'accept':acceptContract(+v);break;case 'collect':collectContract(+v);break;
-      case 'policy':togglePolicy(v);break;case 'fac':buyFac(v);break;case 'tal':buyTalent(v);break;case 'dbg':debugAct(v);break;case 'glass':useGlass(v,+b.dataset.j);break;case 'autotog':toggleAuto(v);break;case 'season':claimSeason(v);break;case 'board':buyBoard(v);break;case 'accent':setCustom('accent',v);break;case 'adglass':adForGlass();break;case 'supporter':buySupporter();break;}});
-  document.addEventListener('change',e=>{const el=e.target.closest('[data-assign]');if(el)setStation(el.dataset.assign,el.value);const cu=e.target.closest('[data-cust]');if(cu)setCustom(cu.dataset.cust,cu.value,cu.dataset.i);const pk=e.target.closest('[data-pick]');if(pk){S.nextCity=pk.value===''?null:pk.value;save();}});
+    switch(b.dataset.act){case 'hire':hire(v);break;case 'reno':renovate(+v);break;case 'renomax':renovateMax(+v);break;case 'renoall':renovateAll();break;case 'upall':upgradeAll();break;case 'accept':acceptContract(+v);break;case 'collect':collectContract(+v);break;
+      case 'policy':togglePolicy(v);break;case 'fac':buyFac(v);break;case 'tal':buyTalent(v);break;case 'dbg':debugAct(v);break;case 'glass':useGlass(v,b.dataset.j);break;case 'autotog':toggleAuto(v);break;case 'season':claimSeason(v);break;case 'board':buyBoard(v);break;case 'accent':setCustom('accent',v);break;case 'adglass':adForGlass();break;case 'supporter':buySupporter();break;}});
+  document.addEventListener('change',e=>{const el=e.target.closest('[data-assign]');if(el)setStation(el.dataset.assign,el.value);const cu=e.target.closest('[data-cust]');if(cu)setCustom(cu.dataset.cust,cu.value,cu.dataset.i);const ch=e.target.closest('[data-chal]');if(ch){S.nextChal=ch.value;save();}const kp=e.target.closest('[data-keep]');if(kp){S.keepReno=kp.checked;renderCorp();save();}const pk=e.target.closest('[data-pick]');if(pk){S.nextCity=pk.value===''?null:pk.value;save();}});
   $('ipoBtn').onclick=()=>{$('ipoRow').hidden=true;$('ipoConfirm').hidden=false;};
   $('ipoNo').onclick=()=>{$('ipoRow').hidden=false;$('ipoConfirm').hidden=true;};
   $('ipoYes').onclick=()=>{$('ipoRow').hidden=false;$('ipoConfirm').hidden=true;doIPO();};
@@ -1839,6 +2095,7 @@ function wire(){
     document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected',x===t?'true':'false'));
     ['run','biz','corp','mgr','ach','log','save'].forEach(k=>$('page-'+k).hidden=(k!==t.dataset.tab));
     renderAll();window.scrollTo(0,0);});
+  document.querySelectorAll('#runSub [data-sub]').forEach(b=>b.onclick=()=>{S.runSub=b.dataset.sub;renderTabs();renderProps();updateStaff();window.scrollTo(0,0);});
   $('goal').onclick=()=>{const k=$('goal').dataset.tab;if(k&&TAB_RULES[k]&&TAB_RULES[k]())$('tab-'+k).click();};
   $('exportBtn').onclick=()=>{save();const code=encode(S);const ta=$('code');ta.value=code;
     try{navigator.clipboard.writeText(code).then(()=>{$('saveNote').textContent='存檔碼已複製，到另一台裝置的「存檔」頁貼上後按匯入。';},()=>{ta.select();$('saveNote').textContent='已產生存檔碼並選取，請手動複製。';});}catch(e){ta.select();$('saveNote').textContent='已產生存檔碼並選取，請手動複製。';}};
@@ -1858,7 +2115,9 @@ function boot(){
   applyAccent();
   if(!S.assignInit){MGRS.filter(g=>mgrLv(g.id)).forEach(autoAssign);S.assignInit=true;}
   const gap=(Date.now()-S.lastSeen)/1000;S.lastSeen=Date.now();
-  stNote(S.stats.sessions?Math.max(gap,300):0);returnReport(S.story.length?gap:0);check();renderAll();
+  stNote(S.stats.sessions?Math.max(gap,300):0);returnReport(S.story.length?gap:0);
+  if(S.refund8){queue({title:'天賦調整通知',lines:['這次改版調整了「客訴專家」「口碑發酵」「住戶回饋」三項天賦：客訴獎勵每張最多 30 分鐘收入（霧港 60 分鐘）、限時加成最長 60 分鐘、每日登入獎勵最多 2 小時收入，等級效果改為逐級遞減。',{text:'已退還這三項天賦花費的聲望 '+fmt(S.refund8)+' 點，等級歸零，可以重新分配。',cls:'gain'}],btn:'知道了'});log('天賦調整：退還聲望 '+fmt(S.refund8)+' 點。','story');delete S.refund8;}
+  check();renderAll();
 }
 function start(data){
   S=(data&&data.state)?merge(data.state):(load()||fresh());
