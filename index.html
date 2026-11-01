@@ -279,6 +279,28 @@ a.lab:hover{text-decoration:underline}
 .dq.done{flex-direction:row;gap:10px;align-items:center;font-size:13px;color:var(--muted)}
 .dqi{display:flex;justify-content:space-between;gap:10px;font-size:14px}
 .dqi.ok{color:var(--good)}
+.iab{border:1px solid var(--warn);border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;background:var(--panel)}
+.iab b{color:var(--warn);font-family:var(--f-display);font-size:15px}
+.iab p{margin:0;font-size:13px;color:var(--muted)}
+.iab .btns{display:flex;flex-wrap:wrap;gap:6px}
+.iab a.btn{text-decoration:none;color:var(--fg)}
+.rrg{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:6px}
+.rrg div{border:1px solid var(--line);border-radius:6px;padding:6px 8px;display:flex;flex-direction:column;gap:2px}
+.rrg span{font-size:12px;color:var(--muted)}
+.rrg b{font-family:var(--f-num);font-size:14px;color:var(--fg);font-weight:600}
+.rrg b.ok{color:var(--good)}
+.rrg b.warn{color:var(--warn)}
+.rrd{display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--line);padding-top:10px}
+.rrd h4{margin:0;font-family:var(--f-display);font-size:15px;color:var(--brass)}
+.rrd button{text-align:left;background:var(--panel-2);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:14px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.rrd button.hot{border-color:var(--warn)}
+.rrd button i{font-style:normal;color:var(--brass);white-space:nowrap;font-size:13px}
+.rrw{display:flex;flex-direction:column;gap:10px}
+.bak{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.bak b{font-family:var(--f-display);font-size:15px;color:var(--brass)}
+.bak div{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.bak button{white-space:nowrap;flex-shrink:0}
+.warnt{color:var(--warn)!important}
 .rbchal{display:flex;flex-direction:column;gap:4px;margin-top:6px}
 .rbchal select{margin-top:4px;max-width:100%;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:4px 6px;font-size:13px}
 .chalnow{display:block;margin-top:4px;color:var(--warn)}
@@ -287,6 +309,7 @@ a.lab:hover{text-decoration:underline}
 </style>
 
 <div class="wrap">
+  <div class="iab" id="iab" role="alert" hidden></div>
   <div class="brand"><div class="bt"><h1 id="officeName">金鑰管家事務所</h1><span class="pl" id="playerLine">新手管家</span></div><span class="where" id="where">銀橡城</span></div>
   <div class="stick">
   <header class="head">
@@ -350,6 +373,7 @@ a.lab:hover{text-decoration:underline}
 
   <section class="page" id="page-run">
     <div id="dqBox" hidden></div>
+    <div id="hrBox" hidden></div>
     <div class="subtabs" id="runSub" role="tablist" aria-label="經營分類">
       <button type="button" data-sub="staff">員工</button>
       <button type="button" data-sub="props">物件</button>
@@ -487,6 +511,8 @@ a.lab:hover{text-decoration:underline}
     </div>
     <div class="note" id="saveNote" aria-live="polite"></div>
     <p class="sub" id="cloudNote"></p>
+    <p class="sub" id="storeNote"></p>
+    <div class="bak" id="bakBox" hidden></div>
     <div class="sec-title" style="margin-top:12px"><h2>試玩回饋</h2><span>紀錄只存在這台裝置</span></div>
     <p>遊戲會在這台裝置上記下你玩了幾天、登入幾次，以及第一次達成各個里程碑的時間。按「寄信」或「複製」時才會離開裝置，幫助開發者調整節奏。</p>
     <pre class="fbstats" id="fbStats"></pre>
@@ -519,7 +545,7 @@ a.lab:hover{text-decoration:underline}
 'use strict';
 const KEY='fantasy-pm-save-v1';
 const OFFLINE_MIN=60;
-const VERSION='v0.8.1';
+const VERSION='v0.9.0';
 
 /* ================= DATA ================= */
 const CITIES=[
@@ -1210,7 +1236,7 @@ function fresh(){return {v:2,amt:1,dbg:false,dbgSpeed:false,coins:0,life:0,run:0
   units:{},props:1,reno:[],ach:[],patrols:0,complaints:0,offlineClaims:0,buffs:[],daily:{last:null,day:0,cycles:0},
   story:[],log:[],seen:[],event:null,nextEvent:null,lastEventIdx:null,lastSeen:Date.now(),
   contracts:{offers:[],active:[]},contractsDone:0,council:{on:[],changed:0},councilSet:0,facs:[],
-  talents:{},mgr:{},seenEv:[],teamLv:0,assign:{},assignInit:true,autoOff:{},glass:GLASS_GIFT,glassUsed:0,eventAt:0,shares:0,sharesTotal:0,ipos:0,board:{},maxCity:0,maxRebirths:0,cityOverride:null,nextCity:null,tabsSeen:[],talAmt:1,keepReno:false,mig8:true,career:{xp:0},runSub:'staff',dq:null,chal:null,nextChal:'',chalDone:{},kpi:null,runStats:{start:0,comp:0,ct:0},rstory:{cur:null,part:0,done:[]},seasonDone:0,supporter:false,adDay:null,adViews:0,custom:{office:'',player:'',title:'rookie',slogan:'',accent:'brass',props:{}},residents:[],nextRes:0,cards:[],sev:{key:'',c:{},got:[]},stats:{start:0,sessions:0,days:[],playSec:0,firsts:{}}};}
+  talents:{},mgr:{},seenEv:[],teamLv:0,assign:{},assignInit:true,autoOff:{},glass:GLASS_GIFT,glassUsed:0,eventAt:0,shares:0,sharesTotal:0,ipos:0,board:{},maxCity:0,maxRebirths:0,cityOverride:null,nextCity:null,tabsSeen:[],talAmt:1,lastExport:0,hrs:null,keepReno:false,mig8:true,career:{xp:0},runSub:'staff',dq:null,chal:null,nextChal:'',chalDone:{},kpi:null,runStats:{start:0,comp:0,ct:0},rstory:{cur:null,part:0,done:[]},seasonDone:0,supporter:false,adDay:null,adViews:0,custom:{office:'',player:'',title:'rookie',slogan:'',accent:'brass',props:{}},residents:[],nextRes:0,cards:[],sev:{key:'',c:{},got:[]},stats:{start:0,sessions:0,days:[],playSec:0,firsts:{}}};}
 function merge(o){
   const f=fresh();if(!o||typeof o!=='object')return f;
   const migrated=o.v!==2;
@@ -1686,10 +1712,10 @@ const rstoryMult=()=>1+0.02*((S.rstory&&S.rstory.done)||[]).length;
 function today(){const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
 function dailyGain(day){const mins=day<=3?5:day<=6?15:60;const r=baseRate();return Math.max(20*day,Math.min(r*mins*60*dimMult(tal('daily')),r*7200));}
 function returnReport(gapSec){
-  const lines=[],recs=[];let offGain=0,capped=0,glass=0,daily=null;let doStory=S.story.includes('open')&&gapSec>=1800;
-  if(gapSec>0&&gapSec<OFFLINE_MIN)earn(rate()*gapSec);
+  const lines=[],recs=[];let offGain=0,capped=0,glass=0,daily=null,hrMsg=[],pick2=null;let doStory=S.story.includes('open')&&gapSec>=1800;
+  if(gapSec>0&&gapSec<OFFLINE_MIN){earn(rate()*gapSec);hrAdd(gapSec);}
   else if(gapSec>=OFFLINE_MIN){
-    const cap=offlineCapH()*3600;capped=Math.min(gapSec,cap);
+    const cap=offlineCapH()*3600;capped=Math.min(gapSec,cap);hrMsg=hrAdd(capped,true);
     offGain=baseRate()*capped*(policyOn('night')?1.5:1)*mgrMult('@offline')*(inCity(3)?2:1);
     if(offGain>0){
       lines.push('你離開了 '+dur(gapSec)+'。'+pick(OFF_LINES));
@@ -1698,8 +1724,7 @@ function returnReport(gapSec){
     }
     if(S.props>=2&&S.event==null)S.nextEvent=Date.now();
     if(gapSec>=3600){const x=tryResident('趁你不在時',true);if(x)lines.push({text:'新住戶搬進'+PROPS[x[0]].name+'：'+x[2]+'（收入 +1%）',cls:'sub'});const rc=rollRecruit(0.3);if(rc)recs.push(rc);}
-    const doneN=S.contracts.active.filter(c=>c.end<=Date.now()).length;
-    if(doneN&&!autoOn('a_collect'))lines.push({text:'有 '+doneN+' 件承攬合約已完工，記得到「業務」驗收。',cls:'sub'});
+    hrMsg.forEach(x=>lines.push({text:x,cls:'sub'}));
   }
   const t=today();
   if(S.story.includes('open')&&S.daily.last!==t){
@@ -1720,8 +1745,23 @@ function returnReport(gapSec){
     recs.forEach(applyRecruit);
     check();save();renderAll();
   };
-  queue({title:offGain?'歡迎回來':'每日登入',lines,btn:'全部領取',onOk:()=>apply(1),
-    extra:daily?()=>{const w=document.createElement('div');w.className='week';for(let i=1;i<=7;i++){const x=document.createElement('i');if(i<=daily.day)x.className='on';w.appendChild(x);}return w;}:null,
+  const decs=decisions(),capH=offlineCapH(),over=Math.max(0,gapSec-capH*3600);
+  const act=S.contracts.active,ctDone=act.filter(c=>c.end<=Date.now()).length,hrNow=hrOn()?hrCur().sec/3600:null;
+  queue({title:offGain?'歡迎回來':'每日登入',lines,btn:'全部領取',onOk:()=>{apply(1);if(pick2){const k=pick2;setTimeout(()=>goTab(k),0);}},
+    extra:()=>{const w=document.createElement('div');w.className='rrw';
+      if(offGain){const g=document.createElement('div');g.className='rrg';
+        const cell=(a,b,c)=>'<div><span>'+a+'</span><b'+(c?' class="'+c+'"':'')+'>'+b+'</b></div>';
+        g.innerHTML=cell('結算時間',dur(capped))+cell('超出上限',over>=60?dur(over)+' 未計入':'無，全數計入',over>=60?'warn':'ok')+
+          (act.length?cell('承攬合約','完工 '+ctDone+'・施工 '+(act.length-ctDone),ctDone?'warn':''):'')+
+          (hrNow!=null?cell('今日經營',hrNow.toFixed(1)+' / 8 小時',hrNow>=8?'ok':''):'');
+        w.appendChild(g);}
+      if(daily){const wk=document.createElement('div');wk.className='week';for(let i=1;i<=7;i++){const x=document.createElement('i');if(i<=daily.day)x.className='on';wk.appendChild(x);}w.appendChild(wk);}
+      if(decs.length){const box=document.createElement('div');box.className='rrd';box.innerHTML='<h4>待你決定</h4>';
+        decs.forEach(x=>{const b=document.createElement('button');b.type='button';if(x.hot)b.className='hot';
+          b.innerHTML='<span>'+esc(x.t)+'</span><i>領取並前往「'+({save:'設定',biz:'業務',corp:'集團',mgr:'收藏',run:'經營'}[x.tab]||'')+'」→</i>';
+          b.onclick=()=>{pick2=x.tab;const go=$('card').querySelector('button.go');if(go)go.click();};box.appendChild(b);});
+        w.appendChild(box);}
+      return w;},
     alt:offGain&&adsOn()?{text:'看廣告，離線收益 ×2',fn:async()=>{const ok=await Ads.rewarded('離線收益加倍');apply(ok?2:1);if(!ok)toast(Ads.last&&Ads.last!=='dismissed'?'目前沒有可播放的廣告，照常領取 1 倍':'沒有看完廣告，照常領取 1 倍');}}:null});
   if(doStory)rstoryAdvance();
 }
@@ -1845,7 +1885,7 @@ function updateStaff(){
     const p=plan(u);row.querySelector('[data-k=qty]').textContent='雇用 ×'+p.k;row.querySelector('[data-k=cost]').textContent=fmt(p.c)+' 金幣';row.querySelector('button').disabled=!p.ok;});
 }
 function renderProps(){
-  renderRunSub();renderFacs();renderDQ();
+  renderRunSub();renderFacs();renderDQ();renderHours();
   let html='';
   for(let i=0;i<=S.props;i++){const p=propAt(i),on=i<S.props;const lv=S.reno[i]||0;
     let right;
@@ -2014,7 +2054,7 @@ function renderSeason(){
       return '<div class="stask"><div><span>'+t.name+'</span><div class="bar"><i style="width:'+(c/t.need*100).toFixed(0)+'%"></i></div></div><button class="mini" type="button" data-act="season" data-v="'+t.k+'" '+(got||!ok?'disabled':'')+'>'+(got?'已領取':ok?'領 '+t.glass+' 沙漏':c+'/'+t.need)+'</button></div>';}).join('')+
     '<span class="sub">三項都完成：限定主管「'+g.name+'」（'+g.title+'）加入或升級。</span>');
 }
-function renderFeedback(){if($('page-save').hidden)return;$('fbStats').textContent=playText();$('fbForm').hidden=!CONFIG.feedbackUrl;$('fbMail').hidden=!CONFIG.feedbackEmail;}
+function renderFeedback(){if($('page-save').hidden)return;renderStore();$('fbStats').textContent=playText();$('fbForm').hidden=!CONFIG.feedbackUrl;$('fbMail').hidden=!CONFIG.feedbackEmail;}
 function renderAll(){renderTabs();renderCustom();renderFeedback();renderSeason();renderDebug();renderAmt();renderTop();renderProps();renderBiz();renderCorp();renderMgr();renderAch();renderLog();renderSlip();}
 
 /* ================= SAVE ================= */
@@ -2040,7 +2080,78 @@ async function cloudInit(){
     return null;
   }catch(e){cloudStatus=cloud?'on':'off';return null;}
 }
-function load(){try{const raw=localStorage.getItem(KEY);return raw?merge(JSON.parse(raw)):null;}catch(e){return null;}}
+/* ---- v0.9 存檔防護：讀檔失敗不覆蓋、改版自動備份、內建瀏覽器提醒 ---- */
+const BAK_KEY=KEY+'-baks',VER_KEY=KEY+'-ver',BROKEN_KEY=KEY+'-broken';
+let loadFailed=false,restoredLabel='',persistOK=null,iabClosed=false;
+function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,v);return true;}catch(e){return false;}}
+function bakList(){try{const a=JSON.parse(lsGet(BAK_KEY)||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}}
+function bakMake(raw,label){if(!raw)return false;try{const o=JSON.parse(raw);const id=KEY+'-bak-'+Date.now();
+  if(!lsSet(id,JSON.stringify(saveSnapshot(o))))return false;
+  const list=bakList();list.unshift({id,label,at:Date.now(),props:Number(o.props)||0});
+  while(list.length>3){const x=list.pop();try{localStorage.removeItem(x.id);}catch(e){}}
+  lsSet(BAK_KEY,JSON.stringify(list));return true;}catch(e){return false;}}
+function bakLoad(id){const raw=lsGet(id);if(!raw)return null;try{return merge(JSON.parse(raw));}catch(e){return null;}}
+function load(){const raw=lsGet(KEY);if(!raw)return null;
+  try{return merge(JSON.parse(raw));}
+  catch(e){loadFailed=true;lsSet(BROKEN_KEY,raw);
+    for(const x of bakList()){const o=bakLoad(x.id);if(o){loadFailed='restored';restoredLabel=x.label;return o;}}
+    return null;}}
+function versionGuard(){const prev=lsGet(VER_KEY);if(prev===VERSION)return;const raw=lsGet(KEY);
+  if(raw&&!loadFailed)bakMake(raw,'改版前（'+(prev||'v0.8 或更早')+'）');lsSet(VER_KEY,VERSION);}
+function askPersist(){try{if(navigator.storage&&navigator.storage.persist){navigator.storage.persisted().then(p=>p||navigator.storage.persist()).then(r=>{persistOK=!!r;}).catch(()=>{});}}catch(e){}}
+function storageNotice(){
+  if(loadFailed==='restored')queue({title:'存檔已從備份還原',lines:['這台裝置上的存檔讀取失敗，已自動改用最近一份備份（'+restoredLabel+'）。','原始資料另外保留著。如果進度不對，請到「設定」頁的「自動備份」按「複製」，傳給開發者。'],btn:'知道了'});
+  else if(loadFailed)queue({title:'存檔讀取失敗',lines:['這台裝置上的存檔無法讀取，先以新進度開始。','原始資料沒有被刪除。請到「設定」頁的「自動備份」按「複製」，傳給開發者協助救回。'],btn:'知道了'});
+  loadFailed=false;}
+const UA=navigator.userAgent||'';
+const inLine=/\bLine\//i.test(UA),inFbIg=/FBAN|FBAV|FB_IAB|Instagram/i.test(UA),inApp=inLine||inFbIg;
+const isIOS=/iP(hone|ad|od)/.test(UA)||(/Macintosh/.test(UA)&&'ontouchend' in document);
+function standalone(){try{return matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;}catch(e){return false;}}
+function storeWhere(){if(inLine)return {t:'LINE 內建瀏覽器',bad:true};if(inFbIg)return {t:'Facebook／Instagram 內建瀏覽器',bad:true};
+  if(standalone())return {t:'主畫面 App',bad:false};return {t:'瀏覽器分頁',bad:false,tip:isIOS};}
+function renderIab(){const el=$('iab');if(!el)return;if(!inApp||iabClosed){el.hidden=true;return;}el.hidden=false;
+  const url=location.origin+location.pathname+'?openExternalBrowser=1';
+  setHTML(el,'<b>你正在'+(inLine?' LINE ':' Facebook／Instagram ')+'內建瀏覽器裡玩</b><p>在這裡玩，進度可能會在 App 更新或清除資料時消失。建議先複製存檔碼，再改用手機瀏覽器開啟，並加入主畫面。</p>'+
+    '<div class="btns"><button class="btn" type="button" data-iab="code">① 複製存檔碼</button>'+(inLine?'<a class="btn" href="'+esc(url)+'">② 用瀏覽器開啟</a>':'')+'<button class="btn" type="button" data-iab="close">這次先不要</button></div>'+
+    '<p>'+(inLine?'':'② 點右上角「⋯」選單，選擇用瀏覽器開啟。')+'到瀏覽器後，在「設定」頁貼上存檔碼，按「匯入存檔碼」。</p>');}
+function renderStore(){const el=$('storeNote');if(!el)return;const w=storeWhere();
+  let t='存檔位置：'+w.t+(w.bad?'（不穩定，進度可能被清除）':'')+'。';
+  if(w.tip)t+='iPhone 建議在 Safari 按「分享 → 加入主畫面」，之後從主畫面圖示開啟最穩定。';
+  if(persistOK)t+='已取得瀏覽器的持久儲存。';
+  t+=S.lastExport?'上次備份存檔：'+new Date(S.lastExport).toLocaleDateString('zh-TW')+'。':'還沒備份過存檔，建議偶爾下載一次存檔檔案。';
+  el.textContent=t;el.className='sub'+(w.bad?' warnt':'');
+  const box=$('bakBox'),list=bakList(),broken=lsGet(BROKEN_KEY);
+  if(!list.length&&!broken){box.hidden=true;return;}box.hidden=false;
+  setHTML(box,'<b>自動備份</b><span class="sub">改版、匯入、重新開始或還原之前，會自動保留一份，最多 3 份。</span>'+list.map(x=>'<div><span>'+esc(x.label)+' · '+new Date(x.at).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})+' · 物件 '+x.props+' 個</span><button class="btn" type="button" data-bak="'+esc(x.id)+'">還原</button></div>').join('')+
+    (broken?'<div><span>讀取失敗時保留的原始資料</span><button class="btn" type="button" data-bak="broken">複製</button></div>':''));}
+/* ---- v0.9 今日經營時數：上線＋離線，對齊 1／3／8 小時 ---- */
+const HR_TIERS=[{h:1,t:'10 分鐘收入',m:10},{h:3,t:'20 分鐘收入',m:20},{h:8,t:'時光沙漏 +1',g:1}];
+function hrOn(){return S.story.includes('open')&&cnt('goblin')>0;}
+function hrCur(){if(!S.hrs||S.hrs.d!==today())S.hrs={d:today(),sec:0,got:[]};return S.hrs;}
+function hrAdd(sec,quiet){if(!hrOn()||!(sec>0))return [];const h=hrCur();h.sec+=sec;const out=[];
+  HR_TIERS.forEach((t,i)=>{if(h.got.includes(i)||h.sec<t.h*3600)return;h.got.push(i);
+    if(t.g){gainGlass(t.g,'今日經營滿 '+t.h+' 小時');out.push('今日經營滿 '+t.h+' 小時：時光沙漏 +'+t.g);}
+    else{const g=Math.max(50,baseRate()*t.m*60);earn(g);log('今日經營滿 '+t.h+' 小時：+'+fmt(g)+' 金幣。');out.push('今日經營滿 '+t.h+' 小時：+'+fmt(g)+' 金幣');if(!quiet)toast('今日經營滿 '+t.h+' 小時：+'+fmt(g)+' 金幣');}});
+  return out;}
+function renderHours(){const el=$('hrBox');if(!el)return;if(!hrOn()){el.hidden=true;return;}const h=hrCur(),hr=h.sec/3600;el.hidden=false;
+  setHTML(el,'<div class="dq"><b>今日經營時數<small>　上線與離線都算</small></b>'+HR_TIERS.map((t,i)=>{const ok=h.got.includes(i);
+    return '<div class="dqi'+(ok?' ok':'')+'"><span>'+(ok?'✔ ':'')+'滿 '+t.h+' 小時：'+t.t+'</span><span class="num">'+Math.min(hr,t.h).toFixed(1)+'/'+t.h+'</span></div>';}).join('')+'</div>');}
+/* ---- v0.9 離線報告：待你決定 ---- */
+function decisions(){const d=[],now=Date.now();
+  if(inApp)d.push({t:'先備份存檔，改用瀏覽器開啟',tab:'save',hot:true});
+  const lx=S.lastExport||0,days=S.stats&&S.stats.start?(now-S.stats.start)/864e5:0;
+  if(lx?now-lx>7*864e5:days>=3)d.push({t:lx?'已超過 7 天沒備份存檔':'還沒備份過存檔',tab:'save'});
+  if(ipoReady())d.push({t:'可以集團上市了',tab:'corp'});
+  else if(S.run>=REBIRTH_MIN){const fg=fameGain();if(fg>=3&&(!veteran()||fg>=S.fameTotal*0.5))d.push({t:'重組時機到了：可得 '+fmt(fg)+' 聲望',tab:'corp'});}
+  const done=S.contracts.active.filter(c=>c.end<=now).length;
+  if(done&&!autoOn('a_collect'))d.push({t:done+' 件承攬合約完工，等你驗收',tab:'biz'});
+  else if(S.props>=3&&!chalOn('nocontract')&&!autoOn('a_collect')&&S.contracts.active.length<contractSlots())d.push({t:'承攬合約還有空位，可以再接一件',tab:'biz'});
+  const sn=seasonNow();if(sn&&S.sev&&S.sev.key===sn.key&&SEASON_TASKS.some(t=>!S.sev.got.includes(t.k)&&(S.sev.c[t.k]||0)>=t.need))d.push({t:sn.s.name+'活動獎勵可以領了',tab:'biz'});
+  if(veteran()&&TALENTS.some(b=>b.items.some(t=>tal(t.id)<talMax(t)&&S.fame>=talPrice(t))))d.push({t:'聲望夠升級天賦了',tab:'corp'});
+  if(S.glass>=10)d.push({t:'時光沙漏累積了 '+S.glass+' 個',tab:'biz'});
+  return d.filter(x=>TAB_RULES[x.tab]&&TAB_RULES[x.tab]()).slice(0,4);}
+function goTab(k){const b=$('tab-'+k);if(b&&!b.hidden)b.click();}
 /* ---- 存檔碼 v2（GK2）：不含日誌、壓縮、URL 安全字元、長度與檢查碼 ---- */
 function saveErr(kind,msg){const e=new Error(msg);e.kind=kind;return e;}
 const b64u={enc:bytes=>{let bin='';for(let i=0;i<bytes.length;i+=0x8000)bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+0x8000));return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');},
@@ -2066,7 +2177,7 @@ async function decode(raw){let str=cleanCode(raw);
   let bytes;try{bytes=b64u.dec(body);}catch(e){throw saveErr('changed','存檔碼含有無法辨識的字元。');}
   if(flag==='z'){if(!canZip())throw saveErr('browser','這個瀏覽器太舊，無法讀取壓縮存檔碼，請更新瀏覽器後再試。');bytes=await zipBytes(bytes,'d');}
   return JSON.parse(new TextDecoder().decode(bytes));}
-async function importCode(raw,src){try{const o=await decode(raw);S=merge(o);S.lastSeen=Date.now();staffBuilt='';save();cloudSave(true);renderAll();$('saveNote').textContent='已匯入存檔。';log('從'+(src||'存檔碼')+'匯入進度。');}
+async function importCode(raw,src){try{const o=await decode(raw);save();bakMake(lsGet(KEY),'匯入前的進度');S=merge(o);S.lastSeen=Date.now();staffBuilt='';save();cloudSave(true);renderAll();$('saveNote').textContent='已匯入存檔。';log('從'+(src||'存檔碼')+'匯入進度。');}
   catch(e){$('saveNote').textContent=e.kind?e.message:'這串存檔碼無法讀取，可能不完整或被改動過。';}}
 function downloadSave(code){const d=new Date();const name='fantasy-pm-save-'+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'.txt';
   const blob=new Blob([code],{type:'text/plain'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},2000);return name;}
@@ -2088,7 +2199,7 @@ function runAutomation(){
 function toggleAuto(id){if(tal(id)<1)return;S.autoOff[id]=!S.autoOff[id];log('自動化「'+talDef(id).name+'」'+(S.autoOff[id]?'已關閉':'已開啟')+'。');renderAll();save();}
 function tick(){
   const now=Date.now();const gap=(now-S.lastSeen)/1000;S.lastSeen=now;
-  if(gap>=OFFLINE_MIN){stNote(gap);returnReport(gap);}else if(gap>0){earn(rate()*gap*(S.dbgSpeed?10:1));S.stats.playSec+=gap;}
+  if(gap>=OFFLINE_MIN){stNote(gap);returnReport(gap);}else if(gap>0){earn(rate()*gap*(S.dbgSpeed?10:1));S.stats.playSec+=gap;hrAdd(gap);}
   check();tickN++;if(gap<OFFLINE_MIN)runAutomation();
   if(S.story.includes('open')){if(!S.nextRes)S.nextRes=now+3*60*1000;else if(now>=S.nextRes){tryResident('');S.nextRes=now+(6+Math.random()*6)*60*1000;}}
   if(tickN%5===0){renderSeason();renderTabs();}renderTop();
@@ -2140,12 +2251,12 @@ function wire(){
     renderAll();window.scrollTo(0,0);});
   document.querySelectorAll('#runSub [data-sub]').forEach(b=>b.onclick=()=>{S.runSub=b.dataset.sub;renderTabs();renderProps();updateStaff();window.scrollTo(0,0);});
   $('goal').onclick=()=>{const k=$('goal').dataset.tab;if(k&&TAB_RULES[k]&&TAB_RULES[k]())$('tab-'+k).click();};
-  $('exportBtn').onclick=async()=>{save();const ta=$('code');const code=await encode(S);ta.value=code;
+  $('exportBtn').onclick=async()=>{save();const ta=$('code');const code=await encode(S);ta.value=code;S.lastExport=Date.now();save();renderStore();
     const manual=()=>{ta.focus();ta.select();$('saveNote').textContent='已產生存檔碼（'+code.length+' 字）並選取，請手動複製。';};
     try{navigator.clipboard.writeText(code).then(()=>{$('saveNote').textContent='存檔碼已複製（共 '+code.length+' 字，結尾是「…'+code.slice(-6)+'」）。到另一台裝置的「設定」頁貼上後按匯入。';},manual);}catch(e){manual();}};
   $('importBtn').onclick=()=>importCode($('code').value,'存檔碼');
   if(window.claude&&!(window.claude.downloads&&window.claude.downloads.save)){$('dlBtn').hidden=true;}
-  $('dlBtn').onclick=async()=>{save();const code=await encode(S);const name=downloadSave(code);$('saveNote').textContent='已下載存檔檔案「'+name+'」。到另一台裝置按「從檔案匯入」選擇這個檔案即可。';};
+  $('dlBtn').onclick=async()=>{save();const code=await encode(S);const name=downloadSave(code);S.lastExport=Date.now();save();renderStore();$('saveNote').textContent='已下載存檔檔案「'+name+'」。到另一台裝置按「從檔案匯入」選擇這個檔案即可。';};
   $('fileBtn').onclick=()=>$('saveFile').click();
   $('saveFile').onchange=e=>{const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{importCode(String(r.result||''),'存檔檔案');e.target.value='';};r.onerror=()=>{$('saveNote').textContent='無法讀取這個檔案。';};r.readAsText(f);};
   const fbBody=()=>{const n=$('fbNote').value.trim();return (n?'想說的話：\n'+n+'\n\n':'')+playText();};
@@ -2155,12 +2266,19 @@ function wire(){
     try{navigator.clipboard.writeText(t).then(ok,()=>{$('code').value=t;$('code').select();$('fbMsg').textContent='無法自動複製，已放到上方文字框並選取，請手動複製。';});}catch(e){$('code').value=t;$('code').select();$('fbMsg').textContent='無法自動複製，已放到上方文字框並選取，請手動複製。';}};
   $('resetBtn').onclick=()=>{$('resetRow').hidden=true;$('resetConfirm').hidden=false;};
   $('resetNo').onclick=()=>{$('resetRow').hidden=false;$('resetConfirm').hidden=true;};
-  $('resetYes').onclick=()=>{S=fresh();staffBuilt='';try{localStorage.removeItem(KEY);}catch(e){}cloudSave(true);$('resetRow').hidden=false;$('resetConfirm').hidden=true;$('saveNote').textContent='已重新開始。';check();renderAll();};
+  $('resetYes').onclick=()=>{save();bakMake(lsGet(KEY),'重新開始前的進度');S=fresh();staffBuilt='';try{localStorage.removeItem(KEY);}catch(e){}cloudSave(true);$('resetRow').hidden=false;$('resetConfirm').hidden=true;$('saveNote').textContent='已重新開始。';check();renderAll();};
+  $('iab').onclick=e=>{const b=e.target.closest('[data-iab]');if(!b)return;if(b.dataset.iab==='close'){iabClosed=true;renderIab();return;}goTab('save');$('exportBtn').click();};
+  $('bakBox').onclick=e=>{const b=e.target.closest('[data-bak]');if(!b)return;const id=b.dataset.bak;
+    if(id==='broken'){const raw=lsGet(BROKEN_KEY)||'';const ta=$('code');ta.value=raw;const man=()=>{ta.focus();ta.select();$('saveNote').textContent='已放到上方文字框並選取，請手動複製後傳給開發者。';};
+      try{navigator.clipboard.writeText(raw).then(()=>{$('saveNote').textContent='已複製讀取失敗的原始資料，請傳給開發者。';},man);}catch(err){man();}return;}
+    const o=bakLoad(id);if(!o){$('saveNote').textContent='這份備份無法讀取。';return;}
+    queue({title:'還原這份備份？',lines:['目前的進度會被這份備份取代。','還原前會先把目前的進度另存一份備份，選錯還可以換回來。'],btn:'確定還原',
+      onOk:()=>{save();bakMake(lsGet(KEY),'還原前的進度');S=merge(o);S.lastSeen=Date.now();staffBuilt='';save();log('從自動備份還原進度。');$('saveNote').textContent='已還原備份。';},alt:{text:'取消',fn:()=>{}}});};
   document.addEventListener('visibilitychange',()=>{if(document.hidden){save();cloudSave(true);clearInterval(tickTimer);tickTimer=0;}else{wake();if(!tickTimer)tickTimer=setInterval(tick,1000);}});
   window.addEventListener('pagehide',save);
 }
 function boot(){
-  applyAccent();
+  applyAccent();storageNotice();
   if(!S.assignInit){MGRS.filter(g=>mgrLv(g.id)).forEach(autoAssign);S.assignInit=true;}
   const gap=(Date.now()-S.lastSeen)/1000;S.lastSeen=Date.now();
   stNote(S.stats.sessions?Math.max(gap,300):0);returnReport(S.story.length?gap:0);
@@ -2168,8 +2286,8 @@ function boot(){
   check();renderAll();
 }
 function start(data){
-  S=(data&&data.state)?merge(data.state):(load()||fresh());
-  wire();applyAccent();Ads.init().then(()=>renderAll());renderAll();cloudNote();
+  S=(data&&data.state)?merge(data.state):(load()||fresh());versionGuard();askPersist();
+  wire();renderIab();applyAccent();Ads.init().then(()=>renderAll());renderAll();cloudNote();
   let booted=false;const go=()=>{if(booted)return;booted=true;boot();if(!tickTimer)tickTimer=setInterval(tick,1000);};
   if(window.claude&&window.claude.use&&!(data&&data.state)){
     const timer=setTimeout(go,4000);
