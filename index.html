@@ -336,6 +336,9 @@ a.lab:hover{text-decoration:underline}
 .quiz .qs{font-size:12px;color:var(--good)}
 .quiz .qd{font-size:11px;color:var(--muted)}
 .choices.q3{grid-template-columns:1fr}
+.today .dq{border:0;border-top:1px solid var(--line);border-radius:0;margin:8px 0 0;padding:10px 0 2px}
+.today summary small.pend{color:var(--brass)}
+#runSub{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--stickH,0px));z-index:4;background:var(--bg);margin:0 0 8px;padding:8px 0;box-shadow:0 8px 10px -10px rgba(0,0,0,.7)}
 .rbchal{display:flex;flex-direction:column;gap:4px;margin-top:6px}
 .rbchal select{margin-top:4px;max-width:100%;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:4px 6px;font-size:13px}
 .chalnow{display:block;margin-top:4px;color:var(--warn)}
@@ -409,9 +412,11 @@ a.lab:hover{text-decoration:underline}
 
   <section class="page" id="page-run">
     <div id="guideBox" hidden></div>
+    <details class="rules today" id="todayWrap" hidden><summary>今日任務<small id="todaySum"></small></summary>
     <div id="dqBox" hidden></div>
     <div id="hrBox" hidden></div>
     <div id="quizBox" hidden></div>
+    </details>
     <details class="rules" id="ruleWrap" hidden><summary>派工規則<small id="ruleSum"></small></summary><p class="sub">每項自動化都有內建判斷；你可以調整執行條件，也可以替員工設定優先、一般或暫緩。</p><div id="ruleBox"></div></details>
     <div class="subtabs" id="runSub" role="tablist" aria-label="經營分類">
       <button type="button" data-sub="staff">員工</button>
@@ -589,7 +594,7 @@ a.lab:hover{text-decoration:underline}
 'use strict';
 const KEY='fantasy-pm-save-v1';
 const OFFLINE_MIN=60;
-const VERSION='v0.11.0';
+const VERSION='v0.11.1';
 
 /* ================= DATA ================= */
 const CITIES=[
@@ -1942,7 +1947,7 @@ function updateStaff(){
     const p=plan(u);row.querySelector('[data-k=qty]').textContent='雇用 ×'+p.k;row.querySelector('[data-k=cost]').textContent=fmt(p.c)+' 金幣';row.querySelector('button').disabled=!p.ok;});
 }
 function renderProps(){
-  renderRunSub();renderFacs();renderGuide();renderDQ();renderHours();renderQuiz();renderRules();
+  renderRunSub();renderFacs();renderGuide();renderDQ();renderHours();renderQuiz();renderToday();renderRules();
   let html='';
   for(let i=0;i<=S.props;i++){const p=propAt(i),on=i<S.props;const lv=S.reno[i]||0;
     let right;
@@ -2213,6 +2218,12 @@ function decisions(){const d=[],now=Date.now();
   if(veteran()&&TALENTS.some(b=>b.items.some(t=>tal(t.id)<talMax(t)&&S.fame>=talPrice(t))))d.push({t:'聲望夠升級天賦了',tab:'corp'});
   if(S.glass>=10)d.push({t:'時光沙漏累積了 '+S.glass+' 個',tab:'biz'});
   return d.filter(x=>TAB_RULES[x.tab]&&TAB_RULES[x.tab]()).slice(0,4);}
+function renderToday(){const w=$('todayWrap');if(!w)return;const ids=['dqBox','hrBox','quizBox'];
+  if(ids.every(id=>$(id).hidden)){w.hidden=true;return;}w.hidden=false;const parts=[];let pend=0;
+  if(!$('dqBox').hidden&&S.dq&&S.dq.d===today()){const n=S.dq.list.filter(q=>q.ok).length,t=S.dq.list.length;if(n<t)pend++;parts.push(n>=t?'委託 ✓':'委託 '+n+'/'+t);}
+  if(!$('hrBox').hidden){const h=hrCur();const all=h.got.length>=HR_TIERS.length;if(!all)pend++;parts.push(all?'經營 ✓':'經營 '+(h.sec/3600).toFixed(1)+'/8 小時');}
+  if(!$('quizBox').hidden){const z=QZ();quizToday();const done=z.ans!=null;if(!done)pend++;parts.push(done?'法規 ✓':'法規一題未作答');}
+  const el=$('todaySum');el.textContent='　'+parts.join('・');el.className=pend?'pend':'';}
 function goTab(k){const b=$('tab-'+k);if(b&&!b.hidden)b.click();}
 /* ---- 存檔碼 v2（GK2）：不含日誌、壓縮、URL 安全字元、長度與檢查碼 ---- */
 function saveErr(kind,msg){const e=new Error(msg);e.kind=kind;return e;}
@@ -2341,7 +2352,7 @@ function quizMark(id,ok){const z=QZ();if(!z.seen.includes(id))z.seen.push(id);if
   if(z.ok.length===10||z.ok.length===QUIZ.length)toast('法規問答答對 '+z.ok.length+' 題，解鎖新稱號');}}
 function answerQuiz(i){const z=QZ(),q=quizToday();if(z.ans!=null)return;i=Number(i);if(!(i>=0&&i<q.o.length))return;z.ans=i;const ok=i===q.a;quizMark(q.id,ok);
   if(ok){gainGlass(1,'今日法規一題');addXP(10);log('今日法規一題答對：'+q.s+'。');}else log('今日法規一題：正確答案是「'+q.o[q.a]+'」（'+q.s+'）。');
-  renderQuiz();save();}
+  renderQuiz();renderToday();save();}
 const labLink=()=>CONFIG.labUrl?'<a class="lab" href="'+esc(CONFIG.labUrl)+'" target="_blank" rel="noopener">延伸閱讀：'+CONFIG.labName+' →</a>':'';
 function renderQuiz(){const el=$('quizBox');if(!el)return;if(!quizOn()){el.hidden=true;return;}el.hidden=false;const z=QZ(),q=quizToday(),done=z.ans!=null;
   let h='<div class="dq quiz"><b>今日法規一題<small>　答對 +1 沙漏、+10 資歷，答錯不扣分</small></b><div class="qq">'+esc(q.q)+'</div><div class="qo">'+
@@ -2444,6 +2455,8 @@ function wire(){
   $('resetBtn').onclick=()=>{$('resetRow').hidden=true;$('resetConfirm').hidden=false;};
   $('resetNo').onclick=()=>{$('resetRow').hidden=false;$('resetConfirm').hidden=true;};
   $('resetYes').onclick=()=>{save();bakMake(lsGet(KEY),'重新開始前的進度');S=fresh();staffBuilt='';try{localStorage.removeItem(KEY);}catch(e){}cloudSave(true);$('resetRow').hidden=false;$('resetConfirm').hidden=true;$('saveNote').textContent='已重新開始。';check();renderAll();};
+  {const tw=$('todayWrap');if(tw){tw.open=lsGet(KEY+'-ui-today')==='1';tw.addEventListener('toggle',()=>lsSet(KEY+'-ui-today',tw.open?'1':'0'));}
+   const st=document.querySelector('.stick');if(st){const setH=()=>document.documentElement.style.setProperty('--stickH',st.offsetHeight+'px');setH();try{new ResizeObserver(setH).observe(st);}catch(e){window.addEventListener('resize',setH);}}}
   $('iab').onclick=e=>{const b=e.target.closest('[data-iab]');if(!b)return;if(b.dataset.iab==='close'){iabClosed=true;renderIab();return;}goTab('save');$('exportBtn').click();};
   $('bakBox').onclick=e=>{const b=e.target.closest('[data-bak]');if(!b)return;const id=b.dataset.bak;
     if(id==='broken'){const raw=lsGet(BROKEN_KEY)||'';const ta=$('code');ta.value=raw;const man=()=>{ta.focus();ta.select();$('saveNote').textContent='已放到上方文字框並選取，請手動複製後傳給開發者。';};
