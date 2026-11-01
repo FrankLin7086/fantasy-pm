@@ -301,6 +301,29 @@ a.lab:hover{text-decoration:underline}
 .bak div{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
 .bak button{white-space:nowrap;flex-shrink:0}
 .warnt{color:var(--warn)!important}
+.rules{border:1px solid var(--line);border-radius:6px;padding:8px 12px;margin-bottom:8px}
+.rules summary{cursor:pointer;font-family:var(--f-display);font-size:15px;color:var(--brass)}
+.rules summary small{color:var(--muted);font-family:var(--f-body);font-size:12px;margin-left:6px}
+.rules .sub{font-size:12px;color:var(--muted);margin:6px 0 0}
+.acard{border-top:1px solid var(--line);margin-top:8px;padding-top:10px;display:flex;flex-direction:column;gap:6px}
+.acard .ah{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.acard .ah b{font-family:var(--f-display);font-size:15px}
+.acard .st{margin-left:auto;margin-top:0}
+.tag{font-size:11px;padding:1px 6px;border:1px solid var(--line);border-radius:4px;color:var(--muted)}
+.asum{margin:0;font-size:14px}
+.arule{margin:0;font-size:13px;color:var(--brass)}
+.aopt{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;flex-shrink:0}
+.seg button{background:var(--panel-2);border:0;border-right:1px solid var(--line);padding:4px 10px;font-size:13px;color:var(--muted)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--brass);color:var(--brass-ink);font-weight:700}
+.prilist{display:flex;flex-direction:column;gap:4px}
+.prilist div{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px}
+.tnx{font-size:12px;color:var(--brass);margin-top:2px}
+.guide .gt{font-size:15px;font-family:var(--f-display)}
+.guide .gd{font-size:12px;color:var(--muted)}
+.guide .gb{display:flex;gap:6px;align-items:center;margin-top:2px}
+.guide .gb .mini{margin-top:0}
 .rbchal{display:flex;flex-direction:column;gap:4px;margin-top:6px}
 .rbchal select{margin-top:4px;max-width:100%;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:4px 6px;font-size:13px}
 .chalnow{display:block;margin-top:4px;color:var(--warn)}
@@ -372,8 +395,10 @@ a.lab:hover{text-decoration:underline}
   </div>
 
   <section class="page" id="page-run">
+    <div id="guideBox" hidden></div>
     <div id="dqBox" hidden></div>
     <div id="hrBox" hidden></div>
+    <details class="rules" id="ruleWrap" hidden><summary>派工規則<small id="ruleSum"></small></summary><p class="sub">每項自動化都有內建判斷；你可以調整執行條件，也可以替員工設定優先、一般或暫緩。</p><div id="ruleBox"></div></details>
     <div class="subtabs" id="runSub" role="tablist" aria-label="經營分類">
       <button type="button" data-sub="staff">員工</button>
       <button type="button" data-sub="props">物件</button>
@@ -545,7 +570,7 @@ a.lab:hover{text-decoration:underline}
 'use strict';
 const KEY='fantasy-pm-save-v1';
 const OFFLINE_MIN=60;
-const VERSION='v0.9.0';
+const VERSION='v0.10.0';
 
 /* ================= DATA ================= */
 const CITIES=[
@@ -696,9 +721,9 @@ const TALENTS=[
   {id:'facil',name:'工程發包',d:l=>'設施投資與物件裝修價格 −'+Math.round((1-hyp(l))*100)+'%'}]}
 ];
 TALENTS.push({branch:'自動化',items:[
-  {id:'a_collect',name:'自動驗收',one:true,cost:3,d:()=>'合約完工時自動驗收，並自動接下新合約（優先長期）'},
-  {id:'a_team',name:'自動補員',one:true,cost:5,d:()=>'每 5 秒自動雇用人數最少的基本員工（每次花費不超過金幣的 10%）'},
-  {id:'a_comp',name:'客訴代理',one:true,cost:8,d:()=>'客訴出現 30 秒後自動選擇金幣選項'}]});
+  {id:'a_collect',name:'自動驗收',one:true,cost:3,d:()=>autoDesc('a_collect')},
+  {id:'a_team',name:'自動補員',one:true,cost:5,d:()=>autoDesc('a_team')},
+  {id:'a_comp',name:'客訴代理',one:true,cost:8,d:()=>autoDesc('a_comp')}]});
 const TAL_MAX=10;
 const talCost=lv=>lv<10?lv+1:Math.ceil(10*Math.pow(1.25,lv-9));
 const talDef=id=>TALENTS.flatMap(b=>b.items).find(x=>x.id===id);
@@ -1236,7 +1261,7 @@ function fresh(){return {v:2,amt:1,dbg:false,dbgSpeed:false,coins:0,life:0,run:0
   units:{},props:1,reno:[],ach:[],patrols:0,complaints:0,offlineClaims:0,buffs:[],daily:{last:null,day:0,cycles:0},
   story:[],log:[],seen:[],event:null,nextEvent:null,lastEventIdx:null,lastSeen:Date.now(),
   contracts:{offers:[],active:[]},contractsDone:0,council:{on:[],changed:0},councilSet:0,facs:[],
-  talents:{},mgr:{},seenEv:[],teamLv:0,assign:{},assignInit:true,autoOff:{},glass:GLASS_GIFT,glassUsed:0,eventAt:0,shares:0,sharesTotal:0,ipos:0,board:{},maxCity:0,maxRebirths:0,cityOverride:null,nextCity:null,tabsSeen:[],talAmt:1,lastExport:0,hrs:null,keepReno:false,mig8:true,career:{xp:0},runSub:'staff',dq:null,chal:null,nextChal:'',chalDone:{},kpi:null,runStats:{start:0,comp:0,ct:0},rstory:{cur:null,part:0,done:[]},seasonDone:0,supporter:false,adDay:null,adViews:0,custom:{office:'',player:'',title:'rookie',slogan:'',accent:'brass',props:{}},residents:[],nextRes:0,cards:[],sev:{key:'',c:{},got:[]},stats:{start:0,sessions:0,days:[],playSec:0,firsts:{}}};}
+  talents:{},mgr:{},seenEv:[],teamLv:0,assign:{},assignInit:true,autoOff:{},glass:GLASS_GIFT,glassUsed:0,eventAt:0,shares:0,sharesTotal:0,ipos:0,board:{},maxCity:0,maxRebirths:0,cityOverride:null,nextCity:null,tabsSeen:[],talAmt:1,lastExport:0,hrs:null,rules:null,guide:0,keepReno:false,mig8:true,career:{xp:0},runSub:'staff',dq:null,chal:null,nextChal:'',chalDone:{},kpi:null,runStats:{start:0,comp:0,ct:0},rstory:{cur:null,part:0,done:[]},seasonDone:0,supporter:false,adDay:null,adViews:0,custom:{office:'',player:'',title:'rookie',slogan:'',accent:'brass',props:{}},residents:[],nextRes:0,cards:[],sev:{key:'',c:{},got:[]},stats:{start:0,sessions:0,days:[],playSec:0,firsts:{}}};}
 function merge(o){
   const f=fresh();if(!o||typeof o!=='object')return f;
   const migrated=o.v!==2;
@@ -1885,7 +1910,7 @@ function updateStaff(){
     const p=plan(u);row.querySelector('[data-k=qty]').textContent='雇用 ×'+p.k;row.querySelector('[data-k=cost]').textContent=fmt(p.c)+' 金幣';row.querySelector('button').disabled=!p.ok;});
 }
 function renderProps(){
-  renderRunSub();renderFacs();renderDQ();renderHours();
+  renderRunSub();renderFacs();renderGuide();renderDQ();renderHours();renderRules();
   let html='';
   for(let i=0;i<=S.props;i++){const p=propAt(i),on=i<S.props;const lv=S.reno[i]||0;
     let right;
@@ -1915,7 +1940,10 @@ function renderFacs(){
   else setHTML($('bizFacs'),'<p class="sub">每項只能買一次，重組後歸零。目前設施加成 ×'+fmt(facMult())+'。</p>'+FACS.map(f=>{const own=S.facs.includes(f.id),c=facCost(f);
       return '<div class="row"><div class="info"><span class="name">'+f.name+(own?'<span class="own">已完工</span>':'')+'</span><span class="desc">'+f.d+'</span><span class="meta num">全體收入 ×'+f.mult+'</span></div><button class="buy" type="button" data-act="fac" data-v="'+f.id+'" '+(own||S.coins<c?'disabled':'')+'><b>'+(own?'已完工':'投資')+'</b><span>'+(own?'':fmt(c)+' 金幣')+'</span></button></div>';}).join(''));
 }
-function renderRunSub(){const cur=S.runSub||'staff';
+function renderRunSub(){const facOk=S.props>=5||veteran();if(S.runSub==='facs'&&!facOk)S.runSub='staff';
+  const fb=document.querySelector('#runSub [data-sub="facs"]');if(fb)fb.hidden=!facOk;
+  if(facOk&&S.story.includes('open')&&!veteran()&&Array.isArray(S.tabsSeen)&&!S.tabsSeen.includes('facs')){S.tabsSeen.push('facs');toast('「經營」新增「設施」：投資設施可提高全體收入');}
+  const cur=S.runSub||'staff';
   document.querySelectorAll('#runSub [data-sub]').forEach(b=>b.setAttribute('aria-selected',b.dataset.sub===cur?'true':'false'));
   document.querySelectorAll('[data-subp]').forEach(el=>el.hidden=el.dataset.subp!==cur);
   const up=$('upAll');up.hidden=!veteran();const us=$('upStaff');if(us)us.hidden=!veteran();const fa=$('facAll');if(fa)fa.hidden=S.props<5;}
@@ -1996,9 +2024,9 @@ function renderCorp(){
   setHTML($('tab-corp'),'集團'+(can||canTal||ipoReady()||BOARD.some(b=>brd(b.id)<b.max&&S.shares>=b.cost(brd(b.id)))?'<span class="dot"></span>':''));
   $('talSum').textContent='已投入 '+talTotal()+' 級';
   setHTML($('tree'),TALENTS.map(b=>'<div class="branch"><h3>'+b.branch+'</h3>'+b.items.map(t=>{const lv=tal(t.id),max=lv>=talMax(t),c=talPrice(t);
-    if(t.one){const on=autoOn(t.id);return '<div class="tal"><div><div class="tn">'+t.name+' <span class="num" style="color:var(--muted);font-weight:400">'+(lv?(on?'開啟中':'已關閉'):'未解鎖')+'</span></div><div class="td">'+t.d(1)+'</div></div>'+(lv?'<button class="mini" type="button" data-act="autotog" data-v="'+t.id+'">'+(on?'關閉':'開啟')+'</button>':'<button class="mini" type="button" data-act="tal" data-v="'+t.id+'" '+(S.fame<c?'disabled':'')+'>'+c+' 聲望</button>')+'</div>';}
+    if(t.one){const on=autoOn(t.id);return '<div class="tal"><div><div class="tn">'+t.name+' <span class="num" style="color:var(--muted);font-weight:400">'+(lv?(on?'開啟中':'已關閉'):'未解鎖')+'</span></div><div class="td">'+t.d(1)+'</div>'+(lv?'<div class="tnx">條件可到「經營 → 派工規則」調整</div>':'')+'</div>'+(lv?'<button class="mini" type="button" data-act="autotog" data-v="'+t.id+'">'+(on?'關閉':'開啟')+'</button>':'<button class="mini" type="button" data-act="tal" data-v="'+t.id+'" '+(S.fame<c?'disabled':'')+'>'+c+' 聲望</button>')+'</div>';}
     let pips='';for(let k=1;k<=TAL_MAX;k++)pips+='<i'+(k<=lv?' class="on"':'')+'></i>';if(lv>TAL_MAX&&!t.max)pips+='<span class="pipx">+'+(lv-TAL_MAX)+'</span>';
-    return '<div class="tal"><div><div class="tn">'+t.name+' <span class="num" style="color:var(--muted);font-weight:400">Lv'+lv+'</span></div><div class="td">'+(lv?t.d(lv):t.d(1)+'（Lv1）')+'</div><div class="pips">'+pips+'</div></div>'+(()=>{const p=talPlan(t);return '<button class="mini" type="button" data-act="tal" data-v="'+t.id+'" '+(max||!p.k?'disabled':'')+'>'+(max?'已滿級':p.k>1?'+'+p.k+' 級 · '+fmt(p.c)+' 聲望':fmt(p.k?p.c:p.next)+' 聲望')+'</button>';})()+'</div>';}).join('')+'</div>').join(''));
+    return '<div class="tal"><div><div class="tn">'+t.name+' <span class="num" style="color:var(--muted);font-weight:400">Lv'+lv+'</span></div><div class="td">'+(lv?t.d(lv):t.d(1)+'（Lv1）')+'</div>'+(lv&&!max?'<div class="tnx">下一級：'+t.d(lv+1)+'</div>':'')+'<div class="pips">'+pips+'</div></div>'+(()=>{const p=talPlan(t);return '<button class="mini" type="button" data-act="tal" data-v="'+t.id+'" '+(max||!p.k?'disabled':'')+'>'+(max?'已滿級':p.k>1?'+'+p.k+' 級 · '+fmt(p.c)+' 聲望':fmt(p.k?p.c:p.next)+' 聲望')+'</button>';})()+'</div>';}).join('')+'</div>').join(''));
   setHTML($('perks'),PERKS.map(([n,name,d])=>{const on=hasPerk(n);return '<div class="perk'+(on?' on':'')+'"><span class="need">'+(on?'已解鎖':'重組 '+n+' 次')+'</span><div><b>'+name+'</b><span class="d">'+d+'</span></div></div>';}).join(''));
 }
 function renderCase(){
@@ -2186,16 +2214,60 @@ function downloadSave(code){const d=new Date();const name='fantasy-pm-save-'+d.g
 let tickN=0;
 function hireOne(u){const c=Math.ceil(firstCost(u));if(S.coins<c)return false;const before=cnt(u.id);S.coins-=c;S.units[u.id]=before+1;dqTrack('hire');
   if(msLevel(before+1)>msLevel(before)){const r=RANKS[Math.min(msLevel(before+1),RANKS.length-1)];log('［自動］'+u.name+'晉升為「'+r+'」等級。','story');}return true;}
+/* ---- v0.10 派工規則：內建判斷＋玩家條件＋員工優先序 ---- */
+const RULE_DEF={tier:'long',spend:10,pick:'low',comp:'smart',wait:30};
+function R(){if(!S.rules||typeof S.rules!=='object')S.rules={};for(const k in RULE_DEF)if(S.rules[k]===undefined)S.rules[k]=RULE_DEF[k];if(!S.rules.pri||typeof S.rules.pri!=='object')S.rules.pri={};return S.rules;}
+const tierIdx=t=>t==='short'?0:t==='mid'?1:2;
+function autoDesc(id){const r=R();
+  if(id==='a_collect')return '合約完工時自動驗收，並自動接下新合約（偏好'+CONTRACT_TIERS[tierIdx(r.tier)].label+'）';
+  if(id==='a_team')return '每 5 秒自動雇用'+(r.pick==='cheap'?'最便宜':'人數最少')+'的基本員工，每次花費不超過金幣的 '+r.spend+'%，跳過設為「暫緩」的員工';
+  if(id==='a_comp')return '客訴出現 '+r.wait+' 秒後自動處理（'+({smart:'比較金幣與收入加成，選划算的',coins:'一律選金幣',buff:'一律選收入加成'}[r.comp])+'）';
+  return '';}
+function compChoice(){const r=R();if(r.comp==='coins')return 1;if(r.comp==='buff')return 2;const ev=EVENTS[S.event];if(!ev||!ev[2])return 1;
+  const coin=complaintReward(ev[1][1]),buff=baseRate()*(ev[2][1]-1)*buffDur()/1000;return buff>coin?2:1;}
 function runAutomation(){
-  const now=Date.now();
-  if(autoOn('a_collect')&&S.props>=3){let n=0,sumg=0;
+  const now=Date.now(),r=R();
+  if(autoOn('a_collect')&&S.props>=3){let n=0,sumg=0;const want=tierIdx(r.tier);
     for(let j=S.contracts.active.length-1;j>=0;j--){if(S.contracts.active[j].end<=now){sumg+=collectContract(j,true);n++;}}
-    while(S.contracts.active.length<contractSlots()){if(!S.contracts.offers.length)fillOffers();let k=S.contracts.offers.findIndex(o=>o.tier===2);if(k<0)k=0;const before=S.contracts.active.length;acceptContract(k,true);if(S.contracts.active.length===before)break;}
+    while(S.contracts.active.length<contractSlots()){if(!S.contracts.offers.length)fillOffers();let k=S.contracts.offers.findIndex(o=>o.tier===want);if(k<0)k=0;const before=S.contracts.active.length;acceptContract(k,true);if(S.contracts.active.length===before)break;}
     if(n){toast('自動驗收 '+n+' 件合約，+'+fmt(sumg)+' 金幣');}}
-  if(autoOn('a_team')&&tickN%5===0){for(let k=0;k<20;k++){const low=BASE_UNITS.filter(u=>S.seen.includes(u[0])).map(u=>UNITS[unitIndex[u[0]]]).sort((x,y)=>cnt(x.id)-cnt(y.id))[0];
-    if(!low||firstCost(low)>S.coins*0.1||!hireOne(low))break;}}
-  if(autoOn('a_comp')&&S.event!=null&&S.eventAt&&now-S.eventAt>=30000)resolveEvent(1);
+  if(autoOn('a_team')&&tickN%5===0){const cap=(r.spend||10)/100;
+    for(let k=0;k<20;k++){const pool=BASE_UNITS.filter(u=>S.seen.includes(u[0])&&r.pri[u[0]]!=='hold').map(u=>UNITS[unitIndex[u[0]]]);if(!pool.length)break;
+      const first=pool.filter(u=>r.pri[u.id]==='first'&&firstCost(u)<=S.coins*cap);const cand=first.length?first:pool;
+      const pick=cand.slice().sort(r.pick==='cheap'?(x,y)=>firstCost(x)-firstCost(y):(x,y)=>cnt(x.id)-cnt(y.id))[0];
+      if(!pick||firstCost(pick)>S.coins*cap||!hireOne(pick))break;}}
+  if(autoOn('a_comp')&&S.event!=null&&S.eventAt&&now-S.eventAt>=(r.wait||30)*1000)resolveEvent(compChoice());
 }
+function seg(k,opts){const r=R();return '<span class="seg">'+opts.map(([v,l])=>'<button type="button" data-act="rule" data-k="'+k+'" data-v="'+v+'" aria-pressed="'+(String(r[k])===String(v))+'">'+l+'</button>').join('')+'</span>';}
+function renderRules(){const wrap=$('ruleWrap');if(!wrap)return;const ids=['a_collect','a_team','a_comp'].filter(id=>tal(id)>=1);
+  if(!ids.length){wrap.hidden=true;return;}wrap.hidden=false;const r=R();
+  $('ruleSum').textContent=ids.filter(id=>autoOn(id)).length+'／'+ids.length+' 項開啟中';
+  const card=(id,tag,sum,opts)=>{const on=autoOn(id);return '<div class="acard"><div class="ah"><b>'+talDef(id).name+'</b><span class="tag">'+tag+'・自動化</span><button class="mini st" type="button" data-act="autotog" data-v="'+id+'">'+(on?'開啟中・按此關閉':'已關閉・按此開啟')+'</button></div><p class="asum">'+sum+'</p><p class="arule">自動執行：'+autoDesc(id)+'。</p>'+opts+'</div>';};
+  let h='';
+  if(ids.includes('a_collect'))h+=card('a_collect','工程','合約完工就收，空出來的位子立刻補上。','<div class="aopt">接單偏好 '+seg('tier',[['short','短期'],['mid','中期'],['long','長期']])+'</div>');
+  if(ids.includes('a_team'))h+=card('a_team','人事','團隊升級看的是「最少的那一種員工」，這項自動化幫你補齊。','<div class="aopt">每次花費上限 '+seg('spend',[[5,'5%'],[10,'10%'],[25,'25%']])+'</div><div class="aopt">挑選方式 '+seg('pick',[['low','人數最少'],['cheap','最便宜']])+'</div><div class="prilist">'+
+    BASE_UNITS.filter(u=>S.seen.includes(u[0])).map(u=>{const p=r.pri[u[0]]||'norm';return '<div><span>'+u[1]+'</span><span class="seg">'+[['first','優先'],['norm','一般'],['hold','暫緩']].map(([v,l])=>'<button type="button" data-act="pri" data-k="'+u[0]+'" data-v="'+v+'" aria-pressed="'+(p===v)+'">'+l+'</button>').join('')+'</span></div>';}).join('')+'</div>');
+  if(ids.includes('a_comp'))h+=card('a_comp','客服','客訴放著沒處理，時間到了就替你決定。','<div class="aopt">處理方式 '+seg('comp',[['smart','自動比較'],['coins','一律金幣'],['buff','一律加成']])+'</div><div class="aopt">等待時間 '+seg('wait',[[10,'10 秒'],[30,'30 秒'],[60,'60 秒']])+'</div>');
+  setHTML($('ruleBox'),h);}
+function setRule(k,v){const r=R();if(!(k in RULE_DEF))return;r[k]=(k==='spend'||k==='wait')?Number(v):v;log('派工規則調整：'+autoDescKey(k)+'。');renderRules();save();}
+function autoDescKey(k){const r=R();return {tier:'接單偏好 '+CONTRACT_TIERS[tierIdx(r.tier)].label,spend:'補員花費上限 '+r.spend+'%',pick:'補員挑選 '+(r.pick==='cheap'?'最便宜':'人數最少'),comp:'客訴處理 '+({smart:'自動比較',coins:'一律金幣',buff:'一律加成'}[r.comp]),wait:'客訴等待 '+r.wait+' 秒'}[k]||k;}
+function setPri(id,v){if(!['first','norm','hold'].includes(v))return;const r=R();if(v==='norm')delete r.pri[id];else r.pri[id]=v;renderRules();save();}
+/* ---- v0.10 新手任務：一次一步，邊做邊學 ---- */
+const GUIDE=[
+ {t:'巡視公寓 10 次',d:'按上方「巡視公寓」，賺第一筆金幣。',ok:()=>S.patrols>=10,tab:'run'},
+ {t:'雇用第一位哥布林清潔工',d:'員工會自動幫你賺錢，離線時也一樣。',ok:()=>cnt('goblin')>=1,tab:'run'},
+ {t:'員工總數達到 10 名',d:'同一種員工到達 10、25、50 名時，產出會翻倍。',ok:()=>totalStaff()>=10,tab:'run'},
+ {t:'接管第 2 個物件',d:'累積收入夠了就會自動接管，之後客訴也會開始出現。',ok:()=>S.props>=2,tab:'run'},
+ {t:'處理第一張客訴',d:'選金幣直接拿錢；選加成，接下來一段時間收入提高。',ok:()=>S.complaints>=1,tab:'run'},
+ {t:'備份一次存檔',d:'到「設定」按「下載存檔檔案」或「產生存檔碼並複製」，換手機、清資料都不怕。',ok:()=>S.lastExport>0,tab:'save'},
+ {t:'接下第一件承攬合約',d:'接管第 3 個物件後開放；合約在你離線時也會施工。',ok:()=>S.contracts.active.length>0||S.contractsDone>0,tab:'biz'}];
+function guideOn(){return S.story.includes('open')&&!veteran()&&(S.guide||0)<GUIDE.length;}
+function renderGuide(){const el=$('guideBox');if(!el)return;if(!guideOn()){el.hidden=true;return;}el.hidden=false;
+  const i=S.guide||0,g=GUIDE[i],ok=g.ok();
+  setHTML(el,'<div class="dq guide"><b>新手任務 '+(i+1)+'／'+GUIDE.length+'<small>　每完成一步 +1 沙漏</small></b><div class="gt">'+(ok?'✔ ':'')+g.t+'</div><span class="gd">'+g.d+'</span><div class="gb">'+
+    (ok?'<button class="mini" type="button" data-act="guide">領取 +1 沙漏</button>':(g.tab!=='run'&&TAB_RULES[g.tab]&&TAB_RULES[g.tab]()?'<button class="mini" type="button" data-act="gotab" data-v="'+g.tab+'">前往</button>':''))+'</div></div>');}
+function claimGuide(){const i=S.guide||0,g=GUIDE[i];if(!g||!g.ok())return;S.guide=i+1;gainGlass(1,'新手任務');log('完成新手任務：'+g.t+'。');
+  if(S.guide>=GUIDE.length){gainGlass(2,'新手任務全部完成');log('新手任務全部完成，之後就照自己的步調經營吧。','story');}renderAll();save();}
 function toggleAuto(id){if(tal(id)<1)return;S.autoOff[id]=!S.autoOff[id];log('自動化「'+talDef(id).name+'」'+(S.autoOff[id]?'已關閉':'已開啟')+'。');renderAll();save();}
 function tick(){
   const now=Date.now();const gap=(now-S.lastSeen)/1000;S.lastSeen=now;
@@ -2232,7 +2304,7 @@ function debugAct(v){
 function wire(){
   document.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const v=b.dataset.v;
     switch(b.dataset.act){case 'hire':hire(v);break;case 'reno':renovate(+v);break;case 'renomax':renovateMax(+v);break;case 'renoall':renovateAll();break;case 'upall':upgradeAll();break;case 'upstaff':upgradeStaff();break;case 'facall':facsAll();break;case 'accept':acceptContract(+v);break;case 'collect':collectContract(+v);break;
-      case 'policy':togglePolicy(v);break;case 'fac':buyFac(v);break;case 'tal':buyTalent(v);break;case 'dbg':debugAct(v);break;case 'glass':useGlass(v,b.dataset.j);break;case 'autotog':toggleAuto(v);break;case 'season':claimSeason(v);break;case 'board':buyBoard(v);break;case 'accent':setCustom('accent',v);break;case 'adglass':adForGlass();break;case 'supporter':buySupporter();break;}});
+      case 'policy':togglePolicy(v);break;case 'fac':buyFac(v);break;case 'tal':buyTalent(v);break;case 'dbg':debugAct(v);break;case 'glass':useGlass(v,b.dataset.j);break;case 'autotog':toggleAuto(v);break;case 'season':claimSeason(v);break;case 'rule':setRule(b.dataset.k,v);break;case 'pri':setPri(b.dataset.k,v);break;case 'guide':claimGuide();break;case 'gotab':goTab(v);break;case 'board':buyBoard(v);break;case 'accent':setCustom('accent',v);break;case 'adglass':adForGlass();break;case 'supporter':buySupporter();break;}});
   document.addEventListener('change',e=>{const el=e.target.closest('[data-assign]');if(el)setStation(el.dataset.assign,el.value);const cu=e.target.closest('[data-cust]');if(cu)setCustom(cu.dataset.cust,cu.value,cu.dataset.i);const ch=e.target.closest('[data-chal]');if(ch){S.nextChal=ch.value;save();}const kp=e.target.closest('[data-keep]');if(kp){S.keepReno=kp.checked;renderCorp();save();}const pk=e.target.closest('[data-pick]');if(pk){S.nextCity=pk.value===''?null:pk.value;save();}});
   $('ipoBtn').onclick=()=>{$('ipoRow').hidden=true;$('ipoConfirm').hidden=false;};
   $('ipoNo').onclick=()=>{$('ipoRow').hidden=false;$('ipoConfirm').hidden=true;};
