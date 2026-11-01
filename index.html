@@ -343,6 +343,11 @@ a.lab:hover{text-decoration:underline}
 .rbchal select{margin-top:4px;max-width:100%;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:4px 6px;font-size:13px}
 .chalnow{display:block;margin-top:4px;color:var(--warn)}
 .sec-title h2{white-space:nowrap}
+.adv{border:1px solid var(--good);border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+.adv b{font-family:var(--f-display);font-size:15px;color:var(--good)}
+.advi{display:grid;grid-template-columns:1fr auto;gap:2px 10px;font-size:14px;align-items:baseline}
+.advi .num{color:var(--muted)}.advi.top .num{color:var(--good);font-weight:600}.advi.neg .num{color:var(--warn)}
+.advi small{grid-column:1/-1;font-size:12px;color:var(--muted)}
 .dq b small{font-family:var(--f-body);font-size:12px;color:var(--muted);font-weight:400;margin-left:8px}
 </style>
 
@@ -453,6 +458,7 @@ a.lab:hover{text-decoration:underline}
       <div class="fstat"><span class="label">重組次數</span><span class="num big" id="rebirths">0</span><span class="sub" id="runEarned"></span></div>
     </div>
     <div class="city" id="cityNow"></div>
+    <div id="advice" hidden></div>
     <div class="rebirth-box">
       <p class="gainline" id="rbGain"></p>
       <p class="sub" id="rbNext"></p>
@@ -594,7 +600,7 @@ a.lab:hover{text-decoration:underline}
 'use strict';
 const KEY='fantasy-pm-save-v1';
 const OFFLINE_MIN=60;
-const VERSION='v0.11.1';
+const VERSION='v0.12.0';
 
 /* ================= DATA ================= */
 const CITIES=[
@@ -712,9 +718,11 @@ const FACS=[
 const REBIRTH_MIN=1e8, FAME_PASSIVE=0.02;
 /* 聲望依本輪累積的位數計算：0.12 ×（位數 − 8）³，避免長時間不重組時聲望指數暴增 */
 const FAME_K=0.12;
-const fameRaw=run=>run<=1e8?0:FAME_K*Math.pow(Math.log10(run)-8,3);
+/* v0.12：1e50 以上改用冪次成長（每多 1 位數，聲望 ×10^0.04 ≈ +9.6%），避免後期越來越平 */
+const FAME_PL=50,FAME_P=0.04,FAME_AT_PL=FAME_K*Math.pow(FAME_PL-8,3);
+const fameRaw=run=>{if(run<=1e8)return 0;const L=Math.log10(run);return L<=FAME_PL?FAME_K*Math.pow(L-8,3):FAME_AT_PL*Math.pow(10,FAME_P*(L-FAME_PL));};
 const fameFor=run=>Math.floor(fameRaw(run));
-const runForFame=f=>1e8*Math.pow(10,Math.cbrt(f/FAME_K));
+const runForFame=f=>f<=FAME_AT_PL?1e8*Math.pow(10,Math.cbrt(f/FAME_K)):Math.pow(10,FAME_PL+Math.log10(f/FAME_AT_PL)/FAME_P);
 const PERKS=[
  [1,'夜班魔像','離線收益上限從 8 小時延長到 12 小時'],
  [2,'老班底','每次開業直接擁有 10 名哥布林清潔工'],
@@ -1285,7 +1293,7 @@ function fresh(){return {v:2,amt:1,dbg:false,dbgSpeed:false,coins:0,life:0,run:0
   units:{},props:1,reno:[],ach:[],patrols:0,complaints:0,offlineClaims:0,buffs:[],daily:{last:null,day:0,cycles:0},
   story:[],log:[],seen:[],event:null,nextEvent:null,lastEventIdx:null,lastSeen:Date.now(),
   contracts:{offers:[],active:[]},contractsDone:0,council:{on:[],changed:0},councilSet:0,facs:[],
-  talents:{},mgr:{},seenEv:[],teamLv:0,assign:{},assignInit:true,autoOff:{},glass:GLASS_GIFT,glassUsed:0,eventAt:0,shares:0,sharesTotal:0,ipos:0,board:{},maxCity:0,maxRebirths:0,cityOverride:null,nextCity:null,tabsSeen:[],talAmt:1,lastExport:0,hrs:null,rules:null,guide:0,quiz:null,nextChalTier:1,keepReno:false,mig8:true,career:{xp:0},runSub:'staff',dq:null,chal:null,nextChal:'',chalDone:{},kpi:null,runStats:{start:0,comp:0,ct:0},rstory:{cur:null,part:0,done:[]},seasonDone:0,supporter:false,adDay:null,adViews:0,custom:{office:'',player:'',title:'rookie',slogan:'',accent:'brass',props:{}},residents:[],nextRes:0,cards:[],sev:{key:'',c:{},got:[]},stats:{start:0,sessions:0,days:[],playSec:0,firsts:{}}};}
+  talents:{},mgr:{},seenEv:[],teamLv:0,assign:{},assignInit:true,autoOff:{},glass:GLASS_GIFT,glassUsed:0,eventAt:0,shares:0,sharesTotal:0,ipos:0,fameLegacy:0,board:{},maxCity:0,maxRebirths:0,cityOverride:null,nextCity:null,tabsSeen:[],talAmt:1,lastExport:0,hrs:null,rules:null,guide:0,quiz:null,nextChalTier:1,keepReno:false,mig8:true,career:{xp:0},runSub:'staff',dq:null,chal:null,nextChal:'',chalDone:{},kpi:null,runStats:{start:0,comp:0,ct:0},rstory:{cur:null,part:0,done:[]},seasonDone:0,supporter:false,adDay:null,adViews:0,custom:{office:'',player:'',title:'rookie',slogan:'',accent:'brass',props:{}},residents:[],nextRes:0,cards:[],sev:{key:'',c:{},got:[]},stats:{start:0,sessions:0,days:[],playSec:0,firsts:{}}};}
 function merge(o){
   const f=fresh();if(!o||typeof o!=='object')return f;
   const migrated=o.v!==2;
@@ -1383,7 +1391,9 @@ const rank=c=>RANKS[Math.min(msLevel(c),RANKS.length-1)];
 const propMult=()=>Math.pow(1.3,S.props-1);
 const renoMult=()=>Math.pow(1.05,sum(S.reno));
 const facMult=()=>chalOn('nofacs')?1:FACS.filter(f=>S.facs.includes(f.id)).reduce((m,f)=>m*f.mult,1);
-const fameMult=()=>S.fameTotal<=100?1+FAME_PASSIVE*S.fameTotal:3*Math.sqrt(S.fameTotal/100);
+const fameMultOf=ft=>ft<=100?1+FAME_PASSIVE*ft:3*Math.sqrt(ft/100);
+const fameEff=()=>S.fameTotal+(S.fameLegacy||0);
+const fameMult=()=>fameMultOf(fameEff());
 const achMult=()=>1+0.02*S.ach.length;
 const dexMult=()=>1+0.01*S.seenEv.length;
 const cityMult=()=>(inCity(9)?2:1)*(inCity(7)&&isNight()?2:1);
@@ -1594,10 +1604,10 @@ function buyTalent(id){const t=talDef(id);if(!t)return;const lv=tal(id);if(lv>=t
 
 /* ================= REBIRTH ================= */
 /* ================= IPO: second prestige layer ================= */
-const IPO_MIN_FAME=250, IPO_GROW=3;
+const IPO_MIN_FAME=250, IPO_GROW=3, BOARD_GROW=1.2, IPO_LEGACY=0.25;
 const BOARD=[
- {id:'aura',name:'上市光環',max:Infinity,cost:l=>l<10?2*(l+1):Math.ceil(20*Math.pow(1.5,l-9)),d:l=>'全體收入 ×'+fmt(Math.pow(1.3,l))},
- {id:'brand',name:'品牌授權',max:Infinity,cost:l=>l<10?l+1:Math.ceil(10*Math.pow(1.5,l-9)),d:l=>'重組獲得的聲望 +'+(25*l)+'%'},
+ {id:'aura',name:'上市光環',max:Infinity,cost:l=>l<10?2*(l+1):Math.ceil(20*Math.pow(BOARD_GROW,l-9)),d:l=>'全體收入 ×'+fmt(Math.pow(1.3,l))},
+ {id:'brand',name:'品牌授權',max:Infinity,cost:l=>l<10?l+1:Math.ceil(10*Math.pow(BOARD_GROW,l-9)),d:l=>'重組獲得的聲望 +'+(25*l)+'%'},
  {id:'head',name:'資深董事',max:3,cost:l=>2*(l+1),d:l=>'每次開業直接接管前 '+(l+1)+' 個物件'},
  {id:'bonus',name:'股東紅利',max:3,cost:l=>l+2,d:l=>'每日登入多 '+l+' 個沙漏'},
  {id:'perma',name:'永久特權',max:1,cost:()=>2,d:()=>'集團特權改以歷史最高重組次數計算，上市後不會失去'},
@@ -1605,7 +1615,8 @@ const BOARD=[
 ];
 const brd=id=>(S&&S.board&&S.board[id])||0;
 const shareMult=()=>(1+0.05*S.sharesTotal)*Math.pow(1.3,brd('aura'));
-const sharesFor=ft=>Math.floor(Math.sqrt(ft/10));
+const ipoScale=()=>1+0.5*(S.ipos||0);
+const sharesFor=ft=>Math.floor(Math.sqrt(ft/10)*ipoScale());
 const ipoNeed=()=>Math.round(IPO_MIN_FAME*Math.pow(IPO_GROW,S.ipos||0));
 const ipoReady=()=>S.rebirths>=CITIES.length-1&&S.fameTotal>=ipoNeed();
 const fameGain=()=>Math.floor(fameRaw(S.run)*(1+0.25*brd('brand')));
@@ -1617,14 +1628,15 @@ function doIPO(){
   if(!ipoReady())return;const g0=sharesFor(S.fameTotal);if(g0<=0)return;const first=S.ipos===0;const hit=kpiHit(),hadKpi=!!S.kpi;const g=Math.floor(g0*kpiBonus());
   S.shares+=g;S.sharesTotal+=g;S.ipos++;addXP(50);S.maxRebirths=Math.max(S.maxRebirths||0,S.rebirths);
   const keep={};TALENTS.flatMap(b=>b.items).filter(t=>t.one).forEach(t=>{if(S.talents[t.id])keep[t.id]=S.talents[t.id];});
-  S.fame=0;S.fameTotal=0;S.talents=keep;S.rebirths=0;S.cityOverride=null;S.nextCity=null;
+  const legacy=Math.floor(IPO_LEGACY*fameEff());S.fameLegacy=legacy;S.fame=0;S.fameTotal=0;S.talents=keep;S.rebirths=0;S.cityOverride=null;S.nextCity=null;
   resetRun();S.coins=1e4*S.sharesTotal;S.props=startProps();runReset();S.chal=null;S.nextChal='';
   const lines=first?['王都證券交易所的大廳擠滿了人。叔叔把敲鐘的木槌交給你。','「當年那間快倒閉的事務所，今天要上市了。」','鐘聲響起，金鑰物業集團正式掛牌。你帶著新的資本，回到一切開始的銀橡城。']
     :['金鑰物業集團再次增資上市，股東們的掌聲比上次更響。','你回到銀橡城，準備打下更大的版圖。'];
   if(hadKpi)lines.push({text:'股東會 KPI 達成 '+hit+' / 3 項：股份 ×'+(1+hit/6).toFixed(2),cls:'sub'});
   lines.push({text:'獲得股份 +'+fmt(g)+'（可用 '+fmt(S.shares)+' 股，累計 '+fmt(S.sharesTotal)+' 股，全體收入 ×'+fmt(shareMult())+'）',cls:'gain'});
+  if(legacy)lines.push({text:'上市傳承：保留 '+fmt(legacy)+' 點聲望計入收入加成（目前 '+pct(fameMult())+'），不能花用、不算上市門檻。',cls:'gain'});
   lines.push({text:'下一次上市需要累計聲望 '+fmt(ipoNeed())+' 點（每上市一次，門檻 ×'+IPO_GROW+'）。',cls:'sub'});
-  lines.push({text:'聲望、天賦、重組次數已歸零；自動化規則、主管、住戶、知識小卡都保留；到過的城市的在地員工會留在名冊上，回到該城市才能再雇用。到「集團」頁用股份通過董事會決議。',cls:'sub'});
+  lines.push({text:'可用聲望、天賦、重組次數已歸零；自動化規則、主管、住戶、知識小卡都保留；到過的城市的在地員工會留在名冊上，回到該城市才能再雇用。到「集團」頁用股份通過董事會決議。',cls:'sub'});
   kpiRoll();lines.push({text:'股東會開出新的本期 KPI，到「集團」頁查看。',cls:'sub'});
   log('集團上市（第 '+S.ipos+' 次），股份 +'+fmt(g)+'。','story');
   queue({title:first?'敲鐘上市':'第 '+S.ipos+' 次上市',lines,btn:'回到銀橡城'});
@@ -1701,12 +1713,14 @@ function chalD(id,t){t=t||1;const pen=t>=2?'全體收入 −'+(10*(t-1))+'%。':
 const chalOn=id=>!!(S.chal&&S.chal.id===id&&!S.chal.done);
 const chalDoneCount=()=>Object.keys(S.chalDone||{}).filter(k=>!k.includes('#')).length;
 const chalTierCount=()=>Object.keys(S.chalDone||{}).filter(k=>k.includes('#')).length;
-const chalMult=()=>(1+0.02*chalDoneCount()+0.01*chalTierCount())*(S.chal&&!S.chal.done&&chalT()>=2?1-0.1*(chalT()-1):1);
+const tierBonus=t=>1+0.05*t;
+const chalTierMult=()=>Object.keys(S.chalDone||{}).filter(k=>k.includes('#')).reduce((m,k)=>m*tierBonus(Number(k.split('#')[1])||2),1);
+const chalMult=()=>(1+0.02*chalDoneCount())*chalTierMult()*(S.chal&&!S.chal.done&&chalT()>=2?1-0.1*(chalT()-1):1);
 function chalCheck(){if(!S.chal||S.chal.done)return;if(S.props>=chalGoal()){S.chal.done=true;const t=chalT();const key=S.chal.id+'@'+S.chal.city+(t>=2?'#'+t:'');const first=!S.chalDone[key];S.chalDone[key]=1;
   const c=CHALLENGES.find(x=>x.id===S.chal.id);if(S.kpi)S.kpi.c.chal=(S.kpi.c.chal||0)+1;
   if(first){gainGlass(5,'城市挑戰');addXP(20*t);}
   queue({title:'城市挑戰完成：'+c.name+' '+ROMAN[t-1],lines:['你在'+CITIES[S.chal.city].name+'的「'+c.name+'」等級 '+ROMAN[t-1]+' 限制下接管了第 '+chalGoal()+' 個物件。',
-    first?{text:'新的挑戰紀錄！全體收入永久 +'+(t>=2?1:2)+'%（基本紀錄 '+chalDoneCount()+' 項、進階紀錄 '+chalTierCount()+' 項），時光沙漏 +5',cls:'gain'}:{text:'這座城市的這項挑戰等級之前已完成過，這次沒有額外獎勵。',cls:'sub'},
+    first?{text:'新的挑戰紀錄！全體收入永久 '+(t>=2?'×'+tierBonus(t).toFixed(2):'+2%')+'（基本紀錄 '+chalDoneCount()+' 項、進階紀錄 '+chalTierCount()+' 項），時光沙漏 +5',cls:'gain'}:{text:'這座城市的這項挑戰等級之前已完成過，這次沒有額外獎勵。',cls:'sub'},
     t<5&&chalAvail(c.id)>t?{text:'等級 '+ROMAN[t]+' 已開放，可以在下次重組時挑戰。',cls:'sub'}:{text:'',cls:'sub'},{text:'挑戰限制已解除，這一輪可以照常經營。',cls:'sub'}],btn:'太好了'});
   log('完成城市挑戰「'+c.name+'」'+ROMAN[t-1]+'（'+CITIES[S.chal.city].name+'）。','story');}}
 
@@ -1904,9 +1918,10 @@ function nextGoal(){
   if(S.contracts.active.some(c=>c.end<=now)&&!autoOn('a_collect'))return {text:'有承攬合約完工了，到「業務」驗收',tab:'biz'};
   const sn=seasonNow();if(sn&&S.sev.key===sn.key&&SEASON_TASKS.some(t=>!S.sev.got.includes(t.k)&&(S.sev.c[t.k]||0)>=t.need))return {text:sn.s.name+'活動任務完成了，領取沙漏',tab:'biz'};
   if(!cnt('goblin'))return S.coins<10?{text:'按「巡視公寓」存到 10 金幣，雇用第一位哥布林清潔工',pct:S.coins/10}:{text:'雇用第一位哥布林清潔工',tab:'run'};
-  if(ipoReady())return {text:'可以集團上市了：到「集團」敲鐘',tab:'corp'};
+  if(ipoReady()&&(S.ipos===0||(growthAdvice().find(x=>x.k==='上市')||{}).m>=1))return {text:'可以集團上市了：到「集團」敲鐘',tab:'corp'};
+  if(S.ipos>0){const ba=boardBuyable('aura');if(ba)return {text:'董事會：股份夠升級上市光環 '+ba+' 級（全體收入 ×'+fmt(Math.pow(1.3,ba))+'）',tab:'corp'};}
   if(S.chal&&!S.chal.done){const cc=CHALLENGES.find(x=>x.id===S.chal.id);return {text:'城市挑戰「'+cc.name+'」'+ROMAN[chalT()-1]+'：接管第 '+chalGoal()+' 個物件（目前 '+S.props+'）',pct:S.props/chalGoal(),tab:'run'};}
-  if(veteran()&&S.run>=REBIRTH_MIN){const fg=fameGain();if(fg>=3&&fg>=S.fameTotal*0.5)return {text:'重組時機到了：這輪可得 '+fmt(fg)+' 聲望（累計 '+fmt(S.fameTotal)+'），下一輪會跑得更快',tab:'corp'};}
+  if(veteran()&&S.run>=REBIRTH_MIN){const fg=fameGain();if(fg>=3&&fg>=S.fameTotal*(S.fameTotal>=1e4?0.2:0.5))return {text:'重組時機到了：這輪可得 '+fmt(fg)+' 聲望（累計 '+fmt(S.fameTotal)+'），下一輪會跑得更快',tab:'corp'};}
   if(!veteran()&&S.run>=REBIRTH_MIN&&fameGain()>=3)return {text:'可以發動集團重組了：帶著 '+fmt(fameGain())+' 點聲望前往下一座城市',tab:'corp'};
   if(S.props>=3&&!S.contracts.active.length&&!autoOn('a_collect'))return {text:'接一件承攬合約，離線時也會施工',tab:'biz'};
   const need=needOf(S.props),lv=S.teamLv||0,nx=TEAM_STEPS[lv],mn=teamMin();
@@ -2030,15 +2045,30 @@ function renderBiz(){
   const ready=S.props>=3&&!autoOn('a_collect')&&(S.contracts.active.some(c=>c.end<=now)||S.contracts.active.length<contractSlots());
   setHTML($('tab-biz'),'業務'+(ready?'<span class="dot"></span>':''));
 }
+/* v0.12：成長建議 —— 比較各條路線對全體收入的立即影響 */
+function boardBuyable(id){const b=BOARD.find(x=>x.id===id);let lv=brd(id),sh=S.shares,n=0;while(lv<b.max&&sh>=b.cost(lv)){sh-=b.cost(lv);lv++;n++;}return n;}
+function growthAdvice(){const out=[];const fm=fameMult();
+  const g=fameGain();if(S.run>=REBIRTH_MIN&&g>0)out.push({k:'重組',t:'現在重組（+'+fmt(g)+' 聲望）',m:fameMultOf(fameEff()+g)/fm,n:'聲望加成提升；城市挑戰可以同時進行。'});
+  else out.push({k:'重組',t:'本輪累積到 '+fmt(REBIRTH_MIN)+' 金幣後可以重組',m:null,n:''});
+  const nc=S.rebirths+1>=CITIES.length?CITIES.length-1:S.rebirths+1;const city=(brd('pick')&&S.nextCity!=null&&S.nextCity!=='')?Number(S.nextCity):nc;
+  let bc=null;CHALLENGES.forEach(c=>{const av=chalAvail(c.id);for(let t=av;t>=1;t--){const key=c.id+'@'+city+(t>=2?'#'+t:'');if(!S.chalDone[key]){const m=t>=2?tierBonus(t):(1+0.02*(chalDoneCount()+1))/(1+0.02*chalDoneCount());if(!bc||m>bc.m)bc={c,t,m};break;}}});
+  if(bc)out.push({k:'挑戰',t:'下次重組挑戰「'+bc.c.name+'」'+ROMAN[bc.t-1]+'（'+CITIES[city].name+'）',m:bc.m,n:'永久效果，完成前收入 '+(bc.t>=2?'−'+(10*(bc.t-1))+'%':'不受影響')+'；目標第 '+CHAL_GOALS[bc.t-1]+' 個物件。'});
+  if(S.ipos>0||ipoReady()){const ba=boardBuyable('aura');out.push({k:'董事會',t:ba?'用股份升級上市光環 '+ba+' 級':'上市光環 Lv'+(brd('aura')+1)+' 需要 '+fmt(BOARD[0].cost(brd('aura')))+' 股（持有 '+fmt(S.shares)+'）',m:ba?Math.pow(1.3,ba):null,n:''});}
+  if(ipoReady()){const sg=Math.floor(sharesFor(S.fameTotal)*kpiBonus());const sm0=1+0.05*S.sharesTotal,sm1=1+0.05*(S.sharesTotal+sg);const leg=Math.floor(IPO_LEGACY*fameEff());
+    out.push({k:'上市',t:'現在上市（+'+fmt(sg)+' 股，保留傳承聲望 '+fmt(leg)+'）',m:fameMultOf(leg)/fm*sm1/sm0,n:'只算聲望與股份的立即變化；天賦也會重置。新股份可以馬上用來升級董事會，之後重組會把聲望補回來。'});}
+  return out;}
+function renderAdvice(){const box=$('advice');if(!(S.ipos>0||S.rebirths>=3)){box.hidden=true;return;}box.hidden=false;
+  const a=growthAdvice();const best=a.filter(x=>x.m&&x.m>1).sort((x,y)=>y.m-x.m)[0];
+  setHTML(box,'<div class="adv"><b>成長建議</b><span class="sub">各選項對全體收入的立即影響（×1.00 表示沒有變化）。</span>'+a.map(x=>'<div class="advi'+(x===best?' top':'')+(x.m&&x.m<1?' neg':'')+'"><span>'+(x===best?'★ ':'')+x.t+'</span><span class="num">'+(x.m?'×'+(x.m<10?x.m.toFixed(2):fmt(x.m)):'—')+'</span>'+(x.n?'<small>'+x.n+'</small>':'')+'</div>').join('')+'</div>');}
 function renderCorp(){
   const g=fameGain(),can=S.run>=REBIRTH_MIN&&g>0;
-  $('fame').textContent=fmt(S.fame);$('fameBonus').textContent='累計 '+fmt(S.fameTotal)+' 點 · 全體收入 '+pct(fameMult());
+  $('fame').textContent=fmt(S.fame);$('fameBonus').textContent='累計 '+fmt(S.fameTotal)+' 點'+(S.fameLegacy?' ＋ 上市傳承 '+fmt(S.fameLegacy):'')+' · 全體收入 '+pct(fameMult());
   $('rebirths').textContent=S.rebirths;$('runEarned').textContent='本輪累積 '+fmt(S.run)+' 金幣';
   $('corpCity').textContent='第 '+(S.rebirths+1)+' 座城市';
   const c=CITIES[cityIdx()];
   setHTML($('cityNow'),'<b>目前城市：'+cityName()+'</b><span class="rule">'+c.rule+'</span>'+(S.chal?(()=>{const cc=CHALLENGES.find(x=>x.id===S.chal.id);return '<span class="sub chalnow">城市挑戰「'+cc.name+'」'+ROMAN[chalT()-1]+(S.chal.done?' 已完成':' 進行中：'+chalD(cc.id,chalT())+'目標：接管第 '+chalGoal()+' 個物件（目前 '+S.props+'）')+'</span>';})():''));
   if(veteran()){const total=CHALLENGES.length*CITIES.length;
-    setHTML($('rbChal'),'<label class="sub">下一輪城市挑戰（選填）<select data-chal="1" id="chalPick"><option value="">不挑戰</option>'+CHALLENGES.map(x=>'<option value="'+x.id+'"'+(S.nextChal===x.id?' selected':'')+'>'+x.name+' — '+x.d+'</option>').join('')+'</select></label>'+(S.nextChal?(()=>{const av=chalAvail(S.nextChal);if((S.nextChalTier||1)>av)S.nextChalTier=av;return '<label class="sub">挑戰等級 <select data-chaltier="1">'+ROMAN.slice(0,av).map((r,i)=>'<option value="'+(i+1)+'"'+((S.nextChalTier||1)===i+1?' selected':'')+'>'+r+'（目標第 '+CHAL_GOALS[i]+' 個物件）</option>').join('')+'</select></label><span class="sub">'+chalD(S.nextChal,S.nextChalTier||1)+'完成上一級才會開放下一級。</span>';})():'')+'<span class="sub">基本紀錄：'+chalDoneCount()+' / '+total+'（每座城市每項挑戰第一次完成 +2%）；進階紀錄 II～V：'+chalTierCount()+' 項（每項 +1%）</span>');}
+    setHTML($('rbChal'),'<label class="sub">下一輪城市挑戰（選填）<select data-chal="1" id="chalPick"><option value="">不挑戰</option>'+CHALLENGES.map(x=>'<option value="'+x.id+'"'+(S.nextChal===x.id?' selected':'')+'>'+x.name+' — '+x.d+'</option>').join('')+'</select></label>'+(S.nextChal?(()=>{const av=chalAvail(S.nextChal);if((S.nextChalTier||1)>av)S.nextChalTier=av;return '<label class="sub">挑戰等級 <select data-chaltier="1">'+ROMAN.slice(0,av).map((r,i)=>'<option value="'+(i+1)+'"'+((S.nextChalTier||1)===i+1?' selected':'')+'>'+r+'（目標第 '+CHAL_GOALS[i]+' 個物件）</option>').join('')+'</select></label><span class="sub">'+chalD(S.nextChal,S.nextChalTier||1)+'完成上一級才會開放下一級。</span>';})():'')+'<span class="sub">基本紀錄：'+chalDoneCount()+' / '+total+'（每座城市每項挑戰第一次完成 +2%）；進階紀錄 II～V：'+chalTierCount()+' 項（II ×1.10、III ×1.15、IV ×1.20、V ×1.25，彼此相乘，目前合計 ×'+fmt(chalTierMult())+'）</span>');}
   else setHTML($('rbChal'),'');
   if(S.kpi&&S.ipos>=1){setHTML($('kpiBox'),'<div class="kpi"><b>股東會本期 KPI</b><span class="sub">下次上市時，每達成 1 項，股份 +17%（3 項全達成 +50%）。目前達成 '+kpiHit()+' / 3。</span>'+S.kpi.list.map(q=>{const d=KPI_KINDS.find(x=>x.k===q.k);const v=Math.min(kpiVal(q),q.need);return '<div class="dqi'+(v>=q.need?' ok':'')+'"><span>'+(v>=q.need?'✔ ':'')+d.t(q.need)+'</span><span class="num">'+fmt(v)+'/'+fmt(q.need)+'</span></div>';}).join('')+'</div>');}
   else setHTML($('kpiBox'),'');
@@ -2050,10 +2080,11 @@ function renderCorp(){
   if(brd('pick')){let o='<option value="">依順序（'+CITIES[Math.min(S.rebirths+1,CITIES.length-1)].name+'）</option>';for(let i=0;i<=Math.max(S.maxCity||0,cityIdx());i++)o+='<option value="'+i+'"'+(String(S.nextCity)===String(i)?' selected':'')+'>'+CITIES[i].name+' — '+CITIES[i].rule+'</option>';
     setHTML($('rbPick'),'<label class="sub">下一座城市（城市直營）<select data-pick="1" id="cityPick">'+o+'</select></label>');}else setHTML($('rbPick'),'');
   {const kp=keepRenoPlan();setHTML($('rbKeep'),kp.n?'<label class="sub keep"><input type="checkbox" data-keep="1"'+(S.keepReno?' checked':'')+'> 重組時用沙漏保留裝修：'+kp.n+' 個物件 × '+KEEP_RENO_COST+' = '+kp.cost+' 個沙漏（持有 '+S.glass+'）'+(S.keepReno&&S.glass<kp.cost?'，沙漏不夠，將不會保留':'')+'</label>':'');}
+  renderAdvice();
   const sg=sharesFor(S.fameTotal),ready=ipoReady();
   $('shares').textContent=fmt(S.shares);$('shareBonus').textContent='累計 '+fmt(S.sharesTotal)+' 股 · 全體收入 ×'+fmt(shareMult());$('ipos').textContent=S.ipos;
   $('ipoGain').textContent=ready?'現在上市可得 '+fmt(sg)+' 股':'條件：把事務所開到王都（目前第 '+(S.rebirths+1)+' 座城市），且累計聲望達 '+fmt(ipoNeed())+' 點（目前 '+fmt(S.fameTotal)+'）';
-  $('ipoNext').textContent=ready?'累計聲望達 '+fmt(Math.pow(sg+1,2)*10)+' 點，可再多 1 股。':'上市後聲望、天賦、重組次數會歸零，換成永久保留的股份。';
+  $('ipoNext').textContent=ready?'累計聲望達 '+fmt(Math.pow((sg+1)/ipoScale(),2)*10)+' 點，可再多 1 股（第 '+(S.ipos+1)+' 次上市股份 ×'+ipoScale()+'）。':'上市後可用聲望、天賦、重組次數會歸零，換成永久保留的股份；累計聲望的 '+(IPO_LEGACY*100)+'% 會以「上市傳承」保留在收入加成裡。';
   $('ipoBtn').disabled=!ready||sg<=0;
   setHTML($('board'),BOARD.map(b=>{const lv=brd(b.id),max=lv>=b.max,c=b.cost(lv);
     return '<div class="tal"><div><div class="tn">'+b.name+' <span class="num" style="color:var(--muted);font-weight:400">Lv'+lv+(b.max===Infinity?'':'/'+b.max)+'</span></div><div class="td">'+(lv?b.d(lv):b.d(1)+'（Lv1）')+'</div></div><button class="mini" type="button" data-act="board" data-v="'+b.id+'" '+(max||S.shares<c?'disabled':'')+'>'+(max?'已滿級':c+' 股')+'</button></div>';}).join(''));
@@ -2210,7 +2241,7 @@ function decisions(){const d=[],now=Date.now();
   const lx=S.lastExport||0,days=S.stats&&S.stats.start?(now-S.stats.start)/864e5:0;
   if(lx?now-lx>7*864e5:days>=3)d.push({t:lx?'已超過 7 天沒備份存檔':'還沒備份過存檔',tab:'save'});
   if(ipoReady())d.push({t:'可以集團上市了',tab:'corp'});
-  else if(S.run>=REBIRTH_MIN){const fg=fameGain();if(fg>=3&&(!veteran()||fg>=S.fameTotal*0.5))d.push({t:'重組時機到了：可得 '+fmt(fg)+' 聲望',tab:'corp'});}
+  else if(S.run>=REBIRTH_MIN){const fg=fameGain();if(fg>=3&&(!veteran()||fg>=S.fameTotal*(S.fameTotal>=1e4?0.2:0.5)))d.push({t:'重組時機到了：可得 '+fmt(fg)+' 聲望',tab:'corp'});}
   const done=S.contracts.active.filter(c=>c.end<=now).length;
   if(done&&!autoOn('a_collect'))d.push({t:done+' 件承攬合約完工，等你驗收',tab:'biz'});
   else if(S.props>=3&&!chalOn('nocontract')&&!autoOn('a_collect')&&S.contracts.active.length<contractSlots())d.push({t:'承攬合約還有空位，可以再接一件',tab:'biz'});
@@ -2490,7 +2521,7 @@ function start(data){
   setInterval(save,30000);
   if(window.claude&&window.claude.hot&&window.claude.hot.snapshot)window.claude.hot.snapshot(()=>({state:S}));
 }
-if(/[?&]sim=1/.test(location.search))window.__sim={S:()=>S,fameGain,ipoReady,nextGoal,rate,cityName};
+if(/[?&]sim=1/.test(location.search))window.__sim={S:()=>S,growthAdvice,fameRaw,fameMult,shareMult,chalMult,BOARD,fameGain,ipoReady,nextGoal,rate,cityName};
 window.claude?.hot?.ready?window.claude.hot.ready(start):start(window.claude?.hot?.data??{});
 })();
 </script>
