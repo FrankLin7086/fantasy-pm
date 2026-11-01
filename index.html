@@ -324,6 +324,18 @@ a.lab:hover{text-decoration:underline}
 .guide .gd{font-size:12px;color:var(--muted)}
 .guide .gb{display:flex;gap:6px;align-items:center;margin-top:2px}
 .guide .gb .mini{margin-top:0}
+.quiz .qq{font-family:var(--f-display);font-size:15px;line-height:1.6}
+.quiz .qo{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.quiz .qo button{text-align:left;background:var(--panel-2);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:14px}
+.quiz .qo button.ok{border-color:var(--good);color:var(--good)}
+.quiz .qo button.no{border-color:var(--warn);color:var(--warn)}
+.quiz .qr{font-size:14px}
+.quiz .qr.ok{color:var(--good)}
+.quiz .qr.no{color:var(--warn)}
+.quiz .qx{font-size:13px;color:var(--fg)}
+.quiz .qs{font-size:12px;color:var(--good)}
+.quiz .qd{font-size:11px;color:var(--muted)}
+.choices.q3{grid-template-columns:1fr}
 .rbchal{display:flex;flex-direction:column;gap:4px;margin-top:6px}
 .rbchal select{margin-top:4px;max-width:100%;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:4px 6px;font-size:13px}
 .chalnow{display:block;margin-top:4px;color:var(--warn)}
@@ -363,6 +375,7 @@ a.lab:hover{text-decoration:underline}
     <div class="choices">
       <button class="choice" id="choiceA" type="button"><b></b><span></span></button>
       <button class="choice" id="choiceB" type="button"><b></b><span></span></button>
+      <button class="choice" id="choiceC" type="button" hidden><b></b><span></span></button>
     </div>
   </section>
 
@@ -398,6 +411,7 @@ a.lab:hover{text-decoration:underline}
     <div id="guideBox" hidden></div>
     <div id="dqBox" hidden></div>
     <div id="hrBox" hidden></div>
+    <div id="quizBox" hidden></div>
     <details class="rules" id="ruleWrap" hidden><summary>派工規則<small id="ruleSum"></small></summary><p class="sub">每項自動化都有內建判斷；你可以調整執行條件，也可以替員工設定優先、一般或暫緩。</p><div id="ruleBox"></div></details>
     <div class="subtabs" id="runSub" role="tablist" aria-label="經營分類">
       <button type="button" data-sub="staff">員工</button>
@@ -501,6 +515,11 @@ a.lab:hover{text-decoration:underline}
       <p class="explain" style="margin-bottom:10px">接管物件、完成設施投資、第一次處理各種事務時解鎖。每張收入 +1%。</p>
       <ul class="dex cardl" id="cards"></ul>
     </div>
+    <div id="quizDexWrap" hidden>
+      <div class="sec-title"><h2>法規問答圖鑑</h2><span id="quizSum"></span></div>
+      <p class="explain" style="margin-bottom:10px">每日一題與情境客訴答對的題目會收在這裡。依《公寓大廈管理條例》民國 111 年 5 月 11 日修正條文，僅供學習參考，以最新法規及個案判斷為準。</p>
+      <ul class="dex cardl" id="quizDex"></ul>
+    </div>
     <div>
       <div class="sec-title"><h2>客訴圖鑑</h2><span id="dexSum"></span></div>
       <ul class="dex" id="dex"></ul>
@@ -570,7 +589,7 @@ a.lab:hover{text-decoration:underline}
 'use strict';
 const KEY='fantasy-pm-save-v1';
 const OFFLINE_MIN=60;
-const VERSION='v0.10.0';
+const VERSION='v0.11.0';
 
 /* ================= DATA ================= */
 const CITIES=[
@@ -747,7 +766,7 @@ const GLASS_GIFT=3;
 /* ================= MONETISATION CONFIG — fill these in when you have the accounts ================= */
 const CONFIG={
   labName:'住宅實驗室',
-  labUrl:'',                    // 住宅實驗室的方格子網址，例如 https://vocus.cc/salon/xxxx；留空則不顯示連結
+  labUrl:'https://vocus.cc/salon/housing-lab/about',                    // 住宅實驗室的方格子網址，例如 https://vocus.cc/salon/xxxx；留空則不顯示連結
   adsenseClient:'ca-pub-7982993592099360',             // AdSense 發布商 ID，例如 ca-pub-0000000000000000（網頁版 H5 Games Ads）
   adsenseTest:true,             // 申請審核期間保持 true（顯示測試廣告）
   admobRewardedIOS:'',          // AdMob 獎勵廣告單元 ID（iOS）
@@ -980,10 +999,10 @@ const CARDS=[
  ['p0','公寓大廈管理條例','台灣集合住宅的管理，主要依據《公寓大廈管理條例》。它規範區分所有權人、住戶、管理委員會與管理服務人的權利義務，是物業管理最常翻的一本法規。','公寓大廈管理條例'],
  ['p1','樓梯間不能堆雜物','住戶不得在樓梯間、共同走廊、防火巷弄、防空避難設備等處所堆置雜物或設置障礙物。這些地方是逃生通道，管委會可以要求改善。','公寓大廈管理條例第 16 條'],
  ['p2','規約是社區的憲法','規約由區分所有權人會議訂定，規範共用部分的使用、費用分擔、違規處理等事項。有些事項必須寫進規約才有效力。','公寓大廈管理條例第 23 條'],
- ['p3','區分所有權人會議','社區最高的決策機關是區分所有權人會議，每年至少要定期召開一次。修改規約等重大事項，需要較高的出席與同意比例。','公寓大廈管理條例第 25 條'],
+ ['p3','區分所有權人會議','社區最高的決策機關是區分所有權人會議，每年至少要定期召開一次。除規約另有規定外，決議需要三分之二以上出席、出席者四分之三以上同意，門檻並不低。','公寓大廈管理條例第 25 條'],
  ['p4','物業管理是有證照的專業','管委會可以委任或僱用領有中央主管機關核發登記證的公寓大廈管理維護公司，或領有認可證的管理服務人員來執行管理工作。','公寓大廈管理條例第 42 條'],
  ['p5','公共基金','公共基金是社區的修繕存款。起造人要依工程造價一定比例提列，之後由住戶依規約或區分所有權人會議決議繳納，用在共用部分的修繕與管理。','公寓大廈管理條例第 18 條'],
- ['p6','外牆與屋頂平臺','外牆面、樓頂平臺不屬於個人專有。在這些地方變更構造、顏色、設置廣告物或鐵鋁窗，除了依法令辦理，也受規約或區分所有權人會議決議限制。','公寓大廈管理條例第 8 條'],
+ ['p6','外牆與屋頂平臺','外牆面、樓頂平臺不屬於個人專有。在這些地方變更構造、顏色、設置廣告物或鐵鋁窗，除了依法令辦理，規約或區分所有權人會議決議經報備主管機關後，也會受其限制。','公寓大廈管理條例第 8 條'],
  ['p7','長期修繕計畫','電梯、屋頂防水、外牆、機電設備都有使用年限。實務上會依設備壽命編列長期修繕計畫，每年提撥預算，避免大修時才臨時向住戶收一大筆錢。','物業管理實務'],
  ['f_gate','門禁紀錄也是個資','門禁的刷卡紀錄、監視影像屬於個人資料，蒐集、保存與調閱都要符合《個人資料保護法》，例如限定用途、設定保存期限、限制調閱權限。','個人資料保護法'],
  ['f_lift','電梯要定期檢查','昇降設備要委託依法登記的專業廠商定期維護保養，並委託指定的檢查機構實施定期安全檢查，取得使用許可才能使用。','建築法第 77 條之 4'],
@@ -1261,7 +1280,7 @@ function fresh(){return {v:2,amt:1,dbg:false,dbgSpeed:false,coins:0,life:0,run:0
   units:{},props:1,reno:[],ach:[],patrols:0,complaints:0,offlineClaims:0,buffs:[],daily:{last:null,day:0,cycles:0},
   story:[],log:[],seen:[],event:null,nextEvent:null,lastEventIdx:null,lastSeen:Date.now(),
   contracts:{offers:[],active:[]},contractsDone:0,council:{on:[],changed:0},councilSet:0,facs:[],
-  talents:{},mgr:{},seenEv:[],teamLv:0,assign:{},assignInit:true,autoOff:{},glass:GLASS_GIFT,glassUsed:0,eventAt:0,shares:0,sharesTotal:0,ipos:0,board:{},maxCity:0,maxRebirths:0,cityOverride:null,nextCity:null,tabsSeen:[],talAmt:1,lastExport:0,hrs:null,rules:null,guide:0,keepReno:false,mig8:true,career:{xp:0},runSub:'staff',dq:null,chal:null,nextChal:'',chalDone:{},kpi:null,runStats:{start:0,comp:0,ct:0},rstory:{cur:null,part:0,done:[]},seasonDone:0,supporter:false,adDay:null,adViews:0,custom:{office:'',player:'',title:'rookie',slogan:'',accent:'brass',props:{}},residents:[],nextRes:0,cards:[],sev:{key:'',c:{},got:[]},stats:{start:0,sessions:0,days:[],playSec:0,firsts:{}}};}
+  talents:{},mgr:{},seenEv:[],teamLv:0,assign:{},assignInit:true,autoOff:{},glass:GLASS_GIFT,glassUsed:0,eventAt:0,shares:0,sharesTotal:0,ipos:0,board:{},maxCity:0,maxRebirths:0,cityOverride:null,nextCity:null,tabsSeen:[],talAmt:1,lastExport:0,hrs:null,rules:null,guide:0,quiz:null,nextChalTier:1,keepReno:false,mig8:true,career:{xp:0},runSub:'staff',dq:null,chal:null,nextChal:'',chalDone:{},kpi:null,runStats:{start:0,comp:0,ct:0},rstory:{cur:null,part:0,done:[]},seasonDone:0,supporter:false,adDay:null,adViews:0,custom:{office:'',player:'',title:'rookie',slogan:'',accent:'brass',props:{}},residents:[],nextRes:0,cards:[],sev:{key:'',c:{},got:[]},stats:{start:0,sessions:0,days:[],playSec:0,firsts:{}}};}
 function merge(o){
   const f=fresh();if(!o||typeof o!=='object')return f;
   const migrated=o.v!==2;
@@ -1379,7 +1398,7 @@ const unitEach=u=>u.prod*msMult(cnt(u.id))*profMult(cnt(u.id))*synMult(u)*mgrMul
 function baseRate(){let r=0;availUnits().forEach(u=>{const n=cnt(u.id);if(n)r+=n*unitEach(u);});return r;}
 function buffMult(){const now=Date.now();return S.buffs.filter(b=>b.until>now).reduce((m,b)=>m*b.mult,1);}
 const rate=()=>baseRate()*buffMult();
-const priceMod=()=>hyp(tal('disc'))*(chalOn('frugal')?3:1)*(inCity(2)?0.7:1);
+const priceMod=()=>hyp(tal('disc'))*(chalOn('frugal')?(2+chalT()):1)*(inCity(2)?0.7:1);
 const firstCost=u=>u.cost*Math.pow(growth(),cnt(u.id))*priceMod();
 const bulkCost=(u,k)=>Math.ceil(firstCost(u)*(Math.pow(growth(),k)-1)/(growth()-1));
 function maxAfford(u){const f=firstCost(u),g=growth();if(S.coins<f)return 0;let k=Math.floor(Math.log(S.coins*(g-1)/f+1)/Math.log(g));while(k>0&&bulkCost(u,k)>S.coins)k--;return k;}
@@ -1392,7 +1411,7 @@ const facCost=f=>f.cost*hyp(tal('facil'))*(inCity(8)?0.5:1);
 const offlineCapH=()=>(hasPerk(5)?24:hasPerk(1)?12:8)+2*tal('night');
 const contractReward=t=>(seasonOn('typhoon')?1.5:1)*Math.max(100,baseRate()*t.dur*t.mult)*(1+0.1*tal('contract'))*mgrMult('@contract')*(inCity(4)?2:1);
 const COMPLAINT_CAP_MIN=()=>inCity(1)?60:30;
-const complaintReward=val=>{const r=baseRate();const raw=(seasonOn('halloween')?1.5:1)*Math.max(50,r*val*15)*(hasPerk(3)?2:1)*(policyOn('resident')?1.5:1)*dimMult(tal('comp'))*mgrMult('@complaint')*(inCity(1)?3:1)*(chalOn('storm')?0.5:1);return r>0?Math.min(raw,Math.max(50,r*COMPLAINT_CAP_MIN()*60)):raw;};
+const complaintReward=val=>{const r=baseRate();const raw=(seasonOn('halloween')?1.5:1)*Math.max(50,r*val*15)*(hasPerk(3)?2:1)*(policyOn('resident')?1.5:1)*dimMult(tal('comp'))*mgrMult('@complaint')*(inCity(1)?3:1)*(chalOn('storm')?Math.max(0.1,0.6-0.1*chalT()):1);return r>0?Math.min(raw,Math.max(50,r*COMPLAINT_CAP_MIN()*60)):raw;};
 const buffDur=()=>Math.min(60*60*1000,10*60*1000*dimMult(tal('buff'),1.5));
 function earn(n){S.coins+=n;S.life+=n;S.run+=n;}
 
@@ -1434,7 +1453,7 @@ function check(){
   if(S.props>=2&&S.event==null){if(S.nextEvent==null)S.nextEvent=now+60*1000;else if(now>=S.nextEvent)spawnEvent();}
   S.buffs=S.buffs.filter(b=>b.until>now);
 }
-function eventGap(){let m=policyOn('resident')?(2+Math.random()*3):(5+Math.random()*5);if(chalOn('storm'))m/=3;if(inCity(1))m/=2;if(seasonOn('halloween'))m/=1.5;return m*60*1000;}
+function eventGap(){let m=policyOn('resident')?(2+Math.random()*3):(5+Math.random()*5);if(chalOn('storm'))m/=(2+chalT());if(inCity(1))m/=2;if(seasonOn('halloween'))m/=1.5;return m*60*1000;}
 function spawnEvent(){
   const pool=EVENTS.map((e,k)=>k).filter(k=>evAllowed(EVENTS[k])&&k!==S.lastEventIdx);if(!pool.length)return;
   const unseen=pool.filter(k=>!S.seenEv.includes(k));
@@ -1446,7 +1465,7 @@ function spawnEvent(){
 function resolveEvent(which){
   if(S.event==null)return;const ev=EVENTS[S.event];const [label,val]=ev[which];
   if(!S.seenEv.includes(S.event)){S.seenEv.push(S.event);toast('客訴圖鑑 +1（收入 +1%）');}
-  if(which===1){const gain=complaintReward(val);earn(gain);log('客訴「'+ev[0]+'」→ '+label+'，+'+fmt(gain)+' 金幣。');toast('+'+fmt(gain)+' 金幣');}
+  if(which===1){const gain=complaintReward(val)*(evMult||1);earn(gain);log('客訴「'+ev[0]+'」→ '+label+'，+'+fmt(gain)+' 金幣。');toast('+'+fmt(gain)+' 金幣');}
   else{const d=buffDur();S.buffs.push({mult:val,until:Date.now()+d,label});log('客訴「'+ev[0]+'」→ '+label+'，收入 ×'+val+' 持續 '+dur(d/1000)+'。');toast('收入 ×'+val+'，持續 '+dur(d/1000));}
   S.complaints++;addXP(1);dqTrack('comp');kpiTrack('comp');S.runStats.comp++;sevTrack('complaint');if(ev[0].includes('國王的表弟'))unlockCards(['c_fee']);if(Math.random()<0.1)tryResident('住戶介紹');S.event=null;S.nextEvent=Date.now()+eventGap();
   if(Math.random()<0.1)gainGlass(1,'住戶的謝禮');
@@ -1619,13 +1638,13 @@ function doRebirth(){
   S.props=startProps();
   if(S.sharesTotal)S.coins=Math.max(S.coins,1e4*S.sharesTotal);
   staffBuilt='';runReset();
-  S.chal=null;if(S.nextChal&&CHALLENGES.some(x=>x.id===S.nextChal)){S.chal={id:S.nextChal,city:cityIdx(),done:false};}S.nextChal='';
+  S.chal=null;if(S.nextChal&&CHALLENGES.some(x=>x.id===S.nextChal)){S.chal={id:S.nextChal,city:cityIdx(),done:false,tier:Math.max(1,Math.min(S.nextChalTier||1,chalAvail(S.nextChal)))};}S.nextChal='';
   const c=CITIES[cityIdx()];
   const lines=first?['叔叔終於回來了，手上拿著一份王都集團的合約。','「把事務所併進集團吧。你在'+from+'打下的名聲，到哪座城市都用得上。」','你帶著「金鑰」這塊招牌，前往下一座城市：'+cityName()+'。']
     :['你把'+from+'的事務所交給在地團隊，帶著「金鑰」品牌前往'+cityName()+'重新開業。'];
   lines.unshift({text:rr.lines[0]+(gradeXP?'（管理資歷 +'+gradeXP+'）':''),cls:'gain'},{text:rr.lines[1],cls:'sub'});
   lines.push({text:'品牌聲望 +'+fmt(g)+'（可用 '+fmt(S.fame)+' 點，累計 '+fmt(S.fameTotal)+' 點）',cls:'gain'});
-  if(S.chal){const cc=CHALLENGES.find(x=>x.id===S.chal.id);lines.push({text:'城市挑戰「'+cc.name+'」開始：'+cc.d+'在這座城市接管第 '+CHAL_GOAL+' 個物件就算完成。',cls:'sub'});}
+  if(S.chal){const cc=CHALLENGES.find(x=>x.id===S.chal.id);lines.push({text:'城市挑戰「'+cc.name+'」'+ROMAN[chalT()-1]+' 開始：'+chalD(cc.id,chalT())+'在這座城市接管第 '+chalGoal()+' 個物件就算完成。',cls:'sub'});}
   if(S.rebirths<CITIES.length||S.cityOverride!=null){lines.push({text:'城市規則：'+c.rule,cls:'sub'});
     const locals=LOCAL_UNITS.filter(l=>l[0]===cityIdx()).map(l=>l[2]);if(locals.length)lines.push({text:'新的在地員工：'+locals.join('、'),cls:'sub'});}
   const np=PERKS.find(p=>p[0]===S.rebirths);if(np)lines.push({text:'解鎖集團特權：'+np[1]+' — '+np[2],cls:'sub'});
@@ -1665,15 +1684,26 @@ const CHALLENGES=[
  {id:'frugal',name:'預算凍結',d:'員工價格 ×3。'},
  {id:'nofacs',name:'設施封存',d:'不能進行設施投資，已有的設施沒有效果。'}
 ];
-const CHAL_GOAL=5;
+const CHAL_GOAL=5,CHAL_GOALS=[5,6,7,8,8],ROMAN=['I','II','III','IV','V'];
+const chalT=()=>S.chal?(S.chal.tier||1):1;
+const chalGoal=()=>CHAL_GOALS[chalT()-1]||CHAL_GOAL;
+function chalMaxTier(id){let m=0;Object.keys(S.chalDone||{}).forEach(k=>{if(!k.startsWith(id+'@'))return;const t=k.includes('#')?Number(k.split('#')[1])||1:1;if(t>m)m=t;});return m;}
+const chalAvail=id=>Math.min(5,chalMaxTier(id)+1);
+function chalD(id,t){t=t||1;const pen=t>=2?'全體收入 −'+(10*(t-1))+'%。':'';
+  if(id==='storm')return '客訴出現頻率 ×'+(2+t)+'，客訴金幣獎勵 ×'+Math.max(0.1,0.6-0.1*t).toFixed(1)+'。'+pen;
+  if(id==='frugal')return '員工價格 ×'+(2+t)+'。'+pen;
+  const c=CHALLENGES.find(x=>x.id===id);return (c?c.d:'')+pen;}
 const chalOn=id=>!!(S.chal&&S.chal.id===id&&!S.chal.done);
-const chalDoneCount=()=>Object.keys(S.chalDone||{}).length;
-const chalMult=()=>1+0.02*chalDoneCount();
-function chalCheck(){if(!S.chal||S.chal.done)return;if(S.props>=CHAL_GOAL){S.chal.done=true;const key=S.chal.id+'@'+S.chal.city;const first=!S.chalDone[key];S.chalDone[key]=1;
+const chalDoneCount=()=>Object.keys(S.chalDone||{}).filter(k=>!k.includes('#')).length;
+const chalTierCount=()=>Object.keys(S.chalDone||{}).filter(k=>k.includes('#')).length;
+const chalMult=()=>(1+0.02*chalDoneCount()+0.01*chalTierCount())*(S.chal&&!S.chal.done&&chalT()>=2?1-0.1*(chalT()-1):1);
+function chalCheck(){if(!S.chal||S.chal.done)return;if(S.props>=chalGoal()){S.chal.done=true;const t=chalT();const key=S.chal.id+'@'+S.chal.city+(t>=2?'#'+t:'');const first=!S.chalDone[key];S.chalDone[key]=1;
   const c=CHALLENGES.find(x=>x.id===S.chal.id);if(S.kpi)S.kpi.c.chal=(S.kpi.c.chal||0)+1;
-  if(first){gainGlass(5,'城市挑戰');addXP(20);}
-  queue({title:'城市挑戰完成：'+c.name,lines:['你在'+CITIES[S.chal.city].name+'的「'+c.name+'」限制下接管了第 '+CHAL_GOAL+' 個物件。',first?{text:'新的挑戰紀錄！全體收入永久 +2%（目前 '+chalDoneCount()+' 項，共 +'+(chalDoneCount()*2)+'%），時光沙漏 +5',cls:'gain'}:{text:'這座城市的這項挑戰之前已完成過，這次沒有額外獎勵。',cls:'sub'},{text:'挑戰限制已解除，這一輪可以照常經營。',cls:'sub'}],btn:'太好了'});
-  log('完成城市挑戰「'+c.name+'」（'+CITIES[S.chal.city].name+'）。','story');}}
+  if(first){gainGlass(5,'城市挑戰');addXP(20*t);}
+  queue({title:'城市挑戰完成：'+c.name+' '+ROMAN[t-1],lines:['你在'+CITIES[S.chal.city].name+'的「'+c.name+'」等級 '+ROMAN[t-1]+' 限制下接管了第 '+chalGoal()+' 個物件。',
+    first?{text:'新的挑戰紀錄！全體收入永久 +'+(t>=2?1:2)+'%（基本紀錄 '+chalDoneCount()+' 項、進階紀錄 '+chalTierCount()+' 項），時光沙漏 +5',cls:'gain'}:{text:'這座城市的這項挑戰等級之前已完成過，這次沒有額外獎勵。',cls:'sub'},
+    t<5&&chalAvail(c.id)>t?{text:'等級 '+ROMAN[t]+' 已開放，可以在下次重組時挑戰。',cls:'sub'}:{text:'',cls:'sub'},{text:'挑戰限制已解除，這一輪可以照常經營。',cls:'sub'}],btn:'太好了'});
+  log('完成城市挑戰「'+c.name+'」'+ROMAN[t-1]+'（'+CITIES[S.chal.city].name+'）。','story');}}
 
 /* ================= v0.8：股東會 KPI ================= */
 const KPI_KINDS=[
@@ -1807,7 +1837,9 @@ const TITLES=[
  {id:'legend',name:'傳奇管家',hint:'接管第 2 個傳奇物件',ok:s=>s.ach.includes('p10')},
  {id:'chair',name:'董事長',hint:'集團上市',ok:s=>s.ipos>=1},
  {id:'detective',name:'名偵探管家',hint:'破解叔叔的大案子',ok:s=>s.story.includes('case10')},
- {id:'patron',name:'金鑰贊助人',hint:'購買支持者禮包',ok:s=>!!s.supporter}
+ {id:'patron',name:'金鑰贊助人',hint:'購買支持者禮包',ok:s=>!!s.supporter},
+ {id:'lawpro',name:'物業法規達人',hint:'法規問答答對 10 題',ok:s=>!!(s.quiz&&Array.isArray(s.quiz.ok)&&s.quiz.ok.length>=10)},
+ {id:'lawmaster',name:'公寓大廈法規通',hint:'法規問答全部答對',ok:s=>!!(s.quiz&&Array.isArray(s.quiz.ok)&&s.quiz.ok.length>=38)}
 ];
 const ACCENTS=[
  {id:'brass',name:'黃銅',c:'#d6a849',ink:'#1b1608',hint:'預設',ok:()=>true},
@@ -1868,7 +1900,7 @@ function nextGoal(){
   const sn=seasonNow();if(sn&&S.sev.key===sn.key&&SEASON_TASKS.some(t=>!S.sev.got.includes(t.k)&&(S.sev.c[t.k]||0)>=t.need))return {text:sn.s.name+'活動任務完成了，領取沙漏',tab:'biz'};
   if(!cnt('goblin'))return S.coins<10?{text:'按「巡視公寓」存到 10 金幣，雇用第一位哥布林清潔工',pct:S.coins/10}:{text:'雇用第一位哥布林清潔工',tab:'run'};
   if(ipoReady())return {text:'可以集團上市了：到「集團」敲鐘',tab:'corp'};
-  if(S.chal&&!S.chal.done){const cc=CHALLENGES.find(x=>x.id===S.chal.id);return {text:'城市挑戰「'+cc.name+'」：接管第 '+CHAL_GOAL+' 個物件（目前 '+S.props+'）',pct:S.props/CHAL_GOAL,tab:'run'};}
+  if(S.chal&&!S.chal.done){const cc=CHALLENGES.find(x=>x.id===S.chal.id);return {text:'城市挑戰「'+cc.name+'」'+ROMAN[chalT()-1]+'：接管第 '+chalGoal()+' 個物件（目前 '+S.props+'）',pct:S.props/chalGoal(),tab:'run'};}
   if(veteran()&&S.run>=REBIRTH_MIN){const fg=fameGain();if(fg>=3&&fg>=S.fameTotal*0.5)return {text:'重組時機到了：這輪可得 '+fmt(fg)+' 聲望（累計 '+fmt(S.fameTotal)+'），下一輪會跑得更快',tab:'corp'};}
   if(!veteran()&&S.run>=REBIRTH_MIN&&fameGain()>=3)return {text:'可以發動集團重組了：帶著 '+fmt(fameGain())+' 點聲望前往下一座城市',tab:'corp'};
   if(S.props>=3&&!S.contracts.active.length&&!autoOn('a_collect'))return {text:'接一件承攬合約，離線時也會施工',tab:'biz'};
@@ -1910,7 +1942,7 @@ function updateStaff(){
     const p=plan(u);row.querySelector('[data-k=qty]').textContent='雇用 ×'+p.k;row.querySelector('[data-k=cost]').textContent=fmt(p.c)+' 金幣';row.querySelector('button').disabled=!p.ok;});
 }
 function renderProps(){
-  renderRunSub();renderFacs();renderGuide();renderDQ();renderHours();renderRules();
+  renderRunSub();renderFacs();renderGuide();renderDQ();renderHours();renderQuiz();renderRules();
   let html='';
   for(let i=0;i<=S.props;i++){const p=propAt(i),on=i<S.props;const lv=S.reno[i]||0;
     let right;
@@ -1999,9 +2031,9 @@ function renderCorp(){
   $('rebirths').textContent=S.rebirths;$('runEarned').textContent='本輪累積 '+fmt(S.run)+' 金幣';
   $('corpCity').textContent='第 '+(S.rebirths+1)+' 座城市';
   const c=CITIES[cityIdx()];
-  setHTML($('cityNow'),'<b>目前城市：'+cityName()+'</b><span class="rule">'+c.rule+'</span>'+(S.chal?(()=>{const cc=CHALLENGES.find(x=>x.id===S.chal.id);return '<span class="sub chalnow">城市挑戰「'+cc.name+'」'+(S.chal.done?'已完成':'進行中：'+cc.d+'目標：接管第 '+CHAL_GOAL+' 個物件（目前 '+S.props+'）')+'</span>';})():''));
+  setHTML($('cityNow'),'<b>目前城市：'+cityName()+'</b><span class="rule">'+c.rule+'</span>'+(S.chal?(()=>{const cc=CHALLENGES.find(x=>x.id===S.chal.id);return '<span class="sub chalnow">城市挑戰「'+cc.name+'」'+ROMAN[chalT()-1]+(S.chal.done?' 已完成':' 進行中：'+chalD(cc.id,chalT())+'目標：接管第 '+chalGoal()+' 個物件（目前 '+S.props+'）')+'</span>';})():''));
   if(veteran()){const total=CHALLENGES.length*CITIES.length;
-    setHTML($('rbChal'),'<label class="sub">下一輪城市挑戰（選填）<select data-chal="1" id="chalPick"><option value="">不挑戰</option>'+CHALLENGES.map(x=>'<option value="'+x.id+'"'+(S.nextChal===x.id?' selected':'')+'>'+x.name+' — '+x.d+'</option>').join('')+'</select></label><span class="sub">挑戰紀錄：'+chalDoneCount()+' / '+total+'（每座城市的每項挑戰第一次完成，全體收入永久 +2%）</span>');}
+    setHTML($('rbChal'),'<label class="sub">下一輪城市挑戰（選填）<select data-chal="1" id="chalPick"><option value="">不挑戰</option>'+CHALLENGES.map(x=>'<option value="'+x.id+'"'+(S.nextChal===x.id?' selected':'')+'>'+x.name+' — '+x.d+'</option>').join('')+'</select></label>'+(S.nextChal?(()=>{const av=chalAvail(S.nextChal);if((S.nextChalTier||1)>av)S.nextChalTier=av;return '<label class="sub">挑戰等級 <select data-chaltier="1">'+ROMAN.slice(0,av).map((r,i)=>'<option value="'+(i+1)+'"'+((S.nextChalTier||1)===i+1?' selected':'')+'>'+r+'（目標第 '+CHAL_GOALS[i]+' 個物件）</option>').join('')+'</select></label><span class="sub">'+chalD(S.nextChal,S.nextChalTier||1)+'完成上一級才會開放下一級。</span>';})():'')+'<span class="sub">基本紀錄：'+chalDoneCount()+' / '+total+'（每座城市每項挑戰第一次完成 +2%）；進階紀錄 II～V：'+chalTierCount()+' 項（每項 +1%）</span>');}
   else setHTML($('rbChal'),'');
   if(S.kpi&&S.ipos>=1){setHTML($('kpiBox'),'<div class="kpi"><b>股東會本期 KPI</b><span class="sub">下次上市時，每達成 1 項，股份 +17%（3 項全達成 +50%）。目前達成 '+kpiHit()+' / 3。</span>'+S.kpi.list.map(q=>{const d=KPI_KINDS.find(x=>x.k===q.k);const v=Math.min(kpiVal(q),q.need);return '<div class="dqi'+(v>=q.need?' ok':'')+'"><span>'+(v>=q.need?'✔ ':'')+d.t(q.need)+'</span><span class="num">'+fmt(v)+'/'+fmt(q.need)+'</span></div>';}).join('')+'</div>');}
   else setHTML($('kpiBox'),'');
@@ -2048,7 +2080,7 @@ function renderMgr(){
   setHTML($('res'),PROPS.map((p,i)=>{const list=RESIDENTS.filter(x=>x[0]===i);const full=list.every(x=>S.residents.includes(x[1]));
     return '<li><b>'+(i<S.props||list.some(x=>S.residents.includes(x[1]))?esc(i<S.props?propLabel(i):p.name):'？？？')+(full?'（全棟滿租 ×1.1）':'')+'</b>'+list.map(x=>S.residents.includes(x[1])?'<span>'+x[2]+'：'+x[3]+'</span>':'<span class="off">？？？</span>').join('')+'</li>';}).join(''));
   $('cardSum').textContent='已收集 '+S.cards.length+' / '+CARDS.length+' · 收入 +'+S.cards.length+'%';
-  setHTML($('cards'),CARDS.map(c=>S.cards.includes(c[0])?'<li><b>'+c[1]+'</b><span>'+c[2]+'</span><span class="src">出處：'+c[3]+'</span>'+(CONFIG.labUrl?'<a class="lab" href="'+esc(CONFIG.labUrl)+'" target="_blank" rel="noopener">延伸閱讀：'+CONFIG.labName+' →</a>':'')+'</li>':'<li class="off"><b>？？？</b></li>').join(''));
+  setHTML($('cards'),CARDS.map(c=>S.cards.includes(c[0])?'<li><b>'+c[1]+'</b><span>'+c[2]+'</span><span class="src">出處：'+c[3]+'</span>'+(CONFIG.labUrl?'<a class="lab" href="'+esc(CONFIG.labUrl)+'" target="_blank" rel="noopener">延伸閱讀：'+CONFIG.labName+' →</a>':'')+'</li>':'<li class="off"><b>？？？</b></li>').join(''));renderQuizDex();
   $('dexSum').textContent='已收集 '+S.seenEv.length+' / '+EVENTS.length+' · 收入 +'+S.seenEv.length+'%';
   setHTML($('dex'),EVENTS.map((e,k)=>S.seenEv.includes(k)?'<li>'+e[0]+'</li>':'<li class="off">？？？'+(typeof e[3]==='string'&&e[3].startsWith('e:')?'（'+SEASONS.find(x=>x.id===e[3].slice(2)).name+'活動限定）':typeof e[3]==='string'?'（'+CITIES[Number(e[3].slice(1))].name+'限定）':e[3]?'（第 '+e[3]+' 個物件後）':'')+'</li>').join(''));
 }
@@ -2065,6 +2097,8 @@ function renderLog(){const ul=$('log');if(!ul)return;ul.innerHTML='';
 function renderSlip(){
   const slip=$('slip');if(S.event==null||!EVENTS[S.event]){slip.hidden=true;return;}
   const ev=EVENTS[S.event];slip.hidden=false;$('slipText').textContent=ev[0];
+  const qz=ev.q;$('choiceC').hidden=!qz;document.querySelector('#slip .choices').classList.toggle('q3',!!qz);
+  if(qz){['choiceA','choiceB','choiceC'].forEach((id,i)=>{$(id).querySelector('b').textContent='ABC'[i]+'. '+qz.o[i];$(id).querySelector('span').textContent=i===0?'情境題：選出符合規定的做法，金幣 ×2':'';});return;}
   $('choiceA').querySelector('b').textContent=ev[1][0];$('choiceA').querySelector('span').textContent='約 +'+fmt(complaintReward(ev[1][1]))+' 金幣';
   $('choiceB').querySelector('b').textContent=ev[2][0];$('choiceB').querySelector('span').textContent='收入 ×'+ev[2][1]+'，持續 '+dur(buffDur()/1000);
 }
@@ -2223,7 +2257,7 @@ function autoDesc(id){const r=R();
   if(id==='a_team')return '每 5 秒自動雇用'+(r.pick==='cheap'?'最便宜':'人數最少')+'的基本員工，每次花費不超過金幣的 '+r.spend+'%，跳過設為「暫緩」的員工';
   if(id==='a_comp')return '客訴出現 '+r.wait+' 秒後自動處理（'+({smart:'比較金幣與收入加成，選划算的',coins:'一律選金幣',buff:'一律選收入加成'}[r.comp])+'）';
   return '';}
-function compChoice(){const r=R();if(r.comp==='coins')return 1;if(r.comp==='buff')return 2;const ev=EVENTS[S.event];if(!ev||!ev[2])return 1;
+function compChoice(){const r=R();if(r.comp==='coins')return 1;if(r.comp==='buff')return 2;const ev=EVENTS[S.event];if(!ev||!ev[2]||ev.q)return 1;
   const coin=complaintReward(ev[1][1]),buff=baseRate()*(ev[2][1]-1)*buffDur()/1000;return buff>coin?2:1;}
 function runAutomation(){
   const now=Date.now(),r=R();
@@ -2252,6 +2286,77 @@ function renderRules(){const wrap=$('ruleWrap');if(!wrap)return;const ids=['a_co
 function setRule(k,v){const r=R();if(!(k in RULE_DEF))return;r[k]=(k==='spend'||k==='wait')?Number(v):v;log('派工規則調整：'+autoDescKey(k)+'。');renderRules();save();}
 function autoDescKey(k){const r=R();return {tier:'接單偏好 '+CONTRACT_TIERS[tierIdx(r.tier)].label,spend:'補員花費上限 '+r.spend+'%',pick:'補員挑選 '+(r.pick==='cheap'?'最便宜':'人數最少'),comp:'客訴處理 '+({smart:'自動比較',coins:'一律金幣',buff:'一律加成'}[r.comp]),wait:'客訴等待 '+r.wait+' 秒'}[k]||k;}
 function setPri(id,v){if(!['first','norm','hold'].includes(v))return;const r=R();if(v==='norm')delete r.pri[id];else r.pri[id]=v;renderRules();save();}
+/* ---- v0.11 法規問答：依公寓大廈管理條例（民國 111 年 5 月 11 日修正）逐條查核 2026-11-01 ---- */
+const QUIZ_BASIS='依《公寓大廈管理條例》民國 111 年 5 月 11 日修正條文（2026 年 11 月查核）。僅供學習參考，以最新法規及個案判斷為準。';
+const QUIZ=[
+ {id:'L01',q:'依公寓大廈管理條例，下列何者不屬於「住戶」？',o:['承租人','經區分所有權人同意而使用專有部分的人','來訪的親友'],a:2,x:'住戶指區分所有權人、承租人或其他經區分所有權人同意而為專有部分之使用者，或取得停車空間建築物所有權者。',s:'第 3 條第 8 款'},
+ {id:'L02',q:'有住戶想把門口的樓梯間圍起來當自家儲藏空間，說「經大會同意就好」。這可以嗎？',o:['經區分所有權人會議同意就可以','不可以，連通數個專有部分的走廊或樓梯不得約定專用','只要他多繳管理費就可以'],a:1,x:'走廊、樓梯、通往室外的通路或門廳、社區巷道與防火巷弄、主要構造等，不得約定專用。',s:'第 7 條'},
+ {id:'L03',q:'家中有 12 歲以下兒童的住戶，可以裝設防墜設施嗎？',o:['可以，但不得妨礙逃生且不得突出外牆面','一律禁止改變外觀','須經全體區分所有權人同意'],a:0,x:'有 12 歲以下兒童或 65 歲以上老人的住戶，外牆開口部或陽臺可設置不妨礙逃生、不突出外牆面的防墜設施；設置理由消失後應改善或回復原狀。',s:'第 8 條第 2 項'},
+ {id:'L04',q:'住戶擅自變更外牆，經管委會制止仍不遵從，應在多久內回復原狀？',o:['7 天','1 個月','3 個月'],a:1,x:'應於一個月內回復原狀；屆期未回復，由管理負責人或管委會回復，費用由該住戶負擔。',s:'第 8 條第 3 項'},
+ {id:'L05',q:'共用部分的修繕費用，原則上由誰負擔？',o:['公共基金支付，或由區分所有權人按應有部分比例分擔','每戶平均分攤','由物業管理公司負擔'],a:0,x:'共用部分由管委會修繕，費用由公共基金支付或按應有部分比例分擔；可歸責於特定住戶者由該住戶負擔，規約或會議另有規定者從其規定。',s:'第 10 條第 2 項'},
+ {id:'L06',q:'樓上與樓下之間的樓地板內管線老化漏水，修繕費用怎麼分？',o:['全部由樓上負擔','由樓地板上下方的區分所有權人共同負擔','全部由管委會負擔'],a:1,x:'共同壁、樓地板或其內管線的維修費用，由兩側或上下方共同負擔；可歸責於某一方者由其負擔。',s:'第 12 條'},
+ {id:'L07',q:'共用部分的拆除、重大修繕或改良，應如何決定？',o:['主任委員決定','依區分所有權人會議決議辦理','由管理公司評估後執行'],a:1,x:'共用部分及其相關設施的拆除、重大修繕或改良，應依區分所有權人會議的決議為之。',s:'第 11 條'},
+ {id:'L08',q:'一般情況下，公寓大廈要重建，需要誰同意？',o:['全體區分所有權人及基地所有權人、地上權人或典權人','四分之三區分所有權人','過半數區分所有權人'],a:0,x:'原則須全體同意；配合都市更新、建物嚴重毀損有危害公安之虞，或因重大事變危害公安者為例外。',s:'第 13 條'},
+ {id:'L09',q:'住戶在樓梯間堆放雜物，經制止仍不改善，主管機關可處多少罰鍰？',o:['1 千至 5 千元','3 千至 1 萬 5 千元','4 萬至 20 萬元'],a:2,x:'於樓梯間、共同走廊等處堆置雜物違反第 16 條第 2 項，可處 4 萬至 20 萬元罰鍰，並得連續處罰。',s:'第 16 條第 2 項、第 49 條'},
+ {id:'L10',q:'住戶半夜製造噪音、振動妨害安寧，主管機關可處多少罰鍰？',o:['3 千至 1 萬 5 千元','4 萬至 20 萬元','不罰，只能報警'],a:0,x:'違反第 16 條第 1 項（喧囂、振動等），可處 3 千至 1 萬 5 千元罰鍰，並得令限期改善。',s:'第 16 條第 1 項、第 47 條'},
+ {id:'L11',q:'住戶在大樓內依法經營餐廳等危險營業，依法應該？',o:['只要放滅火器','投保公共意外責任保險','繳保證金給管委會'],a:1,x:'經催告 7 日內仍未投保，管委會應代為投保，保險費等費用由該住戶負擔。',s:'第 17 條'},
+ {id:'L12',q:'公共基金應如何保管？',o:['存在主任委員個人帳戶','設專戶儲存，由管委會負責管理，依區分所有權人會議決議運用','全額交給管理公司'],a:1,x:'公共基金應設專戶儲存，由管理負責人或管委會負責管理；經決議交付信託者交付信託；運用依區分所有權人會議決議。',s:'第 18 條第 3 項'},
+ {id:'L13',q:'賣掉房子時，公共基金的權利怎麼處理？',o:['隨區分所有權移轉給買方','可以申請退還給賣方','可以拿來抵銷積欠的管理費'],a:0,x:'公共基金的權利隨區分所有權移轉，不得因個人事由讓與、扣押、抵銷或設定負擔。',s:'第 19 條'},
+ {id:'L14',q:'管委會改組時，舊管委會應移交哪些東西？',o:['只要移交印鑑','公共基金收支情形、會計憑證、帳簿、財務報表、印鑑及餘額','只要移交現金餘額'],a:1,x:'拒絕移交者，經催告 7 日內仍不移交，可報請主管機關或訴請法院命其移交。',s:'第 20 條'},
+ {id:'L15',q:'住戶積欠管理費，管委會什麼時候可以訴請法院命其給付？',o:['欠一天就可以','積欠逾二期或達相當金額，經定相當期間催告仍不給付','必須欠滿一年'],a:1,x:'可訴請法院命其給付應繳金額及遲延利息；催告應以書面為之。',s:'第 21 條、第 54 條'},
+ {id:'L16',q:'住戶違規情節重大，管委會促請改善後多久仍未改善，可依區分所有權人會議決議訴請法院強制遷離？',o:['7 日','1 個月','3 個月'],a:2,x:'三個月內仍未改善者，得依區分所有權人會議決議訴請法院強制遷離。',s:'第 22 條'},
+ {id:'L17',q:'下列哪一事項如果沒有寫進規約，就不生效力？',o:['禁止飼養動物的特別約定','住戶姓名','大樓外牆顏色'],a:0,x:'約定專用與約定共用的範圍、禁止飼養動物、違反義務的處理方式、財務運作的監督等事項，未載明於規約者不生效力。',s:'第 23 條第 2 項'},
+ {id:'L18',q:'區分所有權人會議的定期會議，至少多久召開一次？',o:['每年一次','每兩年一次','每季一次'],a:0,x:'區分所有權人會議由全體區分所有權人組成，每年至少召開定期會議一次。',s:'第 25 條第 1 項'},
+ {id:'L19',q:'區分所有權人要請求召開臨時會議，需要多少人以書面請求？',o:['任一人','五分之一以上，且區分所有權比例合計五分之一以上','過半數'],a:1,x:'應以書面載明召集的目的及理由請求召集。',s:'第 25 條第 2 項'},
+ {id:'L20',q:'由區分所有權人互推的召集人，若會議與規約都沒規定任期，任期是？',o:['一年','兩年','三年'],a:0,x:'任期一至二年，會議或規約未規定者為一年，連選得連任一次。',s:'第 25 條第 3 項'},
+ {id:'L21',q:'區分所有權人會議的表決權怎麼算？',o:['每一專有部分一表決權','每一坪一票','每位出席者一票'],a:0,x:'各專有部分的區分所有權人有一表決權；數人共有一專有部分者，推由一人行使。',s:'第 27 條第 1 項'},
+ {id:'L22',q:'區分所有權人不能出席會議，可以委託誰代理？',o:['任何人都可以','配偶、有行為能力的直系血親、其他區分所有權人或承租人','只能委託律師'],a:1,x:'應以書面委託；受託人代理的比例超過五分之一的部分不予計算。',s:'第 27 條第 3 項'},
+ {id:'L23',q:'召開區分所有權人會議，最晚何時要以書面通知？',o:['開會前一天','開會前十日','開會前一個月'],a:1,x:'有急迫情事召開臨時會時，得以公告為之，公告期間不得少於二日。',s:'第 30 條第 1 項'},
+ {id:'L24',q:'開會時有人臨時動議改選管理委員，這樣可以嗎？',o:['主席同意就可以','不可以，管委選任事項應在開會通知中載明並公告','出席者過半同意就可以'],a:1,x:'管理委員的選任事項，應在開會通知中載明並公告，不得以臨時動議提出。',s:'第 30 條第 2 項'},
+ {id:'L25',q:'除規約另有規定，區分所有權人會議的一般決議門檻是？',o:['三分之二以上出席，出席人數及比例四分之三以上同意','過半數出席、過半數同意','全體同意'],a:0,x:'人數與區分所有權比例都要達到門檻。',s:'第 31 條'},
+ {id:'L26',q:'會議出席人數不足時，召集人重新召集同一議案，開議門檻是？',o:['與原會議相同','三人並五分之一以上出席（比例亦同），出席過半數同意','不需任何出席門檻'],a:1,x:'決議紀錄送達後 7 日內，書面反對未超過全體半數，決議視為成立。',s:'第 32 條'},
+ {id:'L27',q:'要在屋頂設置行動電話基地台，除區分所有權人會議決議外，還需要誰同意？',o:['頂層區分所有權人','主任委員','不需要其他人同意'],a:0,x:'外牆面、樓頂平臺設置廣告物、基地台等強波發射設備，設於屋頂者應經頂層區分所有權人同意，否則決議不生效力。',s:'第 33 條'},
+ {id:'L28',q:'區分所有權人會議紀錄，應在會後多久內送達並公告？',o:['七日內','十五日內','三個月內'],a:1,x:'會議紀錄由主席簽名，於會後十五日內送達各區分所有權人並公告。',s:'第 34 條'},
+ {id:'L29',q:'住戶想看公共基金餘額和會計憑證，管委會可以拒絕嗎？',o:['可以，只有主委能看','不可以，利害關係人必要時得請求閱覽或影印','要等區分所有權人會議同意'],a:1,x:'無正當理由拒絕者，主任委員或管理委員可處 1 千至 5 千元罰鍰。',s:'第 35 條、第 48 條'},
+ {id:'L30',q:'管理委員會可以自己當訴訟的原告或被告嗎？',o:['可以，管委會有當事人能力','不行，必須以主委個人名義','不行，必須全體區分所有權人一起'],a:0,x:'管委會為原告或被告時，應將訴訟事件要旨速告區分所有權人。',s:'第 38 條'}
+];
+/* 情境客訴題：答出符合規定的做法，金幣獎勵 ×2；答錯照常給金幣並說明 */
+const QUIZ_EVENTS=[
+ {k:'L02',t:'地精住戶把三樓樓梯間圍起來當自家倉庫，還說：「下次區權會表決通過就好。」',o:['等區權會表決通過就讓他用','請他拆除：連通各戶的樓梯依法不得約定專用','請他多繳管理費就默許'],a:1,x:'連通數個專有部分的樓梯不得約定專用；在樓梯間堆置雜物、設置門扇也違反第 16 條第 2 項。',s:'第 7 條、第 16 條第 2 項'},
+ {k:'L04',t:'火焰法師把陽臺外牆漆成會發光的岩漿紅，管委會制止後，他還是不理。',o:['報請主管機關處理，並要求他一個月內回復原狀','外牆顏色是個人自由，算了','立刻找工人拆掉他家的門'],a:0,x:'經制止不遵從，應報請主管機關處理，住戶應於一個月內回復原狀；屆期未回復，管委會可代為回復，費用由該住戶負擔。',s:'第 8 條'},
+ {k:'L06',t:'矮人公寓二樓和一樓之間的樓地板水管老化漏水，兩戶吵著到底誰該出錢。',o:['由樓上那一戶全額負擔','全部由管委會負擔','由上下兩戶共同負擔（除非是某一方造成的）'],a:2,x:'樓地板或其內管線的維修費用，由上下方的區分所有權人共同負擔；可歸責於某一方者由其負擔。',s:'第 12 條'},
+ {k:'L09',t:'哥布林把撿來的寶物堆滿逃生樓梯，勸了三次還是不搬。',o:['幫他把寶物搬到中庭就好','只能貼公告勸導，沒有別的辦法','經制止仍不遵從，報請主管機關處理，最高可罰 20 萬元'],a:2,x:'樓梯間堆置雜物違反第 16 條第 2 項，經制止不遵從可報請主管機關處理，罰鍰 4 萬至 20 萬元，並得連續處罰。',s:'第 16 條、第 49 條'},
+ {k:'L10',t:'狼人住戶滿月夜嚎叫到天亮，樓上樓下都睡不著。',o:['先制止；仍不改善可報請主管機關處 3 千至 1 萬 5 千元罰鍰','種族習性，管委會不能管','直接訴請法院讓他搬走'],a:0,x:'喧囂、振動違反第 16 條第 1 項，可處 3 千至 1 萬 5 千元罰鍰。強制遷離另有要件：促請改善三個月仍未改善，並依區分所有權人會議決議。',s:'第 16 條、第 47 條、第 22 條'},
+ {k:'L15',t:'龍族住戶已經三個月沒繳管理費，理由是「金幣都在睡覺」。',o:['先停掉他家的水電','以書面定期催告，仍不繳就訴請法院命他給付並加計遲延利息','把他的停龍位拍賣抵債'],a:1,x:'積欠逾二期或達相當金額，經書面定相當期間催告仍不給付，管委會可訴請法院命其給付應繳金額及遲延利息。',s:'第 21 條、第 54 條'},
+ {k:'L24',t:'區權會開到一半，精靈長老舉手：「我臨時動議，改選管理委員！」',o:['主席同意就當場改選','出席者過半同意就可以','不行，管委選任要在開會通知中載明並公告'],a:2,x:'管理委員的選任事項，應在開會通知中載明並公告，不得以臨時動議提出。',s:'第 30 條第 2 項'},
+ {k:'L29',t:'人魚住戶想查公共基金餘額和會計憑證，主委說：「只有委員能看。」',o:['住戶是利害關係人，必要時可請求閱覽或影印，管委會不得拒絕','主委說得對','要等下次區權會同意'],a:0,x:'利害關係人必要時得請求閱覽或影印規約、公共基金餘額、會計憑證等文件；無正當理由拒絕可處主委或委員 1 千至 5 千元罰鍰。',s:'第 35 條、第 48 條'}
+];
+QUIZ_EVENTS.forEach(q=>{const e=[q.t,['依規定處理',15],['不照規定處理',1.5],2];e.q=q;EVENTS.push(e);});
+function QZ(){if(!S.quiz||typeof S.quiz!=='object')S.quiz={};const z=S.quiz;if(!Array.isArray(z.ok))z.ok=[];if(!Array.isArray(z.seen))z.seen=[];return z;}
+function quizOn(){return S.story.includes('open')&&(veteran()||S.props>=2);}
+function quizToday(){const z=QZ(),t=today();if(z.day!==t){let q=QUIZ.find(x=>!z.seen.includes(x.id))||QUIZ.find(x=>!z.ok.includes(x.id));
+    if(!q){const n=Math.floor(Date.now()/864e5);q=QUIZ[n%QUIZ.length];}z.day=t;z.id=q.id;z.ans=null;}
+  return QUIZ.find(x=>x.id===z.id)||QUIZ[0];}
+function quizMark(id,ok){const z=QZ();if(!z.seen.includes(id))z.seen.push(id);if(ok&&!z.ok.includes(id)){z.ok.push(id);
+  if(z.ok.length===10||z.ok.length===QUIZ.length)toast('法規問答答對 '+z.ok.length+' 題，解鎖新稱號');}}
+function answerQuiz(i){const z=QZ(),q=quizToday();if(z.ans!=null)return;i=Number(i);if(!(i>=0&&i<q.o.length))return;z.ans=i;const ok=i===q.a;quizMark(q.id,ok);
+  if(ok){gainGlass(1,'今日法規一題');addXP(10);log('今日法規一題答對：'+q.s+'。');}else log('今日法規一題：正確答案是「'+q.o[q.a]+'」（'+q.s+'）。');
+  renderQuiz();save();}
+const labLink=()=>CONFIG.labUrl?'<a class="lab" href="'+esc(CONFIG.labUrl)+'" target="_blank" rel="noopener">延伸閱讀：'+CONFIG.labName+' →</a>':'';
+function renderQuiz(){const el=$('quizBox');if(!el)return;if(!quizOn()){el.hidden=true;return;}el.hidden=false;const z=QZ(),q=quizToday(),done=z.ans!=null;
+  let h='<div class="dq quiz"><b>今日法規一題<small>　答對 +1 沙漏、+10 資歷，答錯不扣分</small></b><div class="qq">'+esc(q.q)+'</div><div class="qo">'+
+    q.o.map((o,i)=>'<button type="button" '+(done?'disabled ':'data-act="quiz" data-v="'+i+'" ')+'class="'+(done&&i===q.a?'ok':done&&i===z.ans?'no':'')+'">'+'ABC'[i]+'. '+esc(o)+'</button>').join('')+'</div>';
+  if(done)h+='<div class="qr '+(z.ans===q.a?'ok':'no')+'">'+(z.ans===q.a?'答對了！':'正確答案是 '+'ABC'[q.a]+'。')+'</div><div class="qx">'+esc(q.x)+'</div><div class="qs">出處：公寓大廈管理條例'+esc(q.s)+'</div>'+labLink()+'<div class="qd">'+QUIZ_BASIS+'明天會有新的一題。</div>';
+  setHTML(el,h+'</div>');}
+function renderQuizDex(){const w=$('quizDexWrap');if(!w)return;const z=QZ();const all=QUIZ.concat(QUIZ_EVENTS.map(e=>({id:'S'+e.k,q:e.t,o:e.o,a:e.a,x:e.x,s:e.s})));
+  if(!z.seen.length){w.hidden=true;return;}w.hidden=false;
+  $('quizSum').textContent='答對 '+z.ok.length+' / '+all.length+' 題';
+  setHTML($('quizDex'),all.map(q=>z.ok.includes(q.id)?'<li><b>'+esc(q.q)+'</b><span>答案：'+esc(q.o[q.a])+'</span><span>'+esc(q.x)+'</span><span class="src">出處：公寓大廈管理條例'+esc(q.s)+'</span></li>':'<li class="off"><b>'+(z.seen.includes(q.id)?'（答錯過，下次再挑戰）':'？？？')+'</b></li>').join(''));}
+let evMult=1;
+function resolveQuizEvent(i){if(S.event==null)return;const ev=EVENTS[S.event];if(!ev||!ev.q)return;const q=ev.q,ok=Number(i)===q.a;
+  quizMark('S'+q.k,ok);evMult=ok?2:1;try{resolveEvent(1);}finally{evMult=1;}
+  queue({title:ok?'處理得當！':'這樣處理不太對',lines:[ok?{text:'你的做法符合規定，這張客訴的金幣獎勵 ×2。',cls:'gain'}:{text:'比較好的做法是：'+q.o[q.a]+'（金幣照常發放）',cls:'sub'},q.x,{text:'出處：公寓大廈管理條例'+q.s+'。'+QUIZ_BASIS,cls:'sub'}],btn:'記住了',
+    link:CONFIG.labUrl?{url:CONFIG.labUrl,text:'延伸閱讀：'+CONFIG.labName+' →'}:null});}
 /* ---- v0.10 新手任務：一次一步，邊做邊學 ---- */
 const GUIDE=[
  {t:'巡視公寓 10 次',d:'按上方「巡視公寓」，賺第一筆金幣。',ok:()=>S.patrols>=10,tab:'run'},
@@ -2304,8 +2409,8 @@ function debugAct(v){
 function wire(){
   document.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const v=b.dataset.v;
     switch(b.dataset.act){case 'hire':hire(v);break;case 'reno':renovate(+v);break;case 'renomax':renovateMax(+v);break;case 'renoall':renovateAll();break;case 'upall':upgradeAll();break;case 'upstaff':upgradeStaff();break;case 'facall':facsAll();break;case 'accept':acceptContract(+v);break;case 'collect':collectContract(+v);break;
-      case 'policy':togglePolicy(v);break;case 'fac':buyFac(v);break;case 'tal':buyTalent(v);break;case 'dbg':debugAct(v);break;case 'glass':useGlass(v,b.dataset.j);break;case 'autotog':toggleAuto(v);break;case 'season':claimSeason(v);break;case 'rule':setRule(b.dataset.k,v);break;case 'pri':setPri(b.dataset.k,v);break;case 'guide':claimGuide();break;case 'gotab':goTab(v);break;case 'board':buyBoard(v);break;case 'accent':setCustom('accent',v);break;case 'adglass':adForGlass();break;case 'supporter':buySupporter();break;}});
-  document.addEventListener('change',e=>{const el=e.target.closest('[data-assign]');if(el)setStation(el.dataset.assign,el.value);const cu=e.target.closest('[data-cust]');if(cu)setCustom(cu.dataset.cust,cu.value,cu.dataset.i);const ch=e.target.closest('[data-chal]');if(ch){S.nextChal=ch.value;save();}const kp=e.target.closest('[data-keep]');if(kp){S.keepReno=kp.checked;renderCorp();save();}const pk=e.target.closest('[data-pick]');if(pk){S.nextCity=pk.value===''?null:pk.value;save();}});
+      case 'policy':togglePolicy(v);break;case 'fac':buyFac(v);break;case 'tal':buyTalent(v);break;case 'dbg':debugAct(v);break;case 'glass':useGlass(v,b.dataset.j);break;case 'autotog':toggleAuto(v);break;case 'season':claimSeason(v);break;case 'rule':setRule(b.dataset.k,v);break;case 'pri':setPri(b.dataset.k,v);break;case 'guide':claimGuide();break;case 'quiz':answerQuiz(v);break;case 'gotab':goTab(v);break;case 'board':buyBoard(v);break;case 'accent':setCustom('accent',v);break;case 'adglass':adForGlass();break;case 'supporter':buySupporter();break;}});
+  document.addEventListener('change',e=>{const el=e.target.closest('[data-assign]');if(el)setStation(el.dataset.assign,el.value);const cu=e.target.closest('[data-cust]');if(cu)setCustom(cu.dataset.cust,cu.value,cu.dataset.i);const ch=e.target.closest('[data-chal]');if(ch){S.nextChal=ch.value;S.nextChalTier=1;renderCorp();save();}const ct=e.target.closest('[data-chaltier]');if(ct){S.nextChalTier=Number(ct.value)||1;renderCorp();save();}const kp=e.target.closest('[data-keep]');if(kp){S.keepReno=kp.checked;renderCorp();save();}const pk=e.target.closest('[data-pick]');if(pk){S.nextCity=pk.value===''?null:pk.value;save();}});
   $('ipoBtn').onclick=()=>{$('ipoRow').hidden=true;$('ipoConfirm').hidden=false;};
   $('ipoNo').onclick=()=>{$('ipoRow').hidden=false;$('ipoConfirm').hidden=true;};
   $('ipoYes').onclick=()=>{$('ipoRow').hidden=false;$('ipoConfirm').hidden=true;doIPO();};
@@ -2316,7 +2421,7 @@ function wire(){
   $('dbgToggle').onclick=()=>{S.dbg=!S.dbg;if(!S.dbg)S.dbgSpeed=false;renderDebug();save();};
   document.querySelectorAll('.amt button[data-amt]').forEach(b=>b.onclick=()=>{const v=b.dataset.amt;S.amt=(v==='max'||v==='ms')?v:Number(v);renderAmt();updateStaff();});
   document.querySelectorAll('.amt button[data-tamt]').forEach(b=>b.onclick=()=>{const v=b.dataset.tamt;S.talAmt=v==='all'?'all':Number(v);renderAmt();renderCorp();});
-  $('choiceA').onclick=()=>resolveEvent(1);$('choiceB').onclick=()=>resolveEvent(2);
+  $('choiceA').onclick=()=>{const e=EVENTS[S.event];if(e&&e.q)resolveQuizEvent(0);else resolveEvent(1);};$('choiceB').onclick=()=>{const e=EVENTS[S.event];if(e&&e.q)resolveQuizEvent(1);else resolveEvent(2);};$('choiceC').onclick=()=>resolveQuizEvent(2);
   document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
     document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected',x===t?'true':'false'));
     ['run','biz','corp','mgr','ach','log','save'].forEach(k=>$('page-'+k).hidden=(k!==t.dataset.tab));
